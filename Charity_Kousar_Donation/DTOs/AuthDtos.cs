@@ -22,4 +22,10 @@ public record PublicSiteConfigDto(
     string? FooterTextFa,
     string? FooterTextEn,
     bool CryptoEnabled,
-    bool ZarinPalEnabled);
+    bool ZarinPalEnabled,
+    decimal MinDonationAmount,
+    List<long> QuickDonationAmounts,
+    bool ShowRecentDonors,
+    int RecentDonorsCount,
+    bool OtpEnabled,
+    decimal OtpThresholdAmount);

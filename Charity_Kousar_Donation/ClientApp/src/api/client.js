@@ -30,3 +30,30 @@ export async function api(path, options = {}) {
   if (!res.ok) throw new Error(data?.message || 'خطا در ارتباط با سرور')
   return data
 }
+
+export async function uploadFile(file) {
+  const form = new FormData()
+  form.append('file', file)
+  const headers = {}
+  const token = getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch('/api/upload', { method: 'POST', headers, body: form })
+  const data = res.headers.get('content-type')?.includes('json') ? await res.json() : null
+  if (!res.ok) throw new Error(data?.message || 'آپلود ناموفق')
+  return data
+}
+
+export async function downloadAuthFile(path, filename) {
+  const headers = {}
+  const token = getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(`/api${path}`, { headers })
+  if (!res.ok) throw new Error('دانلود ناموفق')
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}

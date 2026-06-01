@@ -2,7 +2,6 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
-import { generateShareImage, downloadDataUrl } from '@/utils/shareImage'
 
 const props = defineProps({
   slug: { type: String, required: true },
@@ -13,8 +12,6 @@ const emit = defineEmits(['close'])
 const { locale } = useI18n()
 const loading = ref(false)
 const pack = ref(null)
-const imageLoading = ref(false)
-const previewImage = ref(null)
 const copied = ref(false)
 
 const message = computed(() => {
@@ -26,38 +23,17 @@ const waUrl = computed(() => locale.value === 'fa' ? pack.value?.whatsAppUrlFa :
 const tgUrl = computed(() => locale.value === 'fa' ? pack.value?.telegramUrlFa : pack.value?.telegramUrlEn)
 
 async function load() {
-  if (pack.value && !loading.value) return
   loading.value = true
   try {
     pack.value = await api(`/campaigns/${props.slug}/share-pack?t=${Date.now()}`)
-    await buildImage()
   } finally {
     loading.value = false
-  }
-}
-
-async function buildImage() {
-  if (!pack.value) return
-  imageLoading.value = true
-  try {
-    previewImage.value = await generateShareImage(pack.value, locale.value)
-  } catch {
-    previewImage.value = null
-  } finally {
-    imageLoading.value = false
   }
 }
 
 async function refresh() {
   pack.value = null
-  previewImage.value = null
-  loading.value = true
-  try {
-    pack.value = await api(`/campaigns/${props.slug}/share-pack?t=${Date.now()}`)
-    await buildImage()
-  } finally {
-    loading.value = false
-  }
+  await load()
 }
 
 function openShare(url) {
@@ -70,34 +46,25 @@ async function copyText() {
   setTimeout(() => { copied.value = false }, 2000)
 }
 
-function downloadImage() {
-  if (previewImage.value)
-    downloadDataUrl(previewImage.value, `share-${props.slug}.png`)
-}
-
 watch(() => props.show, v => { if (v) { pack.value = null; load() } })
-watch(locale, () => { if (pack.value) buildImage() })
 </script>
 
 <template>
   <div v-if="show" class="modal-overlay" @click.self="emit('close')">
     <div class="card modal share-modal">
       <div class="modal-head">
-        <h2>{{ locale === 'fa' ? '📤 اشتراک‌گذاری هوشمند' : '📤 Smart share' }}</h2>
+        <h2>{{ locale === 'fa' ? '📤 اشتراک‌گذاری' : '📤 Share' }}</h2>
         <button type="button" class="icon-btn" @click="emit('close')">✕</button>
       </div>
 
-      <p class="hint">{{ locale === 'fa' ? 'AI متن و تصویر آماده می‌کند — یک‌کلیک برای واتساپ/تلگرام' : 'AI prepares message & image for WhatsApp/Telegram' }}</p>
+      <p class="hint">{{ locale === 'fa'
+        ? 'AI بر اساس محتوای همین کمپین متن مناسب واتساپ/تلگرام می‌سازد'
+        : 'AI builds a WhatsApp/Telegram message from this campaign content' }}</p>
 
       <div v-if="loading" class="loading">{{ locale === 'fa' ? 'در حال آماده‌سازی...' : 'Preparing...' }}</div>
 
       <template v-else-if="pack">
-        <div v-if="previewImage" class="image-preview">
-          <img :src="previewImage" alt="Share card" />
-        </div>
-        <p v-else-if="imageLoading" class="hint">{{ locale === 'fa' ? 'ساخت تصویر...' : 'Building image...' }}</p>
-
-        <textarea class="textarea share-text" :value="message" readonly rows="8" />
+        <textarea class="textarea share-text" :value="message" readonly rows="10" />
 
         <div class="share-actions">
           <a :href="waUrl" class="btn btn-primary" target="_blank" rel="noopener" @click.prevent="openShare(waUrl)">
@@ -107,10 +74,7 @@ watch(locale, () => { if (pack.value) buildImage() })
             Telegram
           </a>
           <button type="button" class="btn btn-ghost" @click="copyText">{{ copied ? '✓' : (locale === 'fa' ? 'کپی متن' : 'Copy') }}</button>
-          <button type="button" class="btn btn-ghost" :disabled="!previewImage" @click="downloadImage">
-            {{ locale === 'fa' ? '⬇ تصویر' : '⬇ Image' }}
-          </button>
-          <button type="button" class="btn btn-accent btn-sm" @click="refresh">✨ {{ locale === 'fa' ? 'متن جدید AI' : 'Regenerate' }}</button>
+          <button type="button" class="btn btn-accent btn-sm" @click="refresh">✨ {{ locale === 'fa' ? 'متن جدید' : 'Regenerate' }}</button>
         </div>
       </template>
     </div>
@@ -124,8 +88,6 @@ watch(locale, () => { if (pack.value) buildImage() })
 .icon-btn { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 0.35rem; }
 .hint { color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem; }
 .loading { text-align: center; padding: 2rem; color: var(--muted); }
-.image-preview { margin-bottom: 1rem; border-radius: 12px; overflow: hidden; border: 1px solid rgba(148,163,184,0.2); }
-.image-preview img { width: 100%; display: block; }
 .share-text { font-size: 0.9rem; line-height: 1.7; margin-bottom: 1rem; resize: none; }
 .share-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .share-actions .btn { flex: 1 1 calc(50% - 0.25rem); min-width: 120px; min-height: 44px; }

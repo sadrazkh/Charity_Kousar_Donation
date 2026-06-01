@@ -6,6 +6,7 @@ import { api } from '@/api/client'
 import PageBuilder from '@/components/PageBuilder.vue'
 import ShareModal from '@/components/ShareModal.vue'
 import AmountInput from '@/components/AmountInput.vue'
+import ImageUpload from '@/components/ImageUpload.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -130,7 +131,7 @@ async function savePage() {
       <textarea v-model="form.descriptionEn" class="textarea input-ltr" dir="ltr" rows="3" />
       <div class="grid grid-2">
         <div><label class="label">{{ t('targetAmount') }}</label><AmountInput v-model="form.targetAmount" dir="ltr" /></div>
-        <div><label class="label">{{ t('imageUrl') }}</label><input v-model="form.imageUrl" class="input input-ltr" dir="ltr" placeholder="https://..." /></div>
+        <div><label class="label">{{ t('imageUrl') }}</label><ImageUpload v-model="form.imageUrl" /></div>
       </div>
       <div class="grid grid-2">
         <div><label class="label">{{ t('slug') }}</label><input v-model="form.slug" class="input input-ltr" dir="ltr" /></div>

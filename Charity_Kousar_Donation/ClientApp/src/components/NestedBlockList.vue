@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import draggable from 'vuedraggable'
 import AiAssistButton from '@/components/AiAssistButton.vue'
+import ImageUpload from '@/components/ImageUpload.vue'
 import NestedBlockList from '@/components/NestedBlockList.vue'
 import {
   BLOCK_TYPES, NESTABLE_TYPES, createBlock, blockLabel, blockPreviewText,
@@ -180,7 +181,7 @@ function label(type) {
           <!-- Image -->
           <template v-else-if="block.type === 'image'">
             <label class="label">URL</label>
-            <input v-model="block.data.url" class="input input-ltr" dir="ltr" placeholder="https://..." />
+            <ImageUpload v-model="block.data.url" />
             <input v-model="block.data.captionFa" class="input input-rtl" placeholder="توضیح FA" />
             <input v-model="block.data.captionEn" class="input input-ltr" dir="ltr" placeholder="Caption EN" />
             <label><input type="checkbox" v-model="block.data.fullWidth" /> تمام‌عرض</label>

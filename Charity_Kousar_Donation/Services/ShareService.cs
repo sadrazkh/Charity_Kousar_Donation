@@ -21,10 +21,14 @@ public class ShareService(AppDbContext db, OpenRouterService ai, IHttpContextAcc
         var baseUrl = $"{http.HttpContext!.Request.Scheme}://{http.HttpContext.Request.Host}";
         var shortUrl = $"{baseUrl}/d/{c.ShortCode}";
         var pageUrl = $"{baseUrl}/c/{c.Slug}";
+        var blocks = CampaignPageHelper.ParseBlocks(c.PageBlocksJson);
+        var pageContentFa = CampaignPageHelper.ExtractPlainText(blocks, true);
+        var pageContentEn = CampaignPageHelper.ExtractPlainText(blocks, false);
 
         var (ok, msgFa, msgEn, _) = await ai.GenerateShareMessagesAsync(
             c.TitleFa, c.TitleEn, c.DescriptionFa, c.DescriptionEn,
-            c.TargetAmount, collected, pct, shortUrl);
+            pageContentFa, pageContentEn,
+            c.TargetAmount, collected, pct, shortUrl, pageUrl);
 
         msgFa ??= shortUrl;
         msgEn ??= shortUrl;

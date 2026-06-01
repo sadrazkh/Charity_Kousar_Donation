@@ -84,4 +84,93 @@ public static class CampaignPageHelper
 
         return blocks;
     }
+
+    public static string ExtractPlainText(List<CampaignPageBlock> blocks, bool fa)
+    {
+        var parts = new List<string>();
+        foreach (var b in blocks)
+            CollectText(b, fa, parts);
+        return string.Join("\n", parts.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim()));
+    }
+
+    private static void CollectText(CampaignPageBlock block, bool fa, List<string> parts)
+    {
+        var d = block.Data;
+        if (d == null) return;
+
+        string? pick(params string[] keys)
+        {
+            foreach (var k in keys)
+                if (d.TryGetValue(k, out var v) && v != null)
+                {
+                    var s = v.ToString()?.Trim();
+                    if (!string.IsNullOrWhiteSpace(s)) return s;
+                }
+            return null;
+        }
+
+        switch (block.Type)
+        {
+            case "heading":
+            case "text":
+            case "quote":
+            case "cta":
+                var t = pick(fa ? "textFa" : "textEn", fa ? "contentFa" : "contentEn", "textFa", "textEn", "contentFa", "contentEn");
+                if (t != null) parts.Add(t);
+                break;
+            case "columns":
+                if (d.TryGetValue("columns", out var cols))
+                    WalkNestedBlocks(cols, fa, parts);
+                break;
+            case "section":
+                if (d.TryGetValue("blocks", out var sb))
+                    WalkNestedBlocks(sb, fa, parts);
+                break;
+        }
+    }
+
+    private static void WalkNestedBlocks(object? value, bool fa, List<string> parts)
+    {
+        if (value is JsonElement je)
+        {
+            if (je.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in je.EnumerateArray())
+                {
+                    if (item.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var child in item.EnumerateArray())
+                        {
+                            var childBlock = JsonSerializer.Deserialize<CampaignPageBlock>(child.GetRawText(), JsonOptions);
+                            if (childBlock != null) CollectText(childBlock, fa, parts);
+                        }
+                    }
+                    else if (item.ValueKind == JsonValueKind.Object)
+                    {
+                        var childBlock = JsonSerializer.Deserialize<CampaignPageBlock>(item.GetRawText(), JsonOptions);
+                        if (childBlock != null) CollectText(childBlock, fa, parts);
+                    }
+                }
+            }
+        }
+        else if (value is IEnumerable<object?> list)
+        {
+            foreach (var item in list)
+            {
+                if (item is IEnumerable<object?> inner && item is not string)
+                {
+                    foreach (var child in inner)
+                    {
+                        if (child is CampaignPageBlock cb) CollectText(cb, fa, parts);
+                        else if (child is JsonElement el && el.ValueKind == JsonValueKind.Object)
+                        {
+                            var childBlock = JsonSerializer.Deserialize<CampaignPageBlock>(el.GetRawText(), JsonOptions);
+                            if (childBlock != null) CollectText(childBlock, fa, parts);
+                        }
+                    }
+                }
+                else if (item is CampaignPageBlock cb) CollectText(cb, fa, parts);
+            }
+        }
+    }
 }

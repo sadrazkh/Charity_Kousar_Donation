@@ -1,5 +1,6 @@
 using System.Text;
 using Charity_Kousar_Donation.Data;
+using Charity_Kousar_Donation.Hubs;
 using Charity_Kousar_Donation.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -17,9 +18,14 @@ builder.Services.AddScoped<CampaignService>();
 builder.Services.AddScoped<DonationService>();
 builder.Services.AddScoped<ZarinPalService>();
 builder.Services.AddScoped<SmsService>();
+builder.Services.AddScoped<OtpService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<OpenRouterService>();
 builder.Services.AddScoped<ShareService>();
+builder.Services.AddScoped<UploadService>();
+builder.Services.AddScoped<ExportService>();
+builder.Services.AddSingleton<IDonationNotifier, DonationNotifier>();
+builder.Services.AddSignalR();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -34,6 +40,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(token) && context.Request.Path.StartsWithSegments("/hubs"))
+                    context.Token = token;
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -71,6 +87,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<DonationHub>("/hubs/donations");
 
 app.MapFallbackToFile("index.html");
 

@@ -31,6 +31,14 @@ public class SmsService(IHttpClientFactory httpFactory, SettingsService settings
         };
     }
 
+    public async Task<bool> SendRawAsync(string phone, string message)
+    {
+        if (!await settings.GetBoolAsync("sms.enabled", true)) return false;
+        var apiKey = await settings.GetAsync("sms.api.key");
+        if (string.IsNullOrWhiteSpace(apiKey)) return false;
+        return await SendKavenegarAsync(apiKey, phone, message);
+    }
+
     private async Task<bool> SendKavenegarAsync(string apiKey, string phone, string message)
     {
         try

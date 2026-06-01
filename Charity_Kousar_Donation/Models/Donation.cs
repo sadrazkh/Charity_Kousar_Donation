@@ -28,6 +28,10 @@ public class Donation
     public string? RefId { get; set; }
     public string? CryptoTxHash { get; set; }
     public bool SmsSent { get; set; }
+    public bool IsRecurring { get; set; }
+    public bool OtpVerified { get; set; }
+    public string? OtpCode { get; set; }
+    public DateTime? OtpExpiresAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PaidAt { get; set; }
 }

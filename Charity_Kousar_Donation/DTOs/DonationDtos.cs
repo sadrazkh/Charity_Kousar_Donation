@@ -7,14 +7,21 @@ public record StartDonationRequest(
     string Phone,
     decimal Amount,
     string? DonorName,
-    PaymentMethod PaymentMethod = PaymentMethod.ZarinPal);
+    PaymentMethod PaymentMethod = PaymentMethod.ZarinPal,
+    bool IsRecurring = false,
+    string? OtpCode = null);
 
 public record StartDonationResponse(
     Guid DonationId,
     string? PaymentUrl,
     string? CryptoAddress,
     string? CryptoNetwork,
-    string Message);
+    string Message,
+    bool RequiresOtp = false);
+
+public record SendOtpRequest(Guid DonationId, string OtpCode);
+
+public record RecentDonorDto(string MaskedPhone, string? DonorName, decimal Amount, DateTime PaidAt, string CampaignTitle);
 
 public record DonationAdminDto(
     Guid Id,

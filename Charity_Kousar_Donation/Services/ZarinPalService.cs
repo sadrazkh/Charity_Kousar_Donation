@@ -55,6 +55,15 @@ public class ZarinPalService(IHttpClientFactory httpFactory, SettingsService set
         return (false, null, result?.Errors?.Message ?? "تأیید پرداخت ناموفق");
     }
 
+    public async Task<string?> GetPaymentUrlAsync(string authority)
+    {
+        if (string.IsNullOrWhiteSpace(authority)) return null;
+        var sandbox = await settings.GetBoolAsync("zarinpal.sandbox", true);
+        return sandbox
+            ? $"https://sandbox.zarinpal.com/pg/StartPay/{authority}"
+            : $"https://www.zarinpal.com/pg/StartPay/{authority}";
+    }
+
     private class ZarinPalRequestResponse
     {
         public ZarinPalData? Data { get; set; }

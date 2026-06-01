@@ -70,62 +70,75 @@ public class OpenRouterService(IHttpClientFactory httpFactory, SettingsService s
 
     public async Task<(bool Ok, string? MessageFa, string? MessageEn, string? Error)> GenerateShareMessagesAsync(
         string titleFa, string titleEn, string descFa, string descEn,
-        decimal target, decimal collected, int progress, string payLink)
+        string pageContentFa, string pageContentEn,
+        decimal target, decimal collected, int progress, string payLink, string pageUrl)
     {
         var targetFmt = target.ToString("N0");
         var collectedFmt = collected.ToString("N0");
 
+        var fallbackFa = BuildFallbackShareFa(titleFa, descFa, collectedFmt, targetFmt, progress, payLink);
+        var fallbackEn = BuildFallbackShareEn(titleEn, descEn, collectedFmt, targetFmt, progress, payLink);
+
         if (!await settings.GetBoolAsync("openrouter.enabled", true))
-            return (true, BuildFallbackShareFa(titleFa, descFa, collectedFmt, targetFmt, progress, payLink),
-                BuildFallbackShareEn(titleEn, descEn, collectedFmt, targetFmt, progress, payLink), null);
+            return (true, fallbackFa, fallbackEn, null);
 
         var apiKey = await settings.GetAsync("openrouter.api.key");
         if (string.IsNullOrWhiteSpace(apiKey))
-            return (true, BuildFallbackShareFa(titleFa, descFa, collectedFmt, targetFmt, progress, payLink),
-                BuildFallbackShareEn(titleEn, descEn, collectedFmt, targetFmt, progress, payLink), null);
+            return (true, fallbackFa, fallbackEn, null);
 
         var model = await settings.GetAsync("openrouter.model", "google/gemma-2-9b-it:free");
-        var systemPrompt = """
-            You write viral charity share messages for Telegram and WhatsApp in Persian and English.
-            Return ONLY JSON: {"messageFa":"...","messageEn":"..."}
-            Rules: warm tone, 2-4 short paragraphs max, use 2-3 relevant emojis, include progress stats,
-            MUST end with payment link on its own line prefixed with 🔗 or 💳
-            Do not invent fake stats. Do not wrap in markdown.
-            """;
+        var systemPrompt = await settings.GetAsync("share.ai.system",
+            "You write charity share texts for WhatsApp and Telegram. Output ONLY valid JSON with messageFa and messageEn. No markdown.");
+        var promptTemplate = await settings.GetAsync("share.ai.prompt", DefaultSharePrompt());
 
-        var userPrompt = $"""
-            Title FA: {titleFa}
-            Title EN: {titleEn}
-            Description FA: {descFa}
-            Description EN: {descEn}
-            Collected: {collectedFmt} Toman
-            Target: {targetFmt} Toman
-            Progress: {progress}%
-            Payment link (include exactly at end): {payLink}
-            """;
+        var userPrompt = ApplySharePrompt(promptTemplate, titleFa, titleEn, descFa, descEn,
+            pageContentFa, pageContentEn, collectedFmt, targetFmt, progress.ToString(), payLink, pageUrl);
 
         try
         {
             var content = await ChatRawAsync(apiKey, model, systemPrompt, userPrompt);
             if (string.IsNullOrWhiteSpace(content))
-                return (true, BuildFallbackShareFa(titleFa, descFa, collectedFmt, targetFmt, progress, payLink),
-                    BuildFallbackShareEn(titleEn, descEn, collectedFmt, targetFmt, progress, payLink), null);
+                return (true, fallbackFa, fallbackEn, null);
 
             content = ExtractJson(content);
             var result = JsonSerializer.Deserialize<ShareJsonResult>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (string.IsNullOrWhiteSpace(result?.MessageFa))
-                return (true, BuildFallbackShareFa(titleFa, descFa, collectedFmt, targetFmt, progress, payLink),
-                    BuildFallbackShareEn(titleEn, descEn, collectedFmt, targetFmt, progress, payLink), null);
+                return (true, fallbackFa, fallbackEn, null);
 
             return (true, EnsureLink(result.MessageFa, payLink), EnsureLink(result.MessageEn ?? result.MessageFa, payLink), null);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Share message generation failed");
-            return (true, BuildFallbackShareFa(titleFa, descFa, collectedFmt, targetFmt, progress, payLink),
-                BuildFallbackShareEn(titleEn, descEn, collectedFmt, targetFmt, progress, payLink), null);
+            return (true, fallbackFa, fallbackEn, null);
         }
     }
+
+    private static string DefaultSharePrompt() => """
+        بر اساس محتوای واقعی این کمپین خیریه، متن اشتراک‌گذاری برای واتساپ/تلگرام بنویس.
+
+        عنوان فارسی: {titleFa}
+        عنوان انگلیسی: {titleEn}
+        توضیح فارسی: {descriptionFa}
+        توضیح انگلیسی: {descriptionEn}
+        جمع‌آوری: {collected} تومان از {target} تومان ({progress}%)
+        لینک پرداخت: {link}
+        لینک صفحه: {pageUrl}
+
+        فقط از اطلاعات بالا استفاده کن. در پایان هر متن لینک پرداخت را بیاور.
+        خروجی JSON: {"messageFa":"...","messageEn":"..."}
+        """;
+
+    private static string ApplySharePrompt(string template, string titleFa, string titleEn,
+        string descFa, string descEn, string pageContentFa, string pageContentEn,
+        string collected, string target, string progress, string link, string pageUrl) =>
+        template
+            .Replace("{titleFa}", titleFa).Replace("{titleEn}", titleEn)
+            .Replace("{descriptionFa}", descFa).Replace("{descriptionEn}", descEn)
+            .Replace("{descFa}", descFa).Replace("{descEn}", descEn)
+            .Replace("{pageContentFa}", pageContentFa).Replace("{pageContentEn}", pageContentEn)
+            .Replace("{collected}", collected).Replace("{target}", target)
+            .Replace("{progress}", progress).Replace("{link}", link).Replace("{pageUrl}", pageUrl);
 
     private async Task<string?> ChatRawAsync(string apiKey, string model, string systemPrompt, string userPrompt)
     {

@@ -57,6 +57,15 @@ public static class DbSeeder
                 new() { Key = "sms.enabled", Value = "true", Group = "sms", LabelFa = "ارسال پیامک فعال", LabelEn = "SMS enabled", Type = SettingType.Boolean, SortOrder = 5 },
 
                 new() { Key = "donation.min.amount", Value = "10000", Group = "donation", LabelFa = "حداقل مبلغ (تومان)", LabelEn = "Min amount (Toman)", Type = SettingType.Number, SortOrder = 1 },
+                new() { Key = "donation.quick.amounts", Value = "50000,100000,200000,500000,1000000", Group = "donation", LabelFa = "مبالغ پیشنهادی (با کاما)", LabelEn = "Quick amounts (comma-separated)", SortOrder = 2 },
+                new() { Key = "donation.otp.enabled", Value = "false", Group = "donation", LabelFa = "تأیید OTP برای مبالغ بالا", LabelEn = "OTP for large amounts", Type = SettingType.Boolean, SortOrder = 3 },
+                new() { Key = "donation.otp.threshold", Value = "5000000", Group = "donation", LabelFa = "آستانه OTP (تومان)", LabelEn = "OTP threshold (Toman)", Type = SettingType.Number, SortOrder = 4 },
+
+                new() { Key = "share.ai.system", Value = "You write charity share texts for WhatsApp and Telegram. Output ONLY valid JSON with messageFa and messageEn. No markdown.", Group = "share", LabelFa = "دستور سیستم AI", LabelEn = "AI system prompt", Type = SettingType.TextArea, SortOrder = 1 },
+                new() { Key = "share.ai.prompt", Value = "بر اساس محتوای واقعی این کمپین خیریه، متن اشتراک‌گذاری برای واتساپ/تلگرام بنویس.\n\nعنوان فارسی: {titleFa}\nعنوان انگلیسی: {titleEn}\nتوضیح فارسی: {descriptionFa}\nتوضیح انگلیسی: {descriptionEn}\nمحتوای صفحه (فارسی): {pageContentFa}\nمحتوای صفحه (انگلیسی): {pageContentEn}\nجمع‌آوری: {collected} تومان از {target} تومان ({progress}%)\nلینک پرداخت: {link}\nلینک صفحه: {pageUrl}\n\nفقط از اطلاعات بالا استفاده کن. در پایان هر متن لینک پرداخت را بیاور.\nخروجی JSON: {\"messageFa\":\"...\",\"messageEn\":\"...\"}", Group = "share", LabelFa = "پرامپت AI اشتراک", LabelEn = "Share AI prompt template", Type = SettingType.TextArea, SortOrder = 2 },
+
+                new() { Key = "donors.show.recent", Value = "true", Group = "donors", LabelFa = "نمایش حامیان اخیر", LabelEn = "Show recent donors", Type = SettingType.Boolean, SortOrder = 1 },
+                new() { Key = "donors.show.count", Value = "10", Group = "donors", LabelFa = "تعداد حامیان", LabelEn = "Recent donors count", Type = SettingType.Number, SortOrder = 2 },
 
                 new() { Key = "openrouter.enabled", Value = "true", Group = "ai", LabelFa = "فعال بودن AI", LabelEn = "AI enabled", Type = SettingType.Boolean, SortOrder = 1 },
                 new() { Key = "openrouter.api.key", Value = "", Group = "ai", LabelFa = "کلید API OpenRouter", LabelEn = "OpenRouter API Key", Type = SettingType.Password, SortOrder = 2 },
@@ -70,6 +79,38 @@ public static class DbSeeder
             await EnsureSettingAsync(db, "openrouter.enabled", "true", "ai", "فعال بودن AI", "AI enabled", SettingType.Boolean, 1);
             await EnsureSettingAsync(db, "openrouter.api.key", "", "ai", "کلید API OpenRouter", "OpenRouter API Key", SettingType.Password, 2);
             await EnsureSettingAsync(db, "openrouter.model", "google/gemma-2-9b-it:free", "ai", "مدل OpenRouter", "Model ID", SettingType.Text, 3);
+
+            await EnsureSettingAsync(db, "donation.quick.amounts", "50000,100000,200000,500000,1000000", "donation",
+                "مبالغ پیشنهادی (با کاما)", "Quick amounts (comma-separated)", SettingType.Text, 2);
+            await EnsureSettingAsync(db, "donation.otp.enabled", "false", "donation",
+                "تأیید OTP برای مبالغ بالا", "OTP for large amounts", SettingType.Boolean, 3);
+            await EnsureSettingAsync(db, "donation.otp.threshold", "5000000", "donation",
+                "آستانه OTP (تومان)", "OTP threshold (Toman)", SettingType.Number, 4);
+
+            await EnsureSettingAsync(db, "share.ai.system",
+                "You write charity share texts for WhatsApp and Telegram. Output ONLY valid JSON with messageFa and messageEn. No markdown.",
+                "share", "دستور سیستم AI", "AI system prompt", SettingType.TextArea, 1);
+            await EnsureSettingAsync(db, "share.ai.prompt", """
+                بر اساس محتوای واقعی این کمپین خیریه، متن اشتراک‌گذاری برای واتساپ/تلگرام بنویس.
+
+                عنوان فارسی: {titleFa}
+                عنوان انگلیسی: {titleEn}
+                توضیح فارسی: {descriptionFa}
+                توضیح انگلیسی: {descriptionEn}
+                محتوای صفحه (فارسی): {pageContentFa}
+                محتوای صفحه (انگلیسی): {pageContentEn}
+                جمع‌آوری: {collected} تومان از {target} تومان ({progress}%)
+                لینک پرداخت: {link}
+                لینک صفحه: {pageUrl}
+
+                فقط از اطلاعات بالا استفاده کن. در پایان هر متن لینک پرداخت را بیاور.
+                خروجی JSON: {"messageFa":"...","messageEn":"..."}
+                """, "share", "پرامپت AI اشتراک (قابل ویرایش)", "Share AI prompt template", SettingType.TextArea, 2);
+
+            await EnsureSettingAsync(db, "donors.show.recent", "true", "donors",
+                "نمایش حامیان اخیر", "Show recent donors", SettingType.Boolean, 1);
+            await EnsureSettingAsync(db, "donors.show.count", "10", "donors",
+                "تعداد حامیان نمایش داده شده", "Recent donors count", SettingType.Number, 2);
         }
 
         if (!await db.AdminUsers.AnyAsync())
