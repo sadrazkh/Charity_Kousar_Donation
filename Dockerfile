@@ -11,6 +11,10 @@ EXPOSE 8081
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
+# SPA (Vite) is built via npm during dotnet publish (see Charity_Kousar_Donation.csproj)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY ["Charity_Kousar_Donation/Charity_Kousar_Donation.csproj", "Charity_Kousar_Donation/"]
 RUN dotnet restore "./Charity_Kousar_Donation/Charity_Kousar_Donation.csproj"
