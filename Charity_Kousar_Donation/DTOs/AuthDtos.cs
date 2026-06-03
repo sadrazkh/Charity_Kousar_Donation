@@ -28,4 +28,5 @@ public record PublicSiteConfigDto(
     bool ShowRecentDonors,
     int RecentDonorsCount,
     bool OtpEnabled,
-    decimal OtpThresholdAmount);
+    decimal OtpThresholdAmount,
+    bool PaymentBypassEnabled);

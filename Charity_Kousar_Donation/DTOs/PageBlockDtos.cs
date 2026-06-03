@@ -18,5 +18,8 @@ public record CampaignAdminDetailDto(
     string PageUrl,
     bool IsActive,
     bool IsFeatured,
+    string? FeaturedBannerFa,
+    string? FeaturedBannerEn,
+    DateTime? FeaturedTimerEndsAt,
     int SortOrder,
     List<PageBlockDto> PageBlocks);

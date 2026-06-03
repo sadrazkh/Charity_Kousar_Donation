@@ -2,11 +2,12 @@
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
+import { useToast } from '@/composables/useToast'
 
 const { t, locale } = useI18n()
+const toast = useToast()
 const groups = ref([])
 const values = ref({})
-const saved = ref(false)
 const activeGroup = ref('site')
 const showTour = ref(false)
 const tourStep = ref(0)
@@ -55,9 +56,12 @@ function scrollToGroup(id) {
 }
 
 async function save() {
-  await api('/settings', { method: 'PUT', body: JSON.stringify({ settings: values.value }) })
-  saved.value = true
-  setTimeout(() => { saved.value = false }, 3000)
+  try {
+    await api('/settings', { method: 'PUT', body: JSON.stringify({ settings: values.value }) })
+    toast.success(t('savedToast'))
+  } catch (e) {
+    toast.error(e.message)
+  }
 }
 
 function nextTour() {
@@ -90,7 +94,6 @@ function restartTour() {
         <button class="btn btn-primary" @click="save">{{ t('save') }}</button>
       </div>
     </div>
-    <p v-if="saved" class="saved">✓ {{ locale === 'fa' ? 'ذخیره شد' : 'Saved' }}</p>
 
     <div class="settings-layout">
       <nav class="settings-nav card">
@@ -147,7 +150,7 @@ function restartTour() {
 
 <style scoped>
 .settings-page { padding-bottom: 2rem; }
-.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; position: sticky; top: 0; z-index: 5; background: var(--bg, #0f172a); padding: 0.5rem 0; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 0.5rem 0; }
 .toolbar-actions { display: flex; gap: 0.5rem; }
 .settings-layout { display: grid; grid-template-columns: minmax(200px, 240px) 1fr; gap: 1rem; align-items: start; }
 .settings-nav { position: sticky; top: 4rem; padding: 1rem; max-height: calc(100vh - 6rem); overflow-y: auto; }
@@ -161,8 +164,7 @@ function restartTour() {
 .settings-group h2 { font-size: 1rem; margin-bottom: 1rem; color: var(--primary); }
 .section-hint { font-size: 0.8rem; color: var(--muted); margin: -0.5rem 0 1rem; line-height: 1.6; }
 .field { margin-bottom: 1rem; }
-.saved { color: #34d399; margin-bottom: 0.5rem; }
-.tour-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100; display: flex; align-items: flex-end; justify-content: center; padding: 1rem; }
+.tour-overlay { position: fixed; inset: 0; background: var(--overlay); z-index: 100; display: flex; align-items: flex-end; justify-content: center; padding: 1rem; }
 .tour-card { max-width: 420px; width: 100%; padding: 1.25rem; }
 .tour-step { color: var(--muted); font-size: 0.8rem; }
 .tour-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }

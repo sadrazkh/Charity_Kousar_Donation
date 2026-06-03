@@ -2,23 +2,29 @@
 import { onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
+import { useTheme } from '@/composables/useTheme'
+import ToastHost from '@/components/ToastHost.vue'
 
 const { locale } = useI18n()
+const { initTheme, applySiteColors } = useTheme()
 
 async function loadTheme() {
   try {
     const cfg = await api('/settings/public')
-    document.documentElement.style.setProperty('--primary', cfg.primaryColor || '#0d9488')
-    document.documentElement.style.setProperty('--accent', cfg.accentColor || '#f59e0b')
-    document.documentElement.style.setProperty('--bg', cfg.backgroundColor || '#0f172a')
-    document.body.style.background = cfg.backgroundColor || '#0f172a'
-  } catch { /* defaults */ }
+    applySiteColors(cfg)
+  } catch {
+    applySiteColors({})
+  }
 }
 
-onMounted(loadTheme)
+onMounted(() => {
+  initTheme()
+  loadTheme()
+})
 watch(locale, loadTheme)
 </script>
 
 <template>
   <router-view />
+  <ToastHost />
 </template>

@@ -43,6 +43,7 @@ public static class DbSeeder
                 new() { Key = "zarinpal.merchant", Value = "", Group = "payment", LabelFa = "مرچنت زرین‌پال", LabelEn = "ZarinPal Merchant ID", SortOrder = 1 },
                 new() { Key = "zarinpal.sandbox", Value = "true", Group = "payment", LabelFa = "حالت تست (سندباکس)", LabelEn = "Sandbox mode", Type = SettingType.Boolean, SortOrder = 2 },
                 new() { Key = "zarinpal.enabled", Value = "true", Group = "payment", LabelFa = "فعال بودن زرین‌پال", LabelEn = "ZarinPal enabled", Type = SettingType.Boolean, SortOrder = 3 },
+                new() { Key = "payment.bypass.enabled", Value = "true", Group = "payment", LabelFa = "حالت تست پرداخت (بدون درگاه واقعی)", LabelEn = "Payment test bypass", Type = SettingType.Boolean, SortOrder = 4 },
 
                 new() { Key = "crypto.enabled", Value = "false", Group = "crypto", LabelFa = "فعال بودن پرداخت رمزارز", LabelEn = "Crypto enabled", Type = SettingType.Boolean, SortOrder = 1 },
                 new() { Key = "crypto.api.url", Value = "", Group = "crypto", LabelFa = "آدرس API درگاه رمزارز", LabelEn = "Crypto gateway API URL", Type = SettingType.Url, SortOrder = 2 },
@@ -111,6 +112,9 @@ public static class DbSeeder
                 "نمایش حامیان اخیر", "Show recent donors", SettingType.Boolean, 1);
             await EnsureSettingAsync(db, "donors.show.count", "10", "donors",
                 "تعداد حامیان نمایش داده شده", "Recent donors count", SettingType.Number, 2);
+
+            await EnsureSettingAsync(db, "payment.bypass.enabled", "true", "payment",
+                "حالت تست پرداخت (بدون درگاه واقعی)", "Payment test bypass", SettingType.Boolean, 4);
         }
 
         if (!await db.AdminUsers.AnyAsync())

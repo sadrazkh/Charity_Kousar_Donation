@@ -15,8 +15,6 @@ const { t, locale } = useI18n()
 const phone = ref('')
 const amount = ref(0)
 const name = ref('')
-const method = ref('zarinpal')
-const isRecurring = ref(false)
 const loading = ref(false)
 const error = ref('')
 const cryptoStep = ref(null)
@@ -55,8 +53,8 @@ async function submit() {
         phone: phone.value,
         amount: amount.value,
         donorName: name.value || null,
-        paymentMethod: method.value === 'crypto' ? 1 : 0,
-        isRecurring: isRecurring.value
+        paymentMethod: (props.config.cryptoEnabled && props.config.zarinPalEnabled === false) ? 1 : 0,
+        isRecurring: false
       })
     })
     if (res.requiresOtp) {
@@ -126,7 +124,7 @@ async function confirmCrypto() {
 <template>
   <div class="modal-overlay" @click.self="emit('close')">
     <div class="card modal">
-      <h2>{{ t('donateNow') }} — {{ title }}</h2>
+      <h2>{{ t('pay') }} — {{ title }}</h2>
 
       <template v-if="otpStep">
         <p class="hint">{{ otpStep.message }}</p>
@@ -141,8 +139,12 @@ async function confirmCrypto() {
 
       <template v-else-if="!cryptoStep">
         <div class="form">
+          <label class="label">{{ t('name') }}</label>
+          <input v-model="name" class="input" type="text" :placeholder="locale === 'fa' ? 'اختیاری' : 'Optional'" />
+
           <label class="label">{{ t('phone') }}</label>
-          <input v-model="phone" class="input input-ltr" dir="ltr" type="tel" inputmode="tel" placeholder="09123456789" />
+          <input v-model="phone" class="input input-ltr" dir="ltr" type="tel" inputmode="tel"
+            :placeholder="locale === 'fa' ? 'اختیاری — 09123456789' : 'Optional'" />
 
           <label class="label">{{ t('amount') }}</label>
           <AmountInput v-model="amount" dir="ltr" placeholder="100,000" />
@@ -154,28 +156,15 @@ async function confirmCrypto() {
             </button>
           </div>
 
-          <label class="label">{{ t('name') }}</label>
-          <input v-model="name" class="input" type="text" />
-
-          <label class="check-row">
-            <input v-model="isRecurring" type="checkbox" />
-            <span>{{ locale === 'fa' ? 'کمک ماهانه (تکرارشونده)' : 'Monthly recurring donation' }}</span>
-          </label>
-
-          <div class="methods" v-if="config.cryptoEnabled || config.zarinPalEnabled">
-            <button v-if="config.zarinPalEnabled !== false" type="button"
-              class="btn btn-sm" :class="method === 'zarinpal' ? 'btn-primary' : 'btn-ghost'"
-              @click="method = 'zarinpal'">{{ t('payWithZarinpal') }}</button>
-            <button v-if="config.cryptoEnabled" type="button"
-              class="btn btn-sm" :class="method === 'crypto' ? 'btn-accent' : 'btn-ghost'"
-              @click="method = 'crypto'">{{ t('payWithCrypto') }}</button>
-          </div>
+          <p v-if="config.paymentBypassEnabled" class="test-hint">
+            🧪 {{ locale === 'fa' ? 'حالت تست پرداخت فعال است' : 'Payment test mode is on' }}
+          </p>
 
           <p v-if="error" class="error">{{ error }}</p>
           <div class="actions">
             <button class="btn btn-ghost" @click="emit('close')">{{ t('cancel') }}</button>
             <button class="btn btn-primary" :disabled="loading" @click="submit">
-              {{ loading ? '...' : t('donateNow') }}
+              {{ loading ? '...' : t('pay') }}
             </button>
           </div>
         </div>
@@ -203,11 +192,10 @@ async function confirmCrypto() {
   font-family: inherit; min-height: 36px; touch-action: manipulation;
 }
 .quick-btn.active { border-color: var(--primary); color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, transparent); }
-.check-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--muted); cursor: pointer; }
-.methods { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.5rem; flex-wrap: wrap; }
 .actions .btn { flex: 1; min-width: 120px; }
 .error { color: #f87171; font-size: 0.9rem; }
+.test-hint { font-size: 0.8rem; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); padding: 0.45rem 0.65rem; border-radius: 8px; margin: 0; }
 .hint { color: var(--muted); margin: 1rem 0; }
 .wallet { display: block; word-break: break-all; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px; margin: 0.5rem 0; font-size: 0.85rem; }
 h2 { font-size: 1.05rem; line-height: 1.5; }

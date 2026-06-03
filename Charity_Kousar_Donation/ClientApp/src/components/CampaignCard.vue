@@ -1,6 +1,7 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { formatAmount } from '@/utils/amount'
+import FeaturedBanner from '@/components/FeaturedBanner.vue'
 
 const props = defineProps({ campaign: { type: Object, required: true } })
 const emit = defineEmits(['donate'])
@@ -21,7 +22,8 @@ const fmt = (n) => formatAmount(n, locale.value)
     <div v-if="campaign.imageUrl" class="thumb" :style="{ backgroundImage: `url(${campaign.imageUrl})` }" />
     <div v-else class="thumb placeholder" />
     <div class="body">
-      <h3>{{ title() }}</h3>
+      <FeaturedBanner v-if="campaign.isFeatured" :campaign="campaign" compact />
+      <h3><router-link :to="`/c/${campaign.slug}`" class="title-link">{{ title() }}</router-link></h3>
       <p class="desc">{{ desc() }}</p>
       <div class="progress-bar"><div class="progress-bar-fill" :style="{ width: campaign.progressPercent + '%' }" /></div>
       <div class="stats">
@@ -29,8 +31,7 @@ const fmt = (n) => formatAmount(n, locale.value)
         <span class="pct">{{ campaign.progressPercent }}%</span>
       </div>
       <div class="actions">
-        <router-link :to="`/c/${campaign.slug}`" class="btn btn-ghost btn-sm">{{ t('donate') }}</router-link>
-        <button class="btn btn-primary btn-sm" @click="emit('donate', campaign)">{{ t('donateNow') }}</button>
+        <button class="btn btn-primary btn-sm pay-btn" @click="emit('donate', campaign)">{{ t('pay') }}</button>
       </div>
     </div>
   </article>
@@ -38,7 +39,11 @@ const fmt = (n) => formatAmount(n, locale.value)
 
 <style scoped>
 .campaign-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
-.campaign-card.featured { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.campaign-card.featured {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent),
+    0 8px 24px color-mix(in srgb, var(--accent) 12%, transparent);
+}
 .thumb { height: 160px; background-size: cover; background-position: center; }
 .thumb.placeholder { background: linear-gradient(135deg, var(--bg-soft), var(--primary)); opacity: 0.5; }
 .body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
@@ -46,5 +51,8 @@ const fmt = (n) => formatAmount(n, locale.value)
 .desc { color: var(--muted); font-size: 0.9rem; flex: 1; }
 .stats { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pct { color: var(--accent); font-weight: 600; }
-.actions { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap; }
+.actions { display: flex; gap: 0.5rem; justify-content: stretch; flex-wrap: wrap; }
+.pay-btn { width: 100%; justify-content: center; }
+.title-link { color: inherit; text-decoration: none; }
+.title-link:hover { color: var(--primary); }
 </style>

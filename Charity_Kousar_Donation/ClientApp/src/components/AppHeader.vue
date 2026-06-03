@@ -3,8 +3,10 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/i18n'
 import { api } from '@/api/client'
+import { useTheme } from '@/composables/useTheme'
 
 const { t, locale } = useI18n()
+const { isDark, toggleTheme } = useTheme()
 const config = ref({ siteNameFa: '', siteNameEn: '', taglineFa: '', taglineEn: '', logoUrl: null })
 
 onMounted(async () => {
@@ -36,6 +38,9 @@ function toggleLang() {
       <nav>
         <router-link to="/">{{ t('home') }}</router-link>
         <button class="btn btn-ghost btn-sm" @click="toggleLang">{{ locale === 'fa' ? 'EN' : 'FA' }}</button>
+        <button class="btn btn-ghost btn-sm" @click="toggleTheme" :title="isDark ? t('themeLight') : t('themeDark')">
+          {{ isDark ? '☀️' : '🌙' }}
+        </button>
         <router-link to="/admin" class="btn btn-ghost btn-sm">{{ t('admin') }}</router-link>
       </nav>
     </div>

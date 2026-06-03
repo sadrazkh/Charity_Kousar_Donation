@@ -3,25 +3,29 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
+import { useToast } from '@/composables/useToast'
 import PageBuilder from '@/components/PageBuilder.vue'
 import ShareModal from '@/components/ShareModal.vue'
 import AmountInput from '@/components/AmountInput.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
+import PersianDateTimePicker from '@/components/PersianDateTimePicker.vue'
 
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
+const toast = useToast()
 
 const isNew = computed(() => route.name === 'admin-campaign-new')
 const campaignId = computed(() => route.params.id)
 const tab = ref('info')
 const saving = ref(false)
-const saved = ref(false)
 const pageBlocks = ref([])
 
 const form = ref({
   titleFa: '', titleEn: '', descriptionFa: '', descriptionEn: '',
-  targetAmount: 0, imageUrl: '', slug: '', isActive: true, isFeatured: false, sortOrder: 0
+  targetAmount: 0, imageUrl: '', slug: '', isActive: true, isFeatured: false,
+  featuredBannerFa: '', featuredBannerEn: '', featuredTimerEndsAt: null,
+  sortOrder: 0
 })
 
 const previewCampaign = computed(() => ({
@@ -47,7 +51,10 @@ async function loadCampaign() {
     titleFa: c.titleFa, titleEn: c.titleEn,
     descriptionFa: c.descriptionFa, descriptionEn: c.descriptionEn,
     targetAmount: c.targetAmount, imageUrl: c.imageUrl || '', slug: c.slug,
-    isActive: c.isActive, isFeatured: c.isFeatured, sortOrder: c.sortOrder
+    isActive: c.isActive, isFeatured: c.isFeatured,
+    featuredBannerFa: c.featuredBannerFa || '', featuredBannerEn: c.featuredBannerEn || '',
+    featuredTimerEndsAt: c.featuredTimerEndsAt || null,
+    sortOrder: c.sortOrder
   }
   pageBlocks.value = c.pageBlocks || []
   pageUrl.value = c.pageUrl
@@ -56,7 +63,6 @@ async function loadCampaign() {
 
 async function saveInfo() {
   saving.value = true
-  saved.value = false
   try {
     if (isNew.value) {
       const created = await api('/campaigns', { method: 'POST', body: JSON.stringify(form.value) })
@@ -65,8 +71,9 @@ async function saveInfo() {
     } else {
       await api(`/campaigns/${campaignId.value}`, { method: 'PUT', body: JSON.stringify(form.value) })
     }
-    saved.value = true
-    setTimeout(() => { saved.value = false }, 2500)
+    toast.success(t('savedToast'))
+  } catch (e) {
+    toast.error(e.message)
   } finally {
     saving.value = false
   }
@@ -74,7 +81,7 @@ async function saveInfo() {
 
 async function savePage() {
   if (isNew.value) {
-    alert(locale.value === 'fa' ? 'اول اطلاعات پایه را ذخیره کنید' : 'Save basic info first')
+    toast.error(locale.value === 'fa' ? 'اول اطلاعات پایه را ذخیره کنید' : 'Save basic info first')
     tab.value = 'info'
     return
   }
@@ -84,8 +91,9 @@ async function savePage() {
       method: 'PUT',
       body: JSON.stringify({ blocks: pageBlocks.value })
     })
-    saved.value = true
-    setTimeout(() => { saved.value = false }, 2500)
+    toast.success(t('savedToast'))
+  } catch (e) {
+    toast.error(e.message)
   } finally {
     saving.value = false
   }
@@ -107,8 +115,6 @@ async function savePage() {
         <a :href="shortUrl" target="_blank" class="btn btn-ghost btn-sm">{{ t('shortLink') }}</a>
       </div>
     </div>
-
-    <p v-if="saved" class="saved-msg">✓ {{ t('save') }}</p>
 
     <div class="tabs">
       <button type="button" :class="{ active: tab === 'info' }" @click="tab = 'info'">
@@ -139,6 +145,19 @@ async function savePage() {
       </div>
       <label><input type="checkbox" v-model="form.isActive" /> {{ t('active') }}</label>
       <label><input type="checkbox" v-model="form.isFeatured" /> {{ t('featured') }}</label>
+
+      <div v-if="form.isFeatured" class="featured-config card">
+        <h3>{{ locale === 'fa' ? '⭐ تنظیمات بخش ویژه' : '⭐ Featured section' }}</h3>
+        <label class="label">{{ locale === 'fa' ? 'متن بنر (فارسی)' : 'Banner text (FA)' }}</label>
+        <textarea v-model="form.featuredBannerFa" class="textarea" rows="2"
+          :placeholder="locale === 'fa' ? 'مثلاً: امروز باید جمع شود!' : 'e.g. Must be collected today!'" />
+        <label class="label">{{ locale === 'fa' ? 'متن بنر (انگلیسی)' : 'Banner text (EN)' }}</label>
+        <textarea v-model="form.featuredBannerEn" class="textarea input-ltr" dir="ltr" rows="2" />
+        <label class="label">{{ locale === 'fa' ? 'پایان شمارش معکوس (شمسی، اختیاری)' : 'Countdown end (Jalali, optional)' }}</label>
+        <PersianDateTimePicker v-model="form.featuredTimerEndsAt" />
+        <p class="hint">{{ locale === 'fa' ? 'تاریخ و ساعت به وقت تهران — اگر خالی باشد تایمر نمایش داده نمی‌شود' : 'Tehran time — leave empty to hide timer' }}</p>
+      </div>
+
       <div class="actions">
         <button class="btn btn-primary" :disabled="saving" @click="saveInfo">{{ t('save') }}</button>
         <button v-if="!isNew" class="btn btn-ghost" @click="tab = 'page'">
@@ -171,5 +190,7 @@ async function savePage() {
 .tabs button:disabled { opacity: 0.4; cursor: not-allowed; }
 .form-card { display: flex; flex-direction: column; gap: 0.75rem; }
 .actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
-.saved-msg { color: #34d399; margin-bottom: 0.75rem; }
+.featured-config { padding: 1rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.65rem; background: color-mix(in srgb, var(--accent) 8%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+.featured-config h3 { font-size: 0.95rem; margin: 0; }
+.featured-config .hint { font-size: 0.8rem; color: var(--muted); margin: 0; }
 </style>

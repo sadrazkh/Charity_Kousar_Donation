@@ -13,6 +13,9 @@ public class Campaign
     public string ShortCode { get; set; } = "";
     public bool IsActive { get; set; } = true;
     public bool IsFeatured { get; set; }
+    public string? FeaturedBannerFa { get; set; }
+    public string? FeaturedBannerEn { get; set; }
+    public DateTime? FeaturedTimerEndsAt { get; set; }
     public int SortOrder { get; set; }
     /// <summary>JSON array of page builder blocks for the dedicated campaign page.</summary>
     public string PageBlocksJson { get; set; } = "[]";

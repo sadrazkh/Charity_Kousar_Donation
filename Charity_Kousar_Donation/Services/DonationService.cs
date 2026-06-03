@@ -67,12 +67,14 @@ public class DonationService(
         if (req.Amount < minAmount)
             throw new InvalidOperationException($"حداقل مبلغ کمک {minAmount:N0} تومان است");
 
-        var phone = NormalizePhone(req.Phone);
-        if (phone.Length < 10)
+        var phone = string.IsNullOrWhiteSpace(req.Phone) ? "" : NormalizePhone(req.Phone);
+        if (!string.IsNullOrEmpty(phone) && phone.Length < 10)
             throw new InvalidOperationException("شماره موبایل معتبر نیست");
 
-        var needsOtp = await otp.RequiresOtpAsync(req.Amount);
+        if (await otp.RequiresOtpAsync(req.Amount) && string.IsNullOrEmpty(phone))
+            throw new InvalidOperationException("برای این مبلغ ثبت شماره موبایل الزامی است");
 
+        var needsOtp = !string.IsNullOrEmpty(phone) && await otp.RequiresOtpAsync(req.Amount);
         if (needsOtp && string.IsNullOrWhiteSpace(req.OtpCode))
         {
             var pending = new Donation
@@ -170,6 +172,19 @@ public class DonationService(
         if (!await settings.GetBoolAsync("zarinpal.enabled", true))
             throw new InvalidOperationException("درگاه زرین‌پال غیرفعال است");
 
+        var baseUrl = $"{http.HttpContext!.Request.Scheme}://{http.HttpContext.Request.Host}";
+
+        if (await settings.GetBoolAsync("payment.bypass.enabled", false))
+        {
+            donation.Authority = $"BYPASS-{donation.Id:N}"[..24];
+            await db.SaveChangesAsync();
+            return new StartDonationResponse(
+                donation.Id,
+                $"{baseUrl}/payment/test?donationId={donation.Id}",
+                null, null,
+                "در حال انتقال به درگاه آزمایشی...");
+        }
+
         if (!string.IsNullOrEmpty(donation.Authority))
         {
             var existingUrl = await zarinPal.GetPaymentUrlAsync(donation.Authority);
@@ -177,7 +192,6 @@ public class DonationService(
                 return new StartDonationResponse(donation.Id, existingUrl, null, null, "در حال انتقال به درگاه پرداخت...");
         }
 
-        var baseUrl = $"{http.HttpContext!.Request.Scheme}://{http.HttpContext.Request.Host}";
         var callback = $"{baseUrl}/api/payment/callback?donationId={donation.Id}";
         var desc = $"کمک به {campaign.TitleFa}";
 
@@ -222,6 +236,28 @@ public class DonationService(
         return (true, "پرداخت با موفقیت انجام شد");
     }
 
+    public async Task<(bool Success, string Message)> HandleTestPaymentCallbackAsync(Guid donationId, string status)
+    {
+        if (!await settings.GetBoolAsync("payment.bypass.enabled", false))
+            return (false, "حالت تست پرداخت غیرفعال است");
+
+        var donation = await db.Donations.Include(d => d.Campaign).FirstOrDefaultAsync(d => d.Id == donationId);
+        if (donation == null) return (false, "تراکنش یافت نشد");
+
+        if (donation.Status == DonationStatus.Paid)
+            return (true, "پرداخت قبلاً تأیید شده است");
+
+        if (!string.Equals(status, "OK", StringComparison.OrdinalIgnoreCase))
+        {
+            donation.Status = DonationStatus.Failed;
+            await db.SaveChangesAsync();
+            return (false, "پرداخت لغو شد (تست)");
+        }
+
+        await MarkPaidAsync(donation, $"TEST-{donation.Id:N}"[..12]);
+        return (true, "پرداخت آزمایشی با موفقیت انجام شد");
+    }
+
     public async Task<bool> ConfirmCryptoDonationAsync(Guid donationId, string txHash)
     {
         var donation = await db.Donations.Include(d => d.Campaign).FirstOrDefaultAsync(d => d.Id == donationId);
@@ -240,7 +276,7 @@ public class DonationService(
         donation.PaidAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
-        if (!donation.SmsSent)
+        if (!donation.SmsSent && !string.IsNullOrWhiteSpace(donation.Phone))
         {
             donation.SmsSent = await sms.SendDonationThankYouAsync(
                 donation.Phone, donation.DonorName, donation.Amount,
@@ -274,6 +310,7 @@ public class DonationService(
 
     private static string MaskPhone(string phone)
     {
+        if (string.IsNullOrWhiteSpace(phone)) return "ناشناس";
         if (phone.Length < 8) return "***";
         return phone[..4] + "***" + phone[^4..];
     }

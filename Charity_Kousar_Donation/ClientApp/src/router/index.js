@@ -6,6 +6,7 @@ const routes = [
   { path: '/c/:slug', name: 'campaign', component: () => import('@/views/CampaignView.vue') },
   { path: '/payment/success', name: 'pay-success', component: () => import('@/views/PaymentResultView.vue'), props: { success: true } },
   { path: '/payment/failed', name: 'pay-failed', component: () => import('@/views/PaymentResultView.vue'), props: { success: false } },
+  { path: '/payment/test', name: 'pay-test', component: () => import('@/views/TestPaymentView.vue') },
   { path: '/admin/login', name: 'admin-login', component: () => import('@/views/admin/AdminLogin.vue') },
   {
     path: '/admin',

@@ -123,7 +123,7 @@ function alignCls(a) {
 
       <!-- CTA -->
       <div v-else-if="block.type === 'cta'" class="block-cta" :class="alignCls(block.data?.align)">
-        <button class="btn btn-primary btn-lg" @click="emit('donate')">{{ txt(block.data, 'text') || t('donateNow') }}</button>
+        <button class="btn btn-primary btn-lg" @click="emit('donate')">{{ txt(block.data, 'text') || t('pay') }}</button>
       </div>
 
       <!-- Link button -->

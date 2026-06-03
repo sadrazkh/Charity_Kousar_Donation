@@ -49,7 +49,8 @@ public class SettingsService(AppDbContext db)
         await GetBoolAsync("donors.show.recent", true),
         int.TryParse(await GetAsync("donors.show.count", "10"), out var dc) ? dc : 10,
         await GetBoolAsync("donation.otp.enabled", false),
-        await GetDecimalAsync("donation.otp.threshold", 5_000_000));
+        await GetDecimalAsync("donation.otp.threshold", 5_000_000),
+        await GetBoolAsync("payment.bypass.enabled", false));
 
     private static List<long> ParseQuickAmounts(string raw) =>
         raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)

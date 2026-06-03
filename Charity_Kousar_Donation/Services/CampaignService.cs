@@ -66,6 +66,9 @@ public class CampaignService(AppDbContext db, IHttpContextAccessor http)
             ShortCode = shortCode,
             IsActive = req.IsActive,
             IsFeatured = req.IsFeatured,
+            FeaturedBannerFa = req.FeaturedBannerFa,
+            FeaturedBannerEn = req.FeaturedBannerEn,
+            FeaturedTimerEndsAt = req.FeaturedTimerEndsAt,
             SortOrder = req.SortOrder
         };
         campaign.PageBlocksJson = CampaignPageHelper.SerializeBlocks(
@@ -96,6 +99,9 @@ public class CampaignService(AppDbContext db, IHttpContextAccessor http)
         campaign.Slug = slug;
         campaign.IsActive = req.IsActive;
         campaign.IsFeatured = req.IsFeatured;
+        campaign.FeaturedBannerFa = req.FeaturedBannerFa;
+        campaign.FeaturedBannerEn = req.FeaturedBannerEn;
+        campaign.FeaturedTimerEndsAt = req.FeaturedTimerEndsAt;
         campaign.SortOrder = req.SortOrder;
         campaign.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
@@ -152,7 +158,7 @@ public class CampaignService(AppDbContext db, IHttpContextAccessor http)
             c.Id, c.TitleFa, c.TitleEn, c.DescriptionFa, c.DescriptionEn,
             c.TargetAmount, c.ImageUrl, c.Slug, c.ShortCode,
             $"{BaseUrl}/d/{c.ShortCode}", $"{BaseUrl}/c/{c.Slug}",
-            c.IsActive, c.IsFeatured, c.SortOrder, blocks);
+            c.IsActive, c.IsFeatured, c.FeaturedBannerFa, c.FeaturedBannerEn, c.FeaturedTimerEndsAt, c.SortOrder, blocks);
     }
 
     private static List<PageBlockDto> MapBlocks(Campaign c) =>
@@ -183,7 +189,7 @@ public class CampaignService(AppDbContext db, IHttpContextAccessor http)
             var pct = c.TargetAmount > 0 ? (int)Math.Min(100, col / c.TargetAmount * 100) : 0;
             return new CampaignListDto(c.Id, c.TitleFa, c.TitleEn, c.DescriptionFa, c.DescriptionEn,
                 c.TargetAmount, col, pct, c.ImageUrl, c.Slug, c.ShortCode,
-                $"{BaseUrl}/d/{c.ShortCode}", c.IsFeatured);
+                $"{BaseUrl}/d/{c.ShortCode}", c.IsFeatured, c.FeaturedBannerFa, c.FeaturedBannerEn, c.FeaturedTimerEndsAt);
         }).ToList();
     }
 
@@ -198,7 +204,8 @@ public class CampaignService(AppDbContext db, IHttpContextAccessor http)
                 .Select(b => new PageBlockDto(b.Id, b.Type, b.Data)).ToList();
         return new CampaignDetailDto(c.Id, c.TitleFa, c.TitleEn, c.DescriptionFa, c.DescriptionEn,
             c.TargetAmount, col, pct, c.ImageUrl, c.Slug, c.ShortCode,
-            $"{BaseUrl}/d/{c.ShortCode}", c.IsActive, paid.Count, blocks);
+            $"{BaseUrl}/d/{c.ShortCode}", c.IsActive, paid.Count, c.IsFeatured,
+            c.FeaturedBannerFa, c.FeaturedBannerEn, c.FeaturedTimerEndsAt, blocks);
     }
 
     private async Task<string> EnsureUniqueSlugAsync(string slug, Guid? excludeId = null)
