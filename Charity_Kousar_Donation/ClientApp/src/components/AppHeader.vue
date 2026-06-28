@@ -1,23 +1,22 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/i18n'
-import { api } from '@/api/client'
 import { useTheme } from '@/composables/useTheme'
+import { useSiteConfig } from '@/composables/useSiteConfig'
 
 const { t, locale } = useI18n()
 const { isDark, toggleTheme } = useTheme()
-const config = ref({ siteNameFa: '', siteNameEn: '', taglineFa: '', taglineEn: '', logoUrl: null })
+const { config } = useSiteConfig()
 
-onMounted(async () => {
-  try { config.value = await api('/settings/public') } catch { /* */ }
-})
+const logoSize = computed(() => (Number(config.logoHeight) || 48) + 'px')
+const showText = computed(() => config.showLogoText !== false)
 
 function siteName() {
-  return locale.value === 'fa' ? config.value.siteNameFa : config.value.siteNameEn
+  return locale.value === 'fa' ? config.siteNameFa : config.siteNameEn
 }
 function tagline() {
-  return locale.value === 'fa' ? config.value.taglineFa : config.value.taglineEn
+  return locale.value === 'fa' ? config.taglineFa : config.taglineEn
 }
 function toggleLang() {
   setLocale(locale.value === 'fa' ? 'en' : 'fa')
@@ -28,9 +27,10 @@ function toggleLang() {
   <header class="header">
     <div class="container header-inner">
       <router-link to="/" class="brand">
-        <img v-if="config.logoUrl" :src="config.logoUrl" alt="" class="logo" />
-        <span v-else class="logo-icon">♥</span>
-        <div>
+        <img v-if="config.logoUrl" :src="config.logoUrl" alt="" class="logo"
+          :style="{ width: logoSize, height: logoSize }" />
+        <span v-else class="logo-icon" :style="{ width: logoSize, height: logoSize }">♥</span>
+        <div v-if="showText">
           <strong>{{ siteName() || t('site') }}</strong>
           <small>{{ tagline() || t('tagline') }}</small>
         </div>

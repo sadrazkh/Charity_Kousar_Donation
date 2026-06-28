@@ -40,6 +40,28 @@ const previewCampaign = computed(() => ({
 const showShare = ref(false)
 const pageUrl = ref('')
 const shortUrl = ref('')
+const translating = ref('')
+
+async function translate(fromField, toField) {
+  const text = form.value[fromField]
+  if (!text || !String(text).trim()) {
+    toast.error(locale.value === 'fa' ? 'ابتدا متن فارسی را وارد کنید' : 'Enter Persian text first')
+    return
+  }
+  translating.value = toField
+  try {
+    const res = await api('/ai/translate', {
+      method: 'POST',
+      body: JSON.stringify({ text, from: 'fa', to: 'en' })
+    })
+    form.value[toField] = res.translated
+    toast.success(locale.value === 'fa' ? 'ترجمه شد ✓' : 'Translated ✓')
+  } catch (e) {
+    toast.error(e.message)
+  } finally {
+    translating.value = ''
+  }
+}
 
 onMounted(async () => {
   if (!isNew.value) await loadCampaign()
@@ -129,11 +151,26 @@ async function savePage() {
     <div v-if="tab === 'info'" class="card form-card">
       <div class="grid grid-2">
         <div><label class="label">{{ t('titleFa') }}</label><input v-model="form.titleFa" class="input" /></div>
-        <div><label class="label">{{ t('titleEn') }}</label><input v-model="form.titleEn" class="input input-ltr" dir="ltr" /></div>
+        <div>
+          <div class="label-row">
+            <label class="label">{{ t('titleEn') }}</label>
+            <button type="button" class="translate-btn" :disabled="translating === 'titleEn'"
+              @click="translate('titleFa', 'titleEn')">
+              {{ translating === 'titleEn' ? '...' : (locale === 'fa' ? '🌐 ترجمه' : '🌐 Translate') }}
+            </button>
+          </div>
+          <input v-model="form.titleEn" class="input input-ltr" dir="ltr" />
+        </div>
       </div>
       <label class="label">{{ t('descFa') }}</label>
       <textarea v-model="form.descriptionFa" class="textarea" rows="3" />
-      <label class="label">{{ t('descEn') }}</label>
+      <div class="label-row">
+        <label class="label">{{ t('descEn') }}</label>
+        <button type="button" class="translate-btn" :disabled="translating === 'descriptionEn'"
+          @click="translate('descriptionFa', 'descriptionEn')">
+          {{ translating === 'descriptionEn' ? '...' : (locale === 'fa' ? '🌐 ترجمه از فارسی' : '🌐 Translate from FA') }}
+        </button>
+      </div>
       <textarea v-model="form.descriptionEn" class="textarea input-ltr" dir="ltr" rows="3" />
       <div class="grid grid-2">
         <div><label class="label">{{ t('targetAmount') }}</label><AmountInput v-model="form.targetAmount" dir="ltr" /></div>
@@ -193,4 +230,10 @@ async function savePage() {
 .featured-config { padding: 1rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.65rem; background: color-mix(in srgb, var(--accent) 8%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
 .featured-config h3 { font-size: 0.95rem; margin: 0; }
 .featured-config .hint { font-size: 0.8rem; color: var(--muted); margin: 0; }
+.label-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.translate-btn {
+  background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent);
+  border: none; border-radius: 999px; padding: 0.2rem 0.7rem; font-size: 0.75rem; cursor: pointer; font-family: inherit;
+}
+.translate-btn:disabled { opacity: 0.5; cursor: progress; }
 </style>

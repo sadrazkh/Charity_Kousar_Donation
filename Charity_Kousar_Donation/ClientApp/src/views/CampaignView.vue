@@ -7,30 +7,24 @@ import DonationModal from '@/components/DonationModal.vue'
 import PageBlockRenderer from '@/components/PageBlockRenderer.vue'
 import ShareModal from '@/components/ShareModal.vue'
 import FeaturedBanner from '@/components/FeaturedBanner.vue'
+import RecentDonors from '@/components/RecentDonors.vue'
+import ProgressBar from '@/components/ProgressBar.vue'
 import QrCode from '@/components/QrCode.vue'
 import { formatAmount } from '@/utils/amount'
 import { whatsAppShareUrl, telegramShareUrl } from '@/utils/amount'
 import { api } from '@/api/client'
+import { useSiteConfig } from '@/composables/useSiteConfig'
 
 const route = useRoute()
 const { t, locale } = useI18n()
+const { config } = useSiteConfig()
 const campaign = ref(null)
-const config = ref({})
-const recentDonors = ref([])
 const showDonate = ref(false)
 const showShare = ref(false)
 const copied = ref(false)
 
 onMounted(async () => {
-  const [c, cfg] = await Promise.all([
-    api(`/campaigns/${route.params.slug}`),
-    api('/settings/public')
-  ])
-  campaign.value = c
-  config.value = cfg
-  if (cfg.showRecentDonors !== false) {
-    recentDonors.value = await api(`/donations/recent?campaignId=${c.id}`)
-  }
+  campaign.value = await api(`/campaigns/${route.params.slug}`)
 })
 
 const title = computed(() =>
@@ -68,15 +62,7 @@ async function copyLink() {
         @donate="showDonate = true"
       />
 
-      <section v-if="recentDonors.length" class="recent-donors">
-        <h3>{{ locale === 'fa' ? '💚 حامیان اخیر' : '💚 Recent donors' }}</h3>
-        <ul>
-          <li v-for="(d, i) in recentDonors" :key="i">
-            <span>{{ d.donorName || d.maskedPhone }}</span>
-            <span>{{ fmt(d.amount) }} {{ t('toman') }}</span>
-          </li>
-        </ul>
-      </section>
+      <RecentDonors :campaign-id="campaign.id" class="campaign-donors" />
 
       <section class="share-section">
         <div class="share-header">
@@ -104,8 +90,8 @@ async function copyLink() {
             <span>Telegram</span>
           </a>
           <button type="button" class="channel-btn ai" @click="showShare = true">
-            <span class="ch-icon">✨</span>
-            <span>{{ locale === 'fa' ? 'متن AI' : 'AI text' }}</span>
+            <span class="ch-icon">📝</span>
+            <span>{{ locale === 'fa' ? 'متن آماده' : 'Ready text' }}</span>
           </button>
         </div>
 
@@ -121,7 +107,7 @@ async function copyLink() {
 
     <aside class="sticky-donate card">
       <p class="sticky-title">{{ title }}</p>
-      <div class="progress-bar"><div class="progress-bar-fill" :style="{ width: campaign.progressPercent + '%' }" /></div>
+      <ProgressBar :percent="campaign.progressPercent" :height="12" />
       <p class="sticky-amount">{{ fmt(campaign.collectedAmount) }} / {{ fmt(campaign.targetAmount) }} {{ t('toman') }}</p>
       <button class="btn btn-primary" style="width:100%" @click="showDonate = true">{{ t('pay') }}</button>
       <button type="button" class="btn btn-accent btn-sm share-side-btn" @click="showShare = true">
@@ -148,10 +134,7 @@ async function copyLink() {
   .detail { padding: 1.25rem; }
 }
 .detail { padding: clamp(1.15rem, 3vw, 2rem); }
-.recent-donors { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(148,163,184,0.15); }
-.recent-donors h3 { font-size: 0.95rem; margin-bottom: 0.75rem; }
-.recent-donors ul { list-style: none; padding: 0; margin: 0; }
-.recent-donors li { display: flex; justify-content: space-between; padding: 0.45rem 0; border-bottom: 1px solid rgba(148,163,184,0.08); font-size: 0.88rem; color: var(--muted); }
+.campaign-donors { margin-top: 2rem; }
 
 .share-section {
   margin-top: 2rem;

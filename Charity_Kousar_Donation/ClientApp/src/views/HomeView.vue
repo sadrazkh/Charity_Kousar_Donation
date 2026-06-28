@@ -4,29 +4,41 @@ import { useI18n } from 'vue-i18n'
 import AppHeader from '@/components/AppHeader.vue'
 import CampaignCard from '@/components/CampaignCard.vue'
 import DonationModal from '@/components/DonationModal.vue'
+import RecentDonors from '@/components/RecentDonors.vue'
 import { api } from '@/api/client'
-
 import { formatAmount } from '@/utils/amount'
+import { useSiteConfig } from '@/composables/useSiteConfig'
 
 const { t, locale } = useI18n()
+const { config } = useSiteConfig()
 const campaigns = ref([])
 const total = ref(0)
-const config = ref({})
 const selected = ref(null)
 
-const heroText = computed(() =>
-  locale.value === 'fa' ? config.value.heroTextFa : config.value.heroTextEn)
+const heroText = computed(() => locale.value === 'fa' ? config.heroTextFa : config.heroTextEn)
+
+// Section order is admin-configurable (e.g. "hero,featured,campaigns,donors").
+const KNOWN_SECTIONS = ['hero', 'featured', 'campaigns', 'donors']
+const sections = computed(() => {
+  const raw = (config.homeOrder || 'hero,featured,campaigns,donors')
+    .split(',').map(s => s.trim()).filter(s => KNOWN_SECTIONS.includes(s))
+  return raw.length ? [...new Set(raw)] : KNOWN_SECTIONS
+})
+
+const featured = computed(() => campaigns.value.filter(c => c.isFeatured))
+const hasFeaturedSection = computed(() => sections.value.includes('featured') && featured.value.length > 0)
+// Avoid showing the same campaign twice (featured highlight + grid).
+const gridCampaigns = computed(() =>
+  hasFeaturedSection.value ? campaigns.value.filter(c => !c.isFeatured) : campaigns.value)
 
 onMounted(async () => {
   try {
-    const [list, stats, cfg] = await Promise.all([
+    const [list, stats] = await Promise.all([
       api('/campaigns'),
-      api('/donations/stats/total'),
-      api('/settings/public')
+      api('/donations/stats/total')
     ])
     campaigns.value = list
     total.value = stats.totalCollected
-    config.value = cfg
   } catch { /* */ }
 })
 
@@ -35,23 +47,48 @@ const fmt = (n) => formatAmount(n, locale.value)
 
 <template>
   <AppHeader />
-  <main class="container">
-    <section class="hero card">
-      <p class="hero-text">{{ heroText }}</p>
-      <p class="hero-label">{{ t('totalCollected') }}</p>
-      <p class="stat-value">{{ fmt(total) }} <span class="unit">{{ t('toman') }}</span></p>
-    </section>
+  <main class="container home">
+    <template v-for="section in sections" :key="section">
+      <!-- Hero -->
+      <section v-if="section === 'hero'" class="hero card">
+        <p class="hero-text">{{ heroText }}</p>
+        <p class="hero-label">{{ t('totalCollected') }}</p>
+        <p class="stat-value">{{ fmt(total) }} <span class="unit">{{ t('toman') }}</span></p>
+      </section>
 
-    <h2 class="section-title">{{ t('campaigns') }}</h2>
-    <div v-if="campaigns.length" class="grid grid-2">
-      <CampaignCard
-        v-for="c in campaigns"
-        :key="c.id"
-        :campaign="c"
-        @donate="selected = c"
-      />
-    </div>
-    <p v-else class="empty">{{ t('noCampaigns') }}</p>
+      <!-- Featured highlight -->
+      <section v-else-if="section === 'featured' && hasFeaturedSection" class="featured-section">
+        <h2 class="section-title">{{ locale === 'fa' ? '⭐ پروژه‌های ویژه' : '⭐ Featured projects' }}</h2>
+        <div class="featured-grid">
+          <CampaignCard
+            v-for="c in featured"
+            :key="c.id"
+            :campaign="c"
+            class="featured-card"
+            @donate="selected = c"
+          />
+        </div>
+      </section>
+
+      <!-- Campaigns grid -->
+      <section v-else-if="section === 'campaigns'">
+        <h2 class="section-title">{{ t('campaigns') }}</h2>
+        <div v-if="gridCampaigns.length" class="grid grid-2">
+          <CampaignCard
+            v-for="c in gridCampaigns"
+            :key="c.id"
+            :campaign="c"
+            @donate="selected = c"
+          />
+        </div>
+        <p v-else class="empty">{{ t('noCampaigns') }}</p>
+      </section>
+
+      <!-- Recent contributors (global) -->
+      <section v-else-if="section === 'donors' && config.showDonorsHome !== false">
+        <RecentDonors />
+      </section>
+    </template>
   </main>
 
   <DonationModal
@@ -63,7 +100,8 @@ const fmt = (n) => formatAmount(n, locale.value)
 </template>
 
 <style scoped>
-.hero { text-align: center; padding: 2.5rem; margin-bottom: 2.5rem; position: relative; overflow: hidden; }
+.home { display: flex; flex-direction: column; gap: 2.25rem; }
+.hero { text-align: center; padding: 2.5rem; position: relative; overflow: hidden; }
 .hero::before {
   content: '';
   position: absolute;
@@ -77,4 +115,5 @@ const fmt = (n) => formatAmount(n, locale.value)
 .unit { font-size: 1rem; color: var(--muted); -webkit-text-fill-color: var(--muted); }
 .section-title { margin-bottom: 1.25rem; font-size: 1.35rem; }
 .empty { color: var(--muted); text-align: center; padding: 3rem; }
+.featured-grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
 </style>

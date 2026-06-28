@@ -15,18 +15,52 @@ public record PublicSiteConfigDto(
     string TaglineEn,
     string HeroTextFa,
     string HeroTextEn,
+    // Logo / branding
     string? LogoUrl,
+    int LogoHeight,
+    bool ShowLogoText,
+    // Theme colors
     string PrimaryColor,
     string AccentColor,
     string BackgroundColor,
     string? FooterTextFa,
     string? FooterTextEn,
+    // Home page layout
+    string HomeOrder,
+    // Progress bar
+    string ProgressMode,
+    string ProgressColorStart,
+    string ProgressColorEnd,
+    bool ShowProgressPercent,
+    // Featured / countdown timer
+    string FeaturedUnits,
+    string FeaturedLayout,
+    bool FeaturedBadgeShow,
+    string FeaturedBadgeFa,
+    string FeaturedBadgeEn,
+    string FeaturedColor,
+    string FeaturedExpiredFa,
+    string FeaturedExpiredEn,
+    // Payments
     bool CryptoEnabled,
     bool ZarinPalEnabled,
     decimal MinDonationAmount,
     List<long> QuickDonationAmounts,
+    // Donors / contributors display
     bool ShowRecentDonors,
     int RecentDonorsCount,
+    bool ShowDonorsHome,
+    bool ShowDonorName,
+    bool ShowDonorAmount,
+    bool ShowDonorDate,
+    bool ShowDonorCampaign,
+    string DonorAnonymousFa,
+    string DonorAnonymousEn,
+    string DonorsTitleFa,
+    string DonorsTitleEn,
+    // Sharing
+    bool ShareAiEnabled,
+    // OTP / misc
     bool OtpEnabled,
     decimal OtpThresholdAmount,
     bool PaymentBypassEnabled);

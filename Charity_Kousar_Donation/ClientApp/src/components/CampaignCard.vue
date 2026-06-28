@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { formatAmount } from '@/utils/amount'
 import FeaturedBanner from '@/components/FeaturedBanner.vue'
+import ProgressBar from '@/components/ProgressBar.vue'
 
 const props = defineProps({ campaign: { type: Object, required: true } })
 const emit = defineEmits(['donate'])
@@ -25,10 +26,9 @@ const fmt = (n) => formatAmount(n, locale.value)
       <FeaturedBanner v-if="campaign.isFeatured" :campaign="campaign" compact />
       <h3><router-link :to="`/c/${campaign.slug}`" class="title-link">{{ title() }}</router-link></h3>
       <p class="desc">{{ desc() }}</p>
-      <div class="progress-bar"><div class="progress-bar-fill" :style="{ width: campaign.progressPercent + '%' }" /></div>
+      <ProgressBar :percent="campaign.progressPercent" />
       <div class="stats">
         <span>{{ fmt(campaign.collectedAmount) }} / {{ fmt(campaign.targetAmount) }} {{ t('toman') }}</span>
-        <span class="pct">{{ campaign.progressPercent }}%</span>
       </div>
       <div class="actions">
         <button class="btn btn-primary btn-sm pay-btn" @click="emit('donate', campaign)">{{ t('pay') }}</button>

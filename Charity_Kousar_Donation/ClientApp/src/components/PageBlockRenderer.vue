@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { formatAmount } from '@/utils/amount'
 import { getLocalized, youtubeEmbed, SPACER_CLASS, ALIGN_CLASS, GAP_CLASS } from '@/utils/pageBlocks'
 import PageBlockRenderer from '@/components/PageBlockRenderer.vue'
+import ProgressBar from '@/components/ProgressBar.vue'
 
 const props = defineProps({
   blocks: { type: Array, default: () => [] },
@@ -113,7 +114,7 @@ function alignCls(a) {
 
       <!-- Stats -->
       <div v-else-if="block.type === 'stats' && campaign" class="block-stats card">
-        <div class="progress-bar"><div class="progress-bar-fill" :style="{ width: campaign.progressPercent + '%' }" /></div>
+        <ProgressBar :percent="campaign.progressPercent" :height="12" />
         <div class="stats-row">
           <div><span class="label">{{ t('collected') }}</span><strong>{{ fmt(campaign.collectedAmount) }}</strong></div>
           <div><span class="label">{{ t('target') }}</span><strong>{{ fmt(campaign.targetAmount) }}</strong></div>

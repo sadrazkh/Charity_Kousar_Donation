@@ -21,4 +21,15 @@ public class AiController(OpenRouterService ai) : ControllerBase
 
         return Ok(new AiOptimizeResponse(optimized!, alternative, tips));
     }
+
+    [HttpPost("translate")]
+    public async Task<ActionResult<AiTranslateResponse>> Translate(AiTranslateRequest req)
+    {
+        var from = string.IsNullOrWhiteSpace(req.From) ? "fa" : req.From;
+        var to = string.IsNullOrWhiteSpace(req.To) ? "en" : req.To;
+        var (ok, translated, error) = await ai.TranslateAsync(req.Text, from, to);
+        if (!ok)
+            return BadRequest(new { message = error });
+        return Ok(new AiTranslateResponse(translated!));
+    }
 }

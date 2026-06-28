@@ -68,6 +68,58 @@ public class OpenRouterService(IHttpClientFactory httpFactory, SettingsService s
         }
     }
 
+    /// <summary>
+    /// Translate text from one language to another. Used by the admin "auto-translate" buttons.
+    /// </summary>
+    public async Task<(bool Ok, string? Translated, string? Error)> TranslateAsync(
+        string text, string fromLang, string toLang)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return (false, null, "متنی برای ترجمه وارد نشده است");
+
+        if (!await settings.GetBoolAsync("openrouter.enabled", true))
+            return (false, null, "هوش مصنوعی در تنظیمات غیرفعال است");
+
+        var apiKey = await settings.GetAsync("openrouter.api.key");
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return (false, null, "کلید OpenRouter در تنظیمات وارد نشده است");
+
+        // A dedicated translation model can be configured; otherwise reuse the main model.
+        var model = await settings.GetAsync("openrouter.translate.model");
+        if (string.IsNullOrWhiteSpace(model))
+            model = await settings.GetAsync("openrouter.model", "google/gemma-2-9b-it:free");
+
+        var fromName = LangName(fromLang);
+        var toName = LangName(toLang);
+
+        var systemPrompt =
+            $"You are a professional translator for a charity donation website. " +
+            $"Translate the user's text from {fromName} to {toName}. " +
+            "Keep the tone warm and trustworthy. Preserve line breaks, emojis and numbers. " +
+            "Return ONLY the translated text — no quotes, no notes, no explanations.";
+
+        try
+        {
+            var content = await ChatRawAsync(apiKey, model, systemPrompt, text);
+            if (string.IsNullOrWhiteSpace(content))
+                return (false, null, "پاسخی از سرویس ترجمه دریافت نشد");
+            return (true, content.Trim().Trim('"'), null);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Translation request failed");
+            return (false, null, "خطای داخلی در ترجمه");
+        }
+    }
+
+    private static string LangName(string code) => code switch
+    {
+        "fa" => "Persian (Farsi)",
+        "en" => "English",
+        "ar" => "Arabic",
+        _ => code
+    };
+
     public async Task<(bool Ok, string? MessageFa, string? MessageEn, string? Error)> GenerateShareMessagesAsync(
         string titleFa, string titleEn, string descFa, string descEn,
         string pageContentFa, string pageContentEn,
@@ -76,8 +128,12 @@ public class OpenRouterService(IHttpClientFactory httpFactory, SettingsService s
         var targetFmt = target.ToString("N0");
         var collectedFmt = collected.ToString("N0");
 
-        var fallbackFa = BuildFallbackShareFa(titleFa, descFa, collectedFmt, targetFmt, progress, payLink);
-        var fallbackEn = BuildFallbackShareEn(titleEn, descEn, collectedFmt, targetFmt, progress, payLink);
+        var fallbackFa = await BuildTemplateShareAsync("share.template.fa", titleFa, descFa, collectedFmt, targetFmt, progress, payLink, fa: true);
+        var fallbackEn = await BuildTemplateShareAsync("share.template.en", titleEn, descEn, collectedFmt, targetFmt, progress, payLink, fa: false);
+
+        // Admin can disable AI and rely purely on the simple built-in templates.
+        if (!await settings.GetBoolAsync("share.ai.enabled", true))
+            return (true, fallbackFa, fallbackEn, null);
 
         if (!await settings.GetBoolAsync("openrouter.enabled", true))
             return (true, fallbackFa, fallbackEn, null);
@@ -183,11 +239,25 @@ public class OpenRouterService(IHttpClientFactory httpFactory, SettingsService s
     private static string EnsureLink(string msg, string link) =>
         msg.Contains(link, StringComparison.OrdinalIgnoreCase) ? msg : $"{msg.Trim()}\n\n🔗 {link}";
 
-    private static string BuildFallbackShareFa(string title, string desc, string col, string tgt, int pct, string link) =>
-        $"🤲 {title}\n\n{(desc.Length > 120 ? desc[..120] + "…" : desc)}\n\n📊 {col} از {tgt} تومان جمع شده ({pct}%)\n\n💳 لینک کمک:\n{link}";
+    private async Task<string> BuildTemplateShareAsync(string templateKey, string title, string desc,
+        string col, string tgt, int pct, string link, bool fa)
+    {
+        var defaultTemplate = fa
+            ? "🤲 {title}\n\n{desc}\n\n📊 {collected} از {target} تومان جمع شده ({progress}%)\n\n💳 برای کمک:\n{link}"
+            : "🤲 {title}\n\n{desc}\n\n📊 {collected} of {target} Toman raised ({progress}%)\n\n💳 Donate here:\n{link}";
+        var template = await settings.GetAsync(templateKey, defaultTemplate);
+        if (string.IsNullOrWhiteSpace(template)) template = defaultTemplate;
 
-    private static string BuildFallbackShareEn(string title, string desc, string col, string tgt, int pct, string link) =>
-        $"🤲 {title}\n\n{(desc.Length > 120 ? desc[..120] + "…" : desc)}\n\n📊 {col} of {tgt} Toman raised ({pct}%)\n\n💳 Donate here:\n{link}";
+        var shortDesc = desc.Length > 160 ? desc[..160].TrimEnd() + "…" : desc;
+        var msg = template
+            .Replace("{title}", title)
+            .Replace("{desc}", shortDesc)
+            .Replace("{collected}", col)
+            .Replace("{target}", tgt)
+            .Replace("{progress}", pct.ToString())
+            .Replace("{link}", link);
+        return EnsureLink(msg, link);
+    }
 
     private class ShareJsonResult
     {

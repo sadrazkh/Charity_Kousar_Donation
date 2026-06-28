@@ -9,7 +9,11 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: { '/api': 'https://localhost:7208', '/d': 'https://localhost:7208' }
+    proxy: {
+      '/api': { target: 'https://localhost:7208', secure: false },
+      '/d': { target: 'https://localhost:7208', secure: false },
+      '/uploads': { target: 'https://localhost:7208', secure: false }
+    }
   },
   build: {
     outDir: '../wwwroot',

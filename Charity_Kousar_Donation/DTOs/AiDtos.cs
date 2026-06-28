@@ -11,3 +11,10 @@ public record AiOptimizeResponse(
     string Optimized,
     string? Alternative,
     string? Tips);
+
+public record AiTranslateRequest(
+    string Text,
+    string From,
+    string To);
+
+public record AiTranslateResponse(string Translated);
