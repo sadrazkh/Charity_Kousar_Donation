@@ -25,8 +25,16 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.0" />
   </ItemGroup>
 
-  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
-    <Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" Condition="!Exists('$(SpaRoot)node_modules')" />
+  <!--
+    Build the Vue SPA into wwwroot BEFORE the static web assets are resolved, so the
+    freshly built (hashed) files are the ones discovered and published. Running it later
+    (AfterTargets="ComputeFilesToPublish") breaks because vite's emptyOutDir wipes files
+    that the SDK already catalogued.
+    - `npm install` (not `npm ci`) so it works without a committed package-lock.json.
+    - Pass -p:SkipSpaBuild=true to skip during pure backend dev builds.
+  -->
+  <Target Name="BuildSpa" BeforeTargets="ResolveProjectStaticWebAssets" Condition="'$(SkipSpaBuild)' != 'true'">
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" Condition="!Exists('$(SpaRoot)node_modules')" />
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
   </Target>
 

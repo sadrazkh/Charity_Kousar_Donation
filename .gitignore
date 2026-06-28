@@ -35,8 +35,9 @@ bld/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
-# Uncomment if you have tasks that create the project's static files in wwwroot
-#wwwroot/
+# The Vue SPA is built into wwwroot during `dotnet publish` — never commit the build output
+# (committed hashed assets get wiped mid-build by vite and break publish with MSB3030).
+wwwroot/
 
 # Visual Studio 2017 auto generated files
 Generated\ Files/
