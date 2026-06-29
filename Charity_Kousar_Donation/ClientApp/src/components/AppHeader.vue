@@ -36,12 +36,11 @@ function toggleLang() {
         </div>
       </router-link>
       <nav>
-        <router-link to="/">{{ t('home') }}</router-link>
+        <router-link to="/" class="btn btn-ghost btn-sm home-link">🏠 {{ t('home') }}</router-link>
         <button class="btn btn-ghost btn-sm" @click="toggleLang">{{ locale === 'fa' ? 'EN' : 'FA' }}</button>
         <button class="btn btn-ghost btn-sm" @click="toggleTheme" :title="isDark ? t('themeLight') : t('themeDark')">
           {{ isDark ? '☀️' : '🌙' }}
         </button>
-        <router-link to="/admin" class="btn btn-ghost btn-sm">{{ t('admin') }}</router-link>
       </nav>
     </div>
   </header>
@@ -79,6 +78,8 @@ function toggleLang() {
 }
 nav { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 nav a { color: var(--muted); font-size: 0.9rem; }
+.home-link { color: var(--text); text-decoration: none; font-weight: 600; }
+.home-link:hover { text-decoration: none; color: var(--primary); }
 @media (max-width: 480px) {
   .header { margin-bottom: 1.25rem; padding: 0.75rem 0; }
   .brand strong { font-size: 1rem; }

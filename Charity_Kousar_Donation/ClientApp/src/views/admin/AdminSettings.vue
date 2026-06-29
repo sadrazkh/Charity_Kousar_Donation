@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import { progressFillStyle } from '@/utils/progress'
+import ImageUpload from '@/components/ImageUpload.vue'
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -25,12 +26,20 @@ const TIMER_UNITS = [
   { id: 'seconds', fa: 'ثانیه', en: 'Seconds' }
 ]
 
+const manualRows = ref([])
+
 onMounted(async () => {
   groups.value = await api('/settings')
   for (const g of groups.value) {
     for (const item of g.items) values.value[item.key] = item.value
   }
   if (groups.value.length) activeGroup.value = groups.value[0].group
+
+  // Parse manual contributors list into editable rows.
+  try {
+    const parsed = JSON.parse(values.value['donors.manual'] || '[]')
+    manualRows.value = Array.isArray(parsed) ? parsed : []
+  } catch { manualRows.value = [] }
 
   await nextTick()
   const observer = new IntersectionObserver(
@@ -129,6 +138,17 @@ function toggleUnit(id) {
   timerUnits.value = [...set]
 }
 
+/* ---- Manual contributors ---- */
+function syncManual() {
+  values.value['donors.manual'] = JSON.stringify(
+    manualRows.value
+      .filter(r => r.name && String(r.name).trim())
+      .map(r => ({ name: String(r.name).trim(), amount: Number(r.amount) || 0 }))
+  )
+}
+function addManual() { manualRows.value.push({ name: '', amount: 0 }) }
+function removeManual(i) { manualRows.value.splice(i, 1); syncManual() }
+
 /* ---- Progress preview ---- */
 const progressCfg = computed(() => ({
   progressMode: values.value['site.progress.mode'],
@@ -166,13 +186,50 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
           </p>
           <p v-if="g.group === 'donation'" class="section-hint">
             {{ locale === 'fa'
-              ? 'مبالغ پیشنهادی را با کاما جدا کنید، مثلاً: 50000,100000,200000'
-              : 'Quick amounts comma-separated, e.g. 50000,100000,200000' }}
+              ? 'مبالغ پیشنهادی را با کاما جدا کنید، مثلاً: 50000,100000,200000 — در «قالب متن مبلغ» از {collected} و {target} استفاده کنید.'
+              : 'Quick amounts comma-separated, e.g. 50000,100000,200000 — in the amount format use {collected} and {target}.' }}
+          </p>
+          <p v-if="g.group === 'donors'" class="section-hint">
+            {{ locale === 'fa'
+              ? 'برای افزودن دستی حامیان، «منبع لیست» را روی دستی یا هر دو بگذارید و در لیست زیر نام و مبلغ را وارد کنید.'
+              : 'To add contributors manually, set the source to manual/both and fill the list below.' }}
           </p>
 
           <div v-for="item in g.items" :key="item.key" class="field">
+            <!-- Logo image upload -->
+            <template v-if="item.key === 'site.logo.url'">
+              <label class="label">{{ label(item) }}</label>
+              <ImageUpload v-model="values[item.key]" />
+            </template>
+
+            <!-- Contributors source -->
+            <template v-else-if="item.key === 'donors.source'">
+              <label class="label">{{ label(item) }}</label>
+              <select v-model="values[item.key]" class="select">
+                <option value="auto">{{ locale === 'fa' ? 'خودکار (از کمک‌های واقعی)' : 'Automatic (real donations)' }}</option>
+                <option value="manual">{{ locale === 'fa' ? 'دستی (فقط لیست زیر)' : 'Manual (list below only)' }}</option>
+                <option value="both">{{ locale === 'fa' ? 'هر دو' : 'Both' }}</option>
+              </select>
+            </template>
+
+            <!-- Manual contributors editor (add / remove) -->
+            <template v-else-if="item.key === 'donors.manual'">
+              <label class="label">{{ label(item) }}</label>
+              <div class="manual-list">
+                <div v-for="(row, i) in manualRows" :key="i" class="manual-row">
+                  <input v-model="row.name" class="input" :placeholder="locale === 'fa' ? 'نام' : 'Name'" @input="syncManual" />
+                  <input v-model.number="row.amount" type="number" class="input amount-in"
+                    :placeholder="locale === 'fa' ? 'مبلغ (تومان)' : 'Amount'" @input="syncManual" />
+                  <button type="button" class="mini danger" @click="removeManual(i)">✕</button>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm add-manual" @click="addManual">
+                  + {{ locale === 'fa' ? 'افزودن مشارکت‌کننده' : 'Add contributor' }}
+                </button>
+              </div>
+            </template>
+
             <!-- Home section order -->
-            <template v-if="item.key === 'site.home.order'">
+            <template v-else-if="item.key === 'site.home.order'">
               <label class="label">{{ label(item) }}</label>
               <div class="order-editor">
                 <div v-for="(id, i) in homeOrder" :key="id" class="order-row">
@@ -311,6 +368,12 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
 .mini.add { width: auto; padding: 0 0.6rem; }
 .order-add { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-top: 0.25rem; }
 .order-add .muted { color: var(--muted); font-size: 0.85rem; }
+
+.manual-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.manual-row { display: flex; gap: 0.5rem; align-items: center; }
+.manual-row .input { flex: 1; }
+.manual-row .amount-in { max-width: 150px; }
+.add-manual { align-self: flex-start; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
 .chip { padding: 0.4rem 0.9rem; border-radius: 999px; border: 1px solid var(--border); background: var(--input-bg); color: var(--muted); cursor: pointer; font-family: inherit; font-size: 0.85rem; }

@@ -59,12 +59,11 @@ const fmt = (n) => formatAmount(n, locale.value)
       <!-- Featured highlight -->
       <section v-else-if="section === 'featured' && hasFeaturedSection" class="featured-section">
         <h2 class="section-title">{{ locale === 'fa' ? '⭐ پروژه‌های ویژه' : '⭐ Featured projects' }}</h2>
-        <div class="featured-grid">
+        <div class="cards-grid">
           <CampaignCard
             v-for="c in featured"
             :key="c.id"
             :campaign="c"
-            class="featured-card"
             @donate="selected = c"
           />
         </div>
@@ -72,8 +71,8 @@ const fmt = (n) => formatAmount(n, locale.value)
 
       <!-- Campaigns grid -->
       <section v-else-if="section === 'campaigns'">
-        <h2 class="section-title">{{ t('campaigns') }}</h2>
-        <div v-if="gridCampaigns.length" class="grid grid-2">
+        <h2 v-if="gridCampaigns.length" class="section-title">{{ t('campaigns') }}</h2>
+        <div v-if="gridCampaigns.length" class="cards-grid">
           <CampaignCard
             v-for="c in gridCampaigns"
             :key="c.id"
@@ -81,7 +80,7 @@ const fmt = (n) => formatAmount(n, locale.value)
             @donate="selected = c"
           />
         </div>
-        <p v-else class="empty">{{ t('noCampaigns') }}</p>
+        <p v-else-if="!campaigns.length" class="empty">{{ t('noCampaigns') }}</p>
       </section>
 
       <!-- Recent contributors (global) -->
@@ -115,5 +114,13 @@ const fmt = (n) => formatAmount(n, locale.value)
 .unit { font-size: 1rem; color: var(--muted); -webkit-text-fill-color: var(--muted); }
 .section-title { margin-bottom: 1.25rem; font-size: 1.35rem; }
 .empty { color: var(--muted); text-align: center; padding: 3rem; }
-.featured-grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+
+/* Responsive card grid: 3 per row on desktop, 2 on tablet, 1 on mobile */
+.cards-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 900px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .cards-grid { grid-template-columns: 1fr; } }
 </style>

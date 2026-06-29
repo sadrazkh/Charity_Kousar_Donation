@@ -85,8 +85,13 @@ public class SettingsService(AppDbContext db)
         await GetAsync("donors.anonymous.en", "Well-wisher"),
         await GetAsync("donors.title.fa", "حامیان اخیر"),
         await GetAsync("donors.title.en", "Recent supporters"),
+        await GetAsync("donors.source", "auto"),
+        await GetAsync("donors.manual", "[]"),
         // Sharing
         await GetBoolAsync("share.ai.enabled", true),
+        // Amount/progress text format
+        await GetAsync("donation.progress.format.fa", "{collected} از {target} تومان"),
+        await GetAsync("donation.progress.format.en", "{collected} of {target} Toman"),
         // OTP / misc
         await GetBoolAsync("donation.otp.enabled", false),
         await GetDecimalAsync("donation.otp.threshold", 5_000_000),

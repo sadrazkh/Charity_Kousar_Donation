@@ -1,8 +1,8 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
-import { formatAmount } from '@/utils/amount'
 import FeaturedBanner from '@/components/FeaturedBanner.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
+import ProgressAmount from '@/components/ProgressAmount.vue'
 
 const props = defineProps({ campaign: { type: Object, required: true } })
 const emit = defineEmits(['donate'])
@@ -15,7 +15,6 @@ function desc() {
   const d = locale.value === 'fa' ? props.campaign.descriptionFa : props.campaign.descriptionEn
   return d?.length > 120 ? d.slice(0, 120) + '…' : d
 }
-const fmt = (n) => formatAmount(n, locale.value)
 </script>
 
 <template>
@@ -28,7 +27,7 @@ const fmt = (n) => formatAmount(n, locale.value)
       <p class="desc">{{ desc() }}</p>
       <ProgressBar :percent="campaign.progressPercent" />
       <div class="stats">
-        <span>{{ fmt(campaign.collectedAmount) }} / {{ fmt(campaign.targetAmount) }} {{ t('toman') }}</span>
+        <ProgressAmount :collected="campaign.collectedAmount" :target="campaign.targetAmount" />
       </div>
       <div class="actions">
         <button class="btn btn-primary btn-sm pay-btn" @click="emit('donate', campaign)">{{ t('pay') }}</button>

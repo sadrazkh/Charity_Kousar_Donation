@@ -76,6 +76,8 @@ public static class DbSeeder
 
                 new() { Key = "donation.min.amount", Value = "10000", Group = "donation", LabelFa = "حداقل مبلغ (تومان)", LabelEn = "Min amount (Toman)", Type = SettingType.Number, SortOrder = 1 },
                 new() { Key = "donation.quick.amounts", Value = "50000,100000,200000,500000,1000000", Group = "donation", LabelFa = "مبالغ پیشنهادی (با کاما)", LabelEn = "Quick amounts (comma-separated)", SortOrder = 2 },
+                new() { Key = "donation.progress.format.fa", Value = "{collected} از {target} تومان", Group = "donation", LabelFa = "قالب متن مبلغ (فارسی)", LabelEn = "Amount text format (FA)", SortOrder = 5 },
+                new() { Key = "donation.progress.format.en", Value = "{collected} of {target} Toman", Group = "donation", LabelFa = "قالب متن مبلغ (انگلیسی)", LabelEn = "Amount text format (EN)", SortOrder = 6 },
                 new() { Key = "donation.otp.enabled", Value = "false", Group = "donation", LabelFa = "تأیید OTP برای مبالغ بالا", LabelEn = "OTP for large amounts", Type = SettingType.Boolean, SortOrder = 3 },
                 new() { Key = "donation.otp.threshold", Value = "5000000", Group = "donation", LabelFa = "آستانه OTP (تومان)", LabelEn = "OTP threshold (Toman)", Type = SettingType.Number, SortOrder = 4 },
 
@@ -96,6 +98,8 @@ public static class DbSeeder
                 new() { Key = "donors.anonymous.en", Value = "Well-wisher", Group = "donors", LabelFa = "عنوان مشارکت‌کننده ناشناس (انگلیسی)", LabelEn = "Anonymous label (EN)", SortOrder = 9 },
                 new() { Key = "donors.title.fa", Value = "حامیان اخیر", Group = "donors", LabelFa = "عنوان بخش (فارسی)", LabelEn = "Section title (FA)", SortOrder = 10 },
                 new() { Key = "donors.title.en", Value = "Recent supporters", Group = "donors", LabelFa = "عنوان بخش (انگلیسی)", LabelEn = "Section title (EN)", SortOrder = 11 },
+                new() { Key = "donors.source", Value = "auto", Group = "donors", LabelFa = "منبع لیست (auto/manual/both)", LabelEn = "List source (auto/manual/both)", SortOrder = 12 },
+                new() { Key = "donors.manual", Value = "[]", Group = "donors", LabelFa = "لیست دستی مشارکت‌کنندگان", LabelEn = "Manual contributors list", Type = SettingType.TextArea, SortOrder = 13 },
 
                 new() { Key = "openrouter.enabled", Value = "true", Group = "ai", LabelFa = "فعال بودن AI", LabelEn = "AI enabled", Type = SettingType.Boolean, SortOrder = 1 },
                 new() { Key = "openrouter.api.key", Value = "", Group = "ai", LabelFa = "کلید API OpenRouter", LabelEn = "OpenRouter API Key", Type = SettingType.Password, SortOrder = 2 },
@@ -177,6 +181,11 @@ public static class DbSeeder
             await EnsureSettingAsync(db, "donors.anonymous.en", "Well-wisher", "donors", "عنوان مشارکت‌کننده ناشناس (انگلیسی)", "Anonymous label (EN)", SettingType.Text, 9);
             await EnsureSettingAsync(db, "donors.title.fa", "حامیان اخیر", "donors", "عنوان بخش (فارسی)", "Section title (FA)", SettingType.Text, 10);
             await EnsureSettingAsync(db, "donors.title.en", "Recent supporters", "donors", "عنوان بخش (انگلیسی)", "Section title (EN)", SettingType.Text, 11);
+            await EnsureSettingAsync(db, "donors.source", "auto", "donors", "منبع لیست (auto/manual/both)", "List source (auto/manual/both)", SettingType.Text, 12);
+            await EnsureSettingAsync(db, "donors.manual", "[]", "donors", "لیست دستی مشارکت‌کنندگان", "Manual contributors list", SettingType.TextArea, 13);
+
+            await EnsureSettingAsync(db, "donation.progress.format.fa", "{collected} از {target} تومان", "donation", "قالب متن مبلغ (فارسی)", "Amount text format (FA)", SettingType.Text, 5);
+            await EnsureSettingAsync(db, "donation.progress.format.en", "{collected} of {target} Toman", "donation", "قالب متن مبلغ (انگلیسی)", "Amount text format (EN)", SettingType.Text, 6);
 
             // Sharing (built-in templates + AI toggle)
             await EnsureSettingAsync(db, "share.ai.enabled", "true", "share", "استفاده از AI برای متن اشتراک", "Use AI for share text", SettingType.Boolean, 0);

@@ -58,8 +58,13 @@ public record PublicSiteConfigDto(
     string DonorAnonymousEn,
     string DonorsTitleFa,
     string DonorsTitleEn,
+    string DonorsSource,
+    string DonorsManual,
     // Sharing
     bool ShareAiEnabled,
+    // Amount/progress text format
+    string ProgressFormatFa,
+    string ProgressFormatEn,
     // OTP / misc
     bool OtpEnabled,
     decimal OtpThresholdAmount,

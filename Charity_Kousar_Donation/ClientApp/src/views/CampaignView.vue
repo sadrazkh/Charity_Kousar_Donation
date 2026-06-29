@@ -9,8 +9,8 @@ import ShareModal from '@/components/ShareModal.vue'
 import FeaturedBanner from '@/components/FeaturedBanner.vue'
 import RecentDonors from '@/components/RecentDonors.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
+import ProgressAmount from '@/components/ProgressAmount.vue'
 import QrCode from '@/components/QrCode.vue'
-import { formatAmount } from '@/utils/amount'
 import { whatsAppShareUrl, telegramShareUrl } from '@/utils/amount'
 import { api } from '@/api/client'
 import { useSiteConfig } from '@/composables/useSiteConfig'
@@ -41,7 +41,6 @@ const waUrl = computed(() => whatsAppShareUrl(shareText.value))
 const tgUrl = computed(() => telegramShareUrl(campaign.value?.shortUrl || '', shareText.value))
 
 const blocks = computed(() => campaign.value?.pageBlocks || [])
-const fmt = (n) => formatAmount(n, locale.value)
 
 async function copyLink() {
   await navigator.clipboard.writeText(campaign.value.shortUrl)
@@ -52,6 +51,12 @@ async function copyLink() {
 
 <template>
   <AppHeader />
+  <div v-if="campaign" class="container">
+    <router-link to="/" class="back-home">
+      <span class="bh-arrow">{{ locale === 'fa' ? '→' : '←' }}</span>
+      {{ locale === 'fa' ? 'بازگشت به صفحه اصلی' : 'Back to home' }}
+    </router-link>
+  </div>
   <main v-if="campaign" class="container campaign-page">
     <article class="card detail">
       <FeaturedBanner v-if="campaign.isFeatured" :campaign="campaign" />
@@ -108,7 +113,7 @@ async function copyLink() {
     <aside class="sticky-donate card">
       <p class="sticky-title">{{ title }}</p>
       <ProgressBar :percent="campaign.progressPercent" :height="12" />
-      <p class="sticky-amount">{{ fmt(campaign.collectedAmount) }} / {{ fmt(campaign.targetAmount) }} {{ t('toman') }}</p>
+      <p class="sticky-amount"><ProgressAmount :collected="campaign.collectedAmount" :target="campaign.targetAmount" /></p>
       <button class="btn btn-primary" style="width:100%" @click="showDonate = true">{{ t('pay') }}</button>
       <button type="button" class="btn btn-accent btn-sm share-side-btn" @click="showShare = true">
         {{ locale === 'fa' ? '📤 اشتراک‌گذاری' : '📤 Share' }}
@@ -133,6 +138,17 @@ async function copyLink() {
   .sticky-donate { order: -1; position: static !important; }
   .detail { padding: 1.25rem; }
 }
+.back-home {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  margin-bottom: 1rem; padding: 0.6rem 1.1rem;
+  border-radius: 999px; font-size: 1rem; font-weight: 600;
+  color: var(--primary); text-decoration: none;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  transition: background 0.15s;
+}
+.back-home:hover { background: color-mix(in srgb, var(--primary) 20%, transparent); text-decoration: none; }
+.bh-arrow { font-size: 1.15rem; }
 .detail { padding: clamp(1.15rem, 3vw, 2rem); }
 .campaign-donors { margin-top: 2rem; }
 

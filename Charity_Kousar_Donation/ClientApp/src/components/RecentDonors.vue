@@ -13,13 +13,35 @@ const { locale, t } = useI18n()
 const { config, loadSiteConfig } = useSiteConfig()
 const donors = ref([])
 
+function parseManual() {
+  try {
+    const arr = JSON.parse(config.donorsManual || '[]')
+    if (!Array.isArray(arr)) return []
+    return arr
+      .filter(r => r && r.name)
+      .map(r => ({ donorName: r.name, amount: Number(r.amount) || 0, paidAt: null, maskedPhone: null, campaignTitle: null }))
+  } catch { return [] }
+}
+
 onMounted(async () => {
   await loadSiteConfig()
   if (config.showRecentDonors === false) return
+  const source = config.donorsSource || 'auto'
+
+  // Manual-only: never hit the API.
+  if (source === 'manual') {
+    donors.value = parseManual()
+    return
+  }
+
   try {
     const q = props.campaignId ? `?campaignId=${props.campaignId}` : ''
-    donors.value = await api(`/donations/recent${q}`)
-  } catch { /* */ }
+    const real = await api(`/donations/recent${q}`)
+    donors.value = source === 'both' ? [...parseManual(), ...real] : real
+  } catch {
+    // Fall back to manual entries if the API call fails.
+    donors.value = source === 'both' ? parseManual() : []
+  }
 })
 
 const title = computed(() => locale.value === 'fa' ? config.donorsTitleFa : config.donorsTitleEn)
@@ -48,7 +70,7 @@ const show = computed(() => config.showRecentDonors !== false && donors.value.le
         <span class="d-name">{{ donorName(d) }}</span>
         <span class="d-meta">
           <span v-if="config.showDonorCampaign && d.campaignTitle" class="d-campaign">{{ d.campaignTitle }}</span>
-          <span v-if="config.showDonorDate" class="d-date">{{ fmtDate(d) }}</span>
+          <span v-if="config.showDonorDate && d.paidAt" class="d-date">{{ fmtDate(d) }}</span>
           <span v-if="config.showDonorAmount" class="d-amount">{{ fmt(d.amount) }} {{ t('toman') }}</span>
         </span>
       </li>

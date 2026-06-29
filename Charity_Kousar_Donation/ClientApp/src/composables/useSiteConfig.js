@@ -20,7 +20,9 @@ const DEFAULTS = {
   showDonorName: true, showDonorAmount: true, showDonorDate: false, showDonorCampaign: false,
   donorAnonymousFa: 'نیکوکار', donorAnonymousEn: 'Well-wisher',
   donorsTitleFa: 'حامیان اخیر', donorsTitleEn: 'Recent supporters',
+  donorsSource: 'auto', donorsManual: '[]',
   shareAiEnabled: true,
+  progressFormatFa: '{collected} از {target} تومان', progressFormatEn: '{collected} of {target} Toman',
   otpEnabled: false, otpThresholdAmount: 5000000, paymentBypassEnabled: false
 }
 

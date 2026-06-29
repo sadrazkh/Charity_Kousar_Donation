@@ -129,7 +129,9 @@ function fmtNum(n) {
   flex-direction: column;
   align-items: center;
   min-width: 2.6rem;
-  background: color-mix(in srgb, var(--fb-accent) 12%, rgba(0,0,0,0.25));
+  /* var(--card) adapts to light/dark, so boxes stay readable in both themes */
+  background: color-mix(in srgb, var(--fb-accent) 14%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--fb-accent) 25%, transparent);
   border-radius: 8px;
   padding: 0.3rem 0.45rem;
 }
