@@ -9,10 +9,13 @@ export const BLOCK_TYPES = [
   { type: 'quote', icon: '❝', labelFa: 'نقل‌قول', labelEn: 'Quote', category: 'content' },
   { type: 'callout', icon: '💡', labelFa: 'جعبه تأکید', labelEn: 'Callout', category: 'content' },
   { type: 'card', icon: '🃏', labelFa: 'کارت', labelEn: 'Card', category: 'content' },
+  { type: 'faq', icon: '❓', labelFa: 'سوالات متداول', labelEn: 'FAQ', category: 'content' },
+  { type: 'steps', icon: '①', labelFa: 'مراحل / تأثیر', labelEn: 'Steps / impact', category: 'content' },
   { type: 'image', icon: '🖼', labelFa: 'تصویر', labelEn: 'Image', category: 'media' },
   { type: 'gallery', icon: '▦', labelFa: 'گالری', labelEn: 'Gallery', category: 'media' },
   { type: 'video', icon: '▶', labelFa: 'ویدیو', labelEn: 'Video', category: 'media' },
   { type: 'stats', icon: '📊', labelFa: 'آمار کمپین', labelEn: 'Stats', category: 'campaign' },
+  { type: 'banner', icon: '📣', labelFa: 'بنر فراخوان', labelEn: 'CTA banner', category: 'campaign' },
   { type: 'cta', icon: '♥', labelFa: 'دکمه کمک', labelEn: 'Donate button', category: 'campaign' },
   { type: 'button', icon: '🔗', labelFa: 'دکمه لینک', labelEn: 'Link button', category: 'campaign' }
 ]
@@ -25,7 +28,7 @@ export function createBlock(type) {
     columns: { count: 2, gap: 'md', columns: [[], []] },
     section: { bgColor: '', padding: 'md', align: 'start', blocks: [] },
     spacer: { size: 'md' },
-    heading: { textFa: 'عنوان جدید', textEn: 'New heading', level: 2, align: 'start' },
+    heading: { textFa: 'عنوان جدید', textEn: 'New heading', level: 2, align: 'start', color: '' },
     text: { contentFa: 'متن خود را اینجا بنویسید...', contentEn: 'Write your content here...', align: 'start', size: 'md' },
     list: { itemsFa: ['آیتم اول', 'آیتم دوم'], itemsEn: ['Item one', 'Item two'], style: 'bullet' },
     image: { url: '', captionFa: '', captionEn: '', fullWidth: false, rounded: true },
@@ -34,8 +37,15 @@ export function createBlock(type) {
     quote: { textFa: '', textEn: '', authorFa: '', authorEn: '' },
     callout: { textFa: '', textEn: '', style: 'info', icon: '💡' },
     card: { icon: '♥', titleFa: 'عنوان کارت', titleEn: 'Card title', textFa: '', textEn: '' },
+    faq: { items: [{ qFa: 'سوال شما چیست؟', qEn: 'Your question?', aFa: 'پاسخ اینجا.', aEn: 'Answer here.' }] },
+    steps: { columns: 3, items: [
+      { icon: '①', titleFa: 'مرحله اول', titleEn: 'Step one', textFa: '', textEn: '' },
+      { icon: '②', titleFa: 'مرحله دوم', titleEn: 'Step two', textFa: '', textEn: '' },
+      { icon: '③', titleFa: 'مرحله سوم', titleEn: 'Step three', textFa: '', textEn: '' }
+    ] },
     stats: {},
-    cta: { textFa: 'همین حالا کمک کنید', textEn: 'Donate now', align: 'center', size: 'lg' },
+    banner: { titleFa: 'به ما بپیوندید', titleEn: 'Join us', textFa: 'با کمک شما این هدف محقق می‌شود.', textEn: 'Your help makes this possible.', btnFa: 'کمک می‌کنم', btnEn: 'I will help', color: '' },
+    cta: { textFa: 'همین حالا کمک کنید', textEn: 'Donate now', align: 'center', size: 'lg', color: '' },
     button: { textFa: 'بیشتر بدانید', textEn: 'Learn more', url: '', style: 'ghost', align: 'start' },
     divider: { style: 'line' }
   }

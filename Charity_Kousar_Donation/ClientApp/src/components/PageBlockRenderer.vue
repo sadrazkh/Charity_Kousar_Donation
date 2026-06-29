@@ -65,6 +65,7 @@ function alignCls(a) {
         :is="headingTag(block.data?.level)"
         class="block-heading"
         :class="alignCls(block.data?.align)"
+        :style="block.data?.color ? { color: block.data.color } : null"
       >{{ txt(block.data, 'text') }}</component>
 
       <!-- Text -->
@@ -112,6 +113,34 @@ function alignCls(a) {
         <p>{{ txt(block.data, 'text') }}</p>
       </div>
 
+      <!-- FAQ -->
+      <div v-else-if="block.type === 'faq'" class="block-faq">
+        <details v-for="(qa, i) in (block.data?.items || [])" :key="i" class="faq-item">
+          <summary>{{ locale === 'fa' ? qa.qFa : (qa.qEn || qa.qFa) }}</summary>
+          <p>{{ locale === 'fa' ? qa.aFa : (qa.aEn || qa.aFa) }}</p>
+        </details>
+      </div>
+
+      <!-- Steps / impact -->
+      <div v-else-if="block.type === 'steps'" class="block-steps"
+        :style="{ gridTemplateColumns: `repeat(${Math.min(block.data?.columns || 3, 4)}, 1fr)` }">
+        <div v-for="(st, i) in (block.data?.items || [])" :key="i" class="step-card">
+          <span class="step-ic">{{ st.icon }}</span>
+          <h4>{{ locale === 'fa' ? st.titleFa : (st.titleEn || st.titleFa) }}</h4>
+          <p v-if="locale === 'fa' ? st.textFa : (st.textEn || st.textFa)">{{ locale === 'fa' ? st.textFa : (st.textEn || st.textFa) }}</p>
+        </div>
+      </div>
+
+      <!-- CTA banner -->
+      <div v-else-if="block.type === 'banner'" class="block-banner"
+        :style="block.data?.color ? { background: block.data.color } : null">
+        <div class="banner-text">
+          <h3>{{ txt(block.data, 'title') }}</h3>
+          <p v-if="txt(block.data, 'text')">{{ txt(block.data, 'text') }}</p>
+        </div>
+        <button class="btn btn-lg banner-btn" @click="emit('donate')">{{ txt(block.data, 'btn') || t('pay') }}</button>
+      </div>
+
       <!-- Stats -->
       <div v-else-if="block.type === 'stats' && campaign" class="block-stats card">
         <ProgressBar :percent="campaign.progressPercent" :height="12" />
@@ -124,7 +153,9 @@ function alignCls(a) {
 
       <!-- CTA -->
       <div v-else-if="block.type === 'cta'" class="block-cta" :class="alignCls(block.data?.align)">
-        <button class="btn btn-primary btn-lg" @click="emit('donate')">{{ txt(block.data, 'text') || t('pay') }}</button>
+        <button class="btn btn-primary btn-lg"
+          :style="block.data?.color ? { background: block.data.color, color: '#fff' } : null"
+          @click="emit('donate')">{{ txt(block.data, 'text') || t('pay') }}</button>
       </div>
 
       <!-- Link button -->
@@ -180,6 +211,29 @@ function alignCls(a) {
 .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 1rem; text-align: center; }
 @media (max-width: 400px) { .stats-row { grid-template-columns: 1fr; gap: 0.5rem; } }
 .stats-row strong { display: block; font-size: 1.1rem; margin-top: 0.25rem; }
+.block-faq { display: flex; flex-direction: column; gap: 0.5rem; }
+.faq-item { border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1rem; background: color-mix(in srgb, var(--muted) 6%, transparent); }
+.faq-item summary { cursor: pointer; font-weight: 600; list-style: none; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::before { content: '+'; margin-inline-end: 0.5rem; color: var(--primary); font-weight: 700; }
+.faq-item[open] summary::before { content: '−'; }
+.faq-item p { color: var(--muted); margin-top: 0.6rem; line-height: 1.8; }
+.block-steps { display: grid; gap: 1rem; }
+@media (max-width: 560px) { .block-steps { grid-template-columns: 1fr 1fr !important; } }
+@media (max-width: 380px) { .block-steps { grid-template-columns: 1fr !important; } }
+.step-card { text-align: center; padding: 1.25rem 1rem; border: 1px solid var(--border); border-radius: 14px; background: color-mix(in srgb, var(--primary) 6%, transparent); }
+.step-ic { font-size: 1.8rem; display: block; margin-bottom: 0.4rem; }
+.step-card h4 { font-size: 1rem; margin-bottom: 0.3rem; }
+.step-card p { color: var(--muted); font-size: 0.88rem; line-height: 1.7; }
+.block-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  padding: 1.5rem 1.75rem; border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--accent) 80%, var(--primary)));
+  color: #fff;
+}
+.block-banner h3 { font-size: 1.25rem; margin-bottom: 0.2rem; }
+.block-banner .banner-text p { opacity: 0.9; font-size: 0.95rem; }
+.banner-btn { background: #fff; color: var(--primary); font-weight: 700; }
 .block-cta { padding: 0.35rem 0; }
 .btn-lg { padding: 0.85rem 2rem; font-size: clamp(0.95rem, 2.5vw, 1.05rem); width: 100%; max-width: 320px; }
 .block-divider { border: none; border-top: 1px solid rgba(148,163,184,0.2); margin: 0.25rem 0; }

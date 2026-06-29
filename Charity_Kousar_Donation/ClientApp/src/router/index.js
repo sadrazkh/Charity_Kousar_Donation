@@ -14,6 +14,7 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', name: 'admin-dashboard', component: () => import('@/views/admin/AdminDashboard.vue') },
+      { path: 'home', name: 'admin-home', component: () => import('@/views/admin/AdminHome.vue') },
       { path: 'campaigns', name: 'admin-campaigns', component: () => import('@/views/admin/AdminCampaigns.vue') },
       { path: 'campaigns/new', name: 'admin-campaign-new', component: () => import('@/views/admin/AdminCampaignEditor.vue') },
       { path: 'campaigns/:id/edit', name: 'admin-campaign-edit', component: () => import('@/views/admin/AdminCampaignEditor.vue') },

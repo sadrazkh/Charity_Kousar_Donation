@@ -115,11 +115,13 @@ const fmt = (n) => formatAmount(n, locale.value)
 .section-title { margin-bottom: 1.25rem; font-size: 1.35rem; }
 .empty { color: var(--muted); text-align: center; padding: 3rem; }
 
-/* Responsive card grid: up to 3 per row on desktop, fewer items stretch to fill
-   (auto-fit collapses empty columns so 2 cards never leave an empty 3rd column). */
+/* Responsive card grid: up to 3 per row on desktop. Cards keep a natural width
+   (max ~360px) instead of stretching when there are only 1–2 items. */
 .cards-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 360px));
+  justify-content: center;
 }
+@media (max-width: 620px) { .cards-grid { grid-template-columns: 1fr; } }
 </style>

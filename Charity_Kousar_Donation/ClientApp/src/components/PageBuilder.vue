@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { BLOCK_TYPES, createBlock, blockLabel } from '@/utils/pageBlocks'
+import { PAGE_TEMPLATES } from '@/utils/pageTemplates'
 import NestedBlockList from '@/components/NestedBlockList.vue'
 import PageBlockRenderer from '@/components/PageBlockRenderer.vue'
 
@@ -18,8 +19,17 @@ const blocks = computed({
 })
 const showPreview = ref(false)
 const paletteOpen = ref(false)
+const showTemplates = ref(false)
 
 const campaignTitle = computed(() => props.campaign?.titleFa || '')
+
+function applyTemplate(tpl) {
+  if (blocks.value.length && !confirm(locale.value === 'fa'
+    ? 'محتوای فعلی صفحه با این قالب جایگزین شود؟'
+    : 'Replace the current page content with this template?')) return
+  blocks.value = tpl.build()
+  showTemplates.value = false
+}
 
 const categories = computed(() => {
   const cats = { layout: [], content: [], media: [], campaign: [] }
@@ -57,12 +67,26 @@ function label(type) {
 
     <div class="canvas">
       <div class="canvas-toolbar">
-        <span>{{ locale === 'fa' ? 'صفحه‌ساز — بکشید یا ↑↓' : 'Page builder — drag or ↑↓' }}</span>
+        <span>{{ locale === 'fa' ? 'صفحه‌ساز — برای جابه‌جایی بکشید ⠿' : 'Page builder — drag ⠿ to reorder' }}</span>
         <div class="toolbar-actions">
+          <button type="button" class="btn btn-ghost btn-sm" @click="showTemplates = !showTemplates">
+            🎨 {{ locale === 'fa' ? 'قالب آماده' : 'Templates' }}
+          </button>
           <button type="button" class="btn btn-ghost btn-sm hide-mobile" @click="showPreview = !showPreview">
             {{ showPreview ? '▣' : '◫' }} {{ locale === 'fa' ? 'پیش‌نمایش' : 'Preview' }}
           </button>
           <button type="button" class="btn btn-primary btn-sm" @click="emit('save')">{{ locale === 'fa' ? 'ذخیره' : 'Save' }}</button>
+        </div>
+      </div>
+
+      <div v-if="showTemplates" class="templates card">
+        <p class="tpl-hint">{{ locale === 'fa' ? 'یک قالب را انتخاب کنید تا چیدمان آماده ساخته شود، سپس آزادانه ویرایش/بکشید:' : 'Pick a layout to scaffold the page, then edit/drag freely:' }}</p>
+        <div class="tpl-grid">
+          <button v-for="tpl in PAGE_TEMPLATES" :key="tpl.id" type="button" class="tpl-card" @click="applyTemplate(tpl)">
+            <span class="tpl-ic">{{ tpl.icon }}</span>
+            <strong>{{ locale === 'fa' ? tpl.fa : tpl.en }}</strong>
+            <small>{{ locale === 'fa' ? tpl.descFa : tpl.descEn }}</small>
+          </button>
         </div>
       </div>
 
@@ -108,6 +132,19 @@ function label(type) {
 .icon { width: 1.25rem; text-align: center; }
 .canvas-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; font-size: 0.9rem; }
 .toolbar-actions { display: flex; gap: 0.35rem; }
+.templates { padding: 1rem; margin-bottom: 0.85rem; }
+.tpl-hint { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.75rem; }
+.tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem; }
+.tpl-card {
+  display: flex; flex-direction: column; gap: 0.2rem; text-align: start;
+  padding: 0.75rem; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--input-bg); color: var(--text); cursor: pointer; font-family: inherit;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.tpl-card:hover { border-color: color-mix(in srgb, var(--primary) 50%, transparent); transform: translateY(-2px); }
+.tpl-ic { font-size: 1.4rem; }
+.tpl-card strong { font-size: 0.88rem; }
+.tpl-card small { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
 .empty { text-align: center; color: var(--muted); padding: 2rem 1rem; border: 2px dashed rgba(148,163,184,0.2); border-radius: 12px; }
 .preview-panel { margin-top: 1rem; padding: 1rem; overflow-x: auto; }
 .preview-panel h3 { margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--muted); }

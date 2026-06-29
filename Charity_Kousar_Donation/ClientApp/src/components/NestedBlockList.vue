@@ -149,6 +149,11 @@ function label(type) {
                 <select v-model="block.data.align" class="select"><option value="start">Start</option><option value="center">Center</option></select>
               </div>
             </div>
+            <label class="label">{{ locale === 'fa' ? 'رنگ (اختیاری)' : 'Color (optional)' }}</label>
+            <div class="color-field">
+              <input type="color" v-model="block.data.color" class="color-pick" />
+              <button type="button" class="btn btn-ghost btn-sm" @click="block.data.color = ''">{{ locale === 'fa' ? 'پیش‌فرض' : 'Default' }}</button>
+            </div>
           </template>
 
           <!-- Text -->
@@ -230,12 +235,73 @@ function label(type) {
             <textarea v-model="block.data.textEn" class="textarea input-ltr" dir="ltr" />
           </template>
 
+          <!-- FAQ -->
+          <template v-else-if="block.type === 'faq'">
+            <div v-for="(qa, i) in block.data.items" :key="i" class="qa-edit">
+              <div class="qa-head">
+                <span class="qa-num">{{ i + 1 }}</span>
+                <button type="button" class="icon-btn danger" @click="block.data.items.splice(i,1)">✕</button>
+              </div>
+              <input v-model="qa.qFa" class="input input-rtl" placeholder="سوال (فارسی)" />
+              <textarea v-model="qa.aFa" class="textarea input-rtl" rows="2" placeholder="پاسخ (فارسی)" />
+              <input v-model="qa.qEn" class="input input-ltr" dir="ltr" placeholder="Question (EN)" />
+              <textarea v-model="qa.aEn" class="textarea input-ltr" dir="ltr" rows="2" placeholder="Answer (EN)" />
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" @click="block.data.items.push({ qFa:'', qEn:'', aFa:'', aEn:'' })">
+              + {{ locale === 'fa' ? 'سوال' : 'Question' }}
+            </button>
+          </template>
+
+          <!-- Steps / impact -->
+          <template v-else-if="block.type === 'steps'">
+            <label class="label">{{ locale === 'fa' ? 'تعداد ستون' : 'Columns' }}</label>
+            <select v-model.number="block.data.columns" class="select"><option v-for="n in 4" :key="n" :value="n">{{ n }}</option></select>
+            <div v-for="(st, i) in block.data.items" :key="i" class="qa-edit">
+              <div class="qa-head">
+                <input v-model="st.icon" class="input" style="max-width:70px" placeholder="①" />
+                <button type="button" class="icon-btn danger" @click="block.data.items.splice(i,1)">✕</button>
+              </div>
+              <input v-model="st.titleFa" class="input input-rtl" placeholder="عنوان (فارسی)" />
+              <input v-model="st.textFa" class="input input-rtl" placeholder="توضیح (فارسی)" />
+              <input v-model="st.titleEn" class="input input-ltr" dir="ltr" placeholder="Title (EN)" />
+              <input v-model="st.textEn" class="input input-ltr" dir="ltr" placeholder="Text (EN)" />
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" @click="block.data.items.push({ icon:'•', titleFa:'', titleEn:'', textFa:'', textEn:'' })">
+              + {{ locale === 'fa' ? 'مرحله' : 'Step' }}
+            </button>
+          </template>
+
+          <!-- CTA banner -->
+          <template v-else-if="block.type === 'banner'">
+            <input v-model="block.data.titleFa" class="input input-rtl" placeholder="عنوان (فارسی)" />
+            <input v-model="block.data.textFa" class="input input-rtl" placeholder="توضیح (فارسی)" />
+            <input v-model="block.data.titleEn" class="input input-ltr" dir="ltr" placeholder="Title (EN)" />
+            <input v-model="block.data.textEn" class="input input-ltr" dir="ltr" placeholder="Text (EN)" />
+            <div class="row-2">
+              <input v-model="block.data.btnFa" class="input input-rtl" placeholder="متن دکمه (فارسی)" />
+              <input v-model="block.data.btnEn" class="input input-ltr" dir="ltr" placeholder="Button (EN)" />
+            </div>
+            <label class="label">{{ locale === 'fa' ? 'رنگ پس‌زمینه (اختیاری)' : 'Background color (optional)' }}</label>
+            <div class="color-field">
+              <input type="color" v-model="block.data.color" class="color-pick" />
+              <button type="button" class="btn btn-ghost btn-sm" @click="block.data.color = ''">{{ locale === 'fa' ? 'پیش‌فرض' : 'Default' }}</button>
+            </div>
+          </template>
+
           <!-- CTA / Button -->
           <template v-else-if="block.type === 'cta'">
             <input v-model="block.data.textFa" class="input input-rtl" />
             <AiAssistButton v-model="block.data.textFa" language="fa" field-type="cta" :campaign-title="campaignTitle" />
             <input v-model="block.data.textEn" class="input input-ltr" dir="ltr" />
-            <select v-model="block.data.align" class="select"><option value="center">Center</option><option value="start">Start</option></select>
+            <div class="row-2">
+              <div><label class="label">{{ locale === 'fa' ? 'تراز' : 'Align' }}</label>
+                <select v-model="block.data.align" class="select"><option value="center">Center</option><option value="start">Start</option></select>
+              </div>
+              <div><label class="label">{{ locale === 'fa' ? 'رنگ دکمه' : 'Button color' }}</label>
+                <div class="color-field"><input type="color" v-model="block.data.color" class="color-pick" />
+                  <button type="button" class="btn btn-ghost btn-sm" @click="block.data.color = ''">{{ locale === 'fa' ? 'پیش‌فرض' : 'Default' }}</button></div>
+              </div>
+            </div>
           </template>
           <template v-else-if="block.type === 'button'">
             <input v-model="block.data.textFa" class="input input-rtl" />
@@ -294,4 +360,9 @@ function label(type) {
 .add-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.65rem; }
 .add-chip { padding: 0.4rem 0.65rem; border-radius: 999px; border: 1px dashed rgba(148,163,184,0.35); background: rgba(15,23,42,0.4); color: var(--text); font-size: 0.75rem; cursor: pointer; font-family: inherit; touch-action: manipulation; }
 .ghost { opacity: 0.35; }
+.qa-edit { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.6rem; border: 1px dashed rgba(148,163,184,0.25); border-radius: 10px; margin-bottom: 0.5rem; }
+.qa-head { display: flex; align-items: center; justify-content: space-between; }
+.qa-num { background: color-mix(in srgb, var(--primary) 20%, transparent); color: var(--primary); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+.color-field { display: flex; gap: 0.5rem; align-items: center; }
+.color-pick { width: 48px; height: 38px; border: 1px solid var(--border); border-radius: 8px; background: none; cursor: pointer; padding: 2px; }
 </style>

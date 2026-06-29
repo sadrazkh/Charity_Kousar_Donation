@@ -13,6 +13,7 @@ const menuOpen = ref(false)
 
 const navItems = computed(() => [
   { to: '/admin', icon: '📊', label: t('dashboard'), exact: true },
+  { to: '/admin/home', icon: '🏠', label: t('homePage'), exact: false },
   { to: '/admin/campaigns', icon: '📁', label: t('manageCampaigns'), exact: false },
   { to: '/admin/donations', icon: '💳', label: t('manageDonations'), exact: false },
   { to: '/admin/settings', icon: '⚙️', label: t('settings'), exact: false }
