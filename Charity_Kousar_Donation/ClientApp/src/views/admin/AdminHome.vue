@@ -5,6 +5,7 @@ import draggable from 'vuedraggable'
 import { api } from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import { progressFillStyle } from '@/utils/progress'
+import ProgressAmount from '@/components/ProgressAmount.vue'
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -18,7 +19,9 @@ const translating = ref(false)
 // Keys this page owns. Only these are sent on save.
 const KEYS = [
   'site.hero.fa', 'site.hero.en', 'site.home.order',
+  'site.home.columns', 'site.home.merge.featured',
   'site.progress.mode', 'site.progress.color.start', 'site.progress.color.end', 'site.progress.show.percent',
+  'donation.progress.format.fa', 'donation.progress.format.en', 'donation.progress.highlight',
   'donors.source'
 ]
 
@@ -139,9 +142,31 @@ async function save() {
           </div>
         </section>
 
+        <!-- Card layout -->
+        <section class="card block">
+          <h2>{{ fa ? '۲) چیدمان کارت‌ها' : '2) Card layout' }}</h2>
+          <div class="row-2">
+            <div>
+              <label class="label">{{ fa ? 'تعداد ستون در هر ردیف' : 'Columns per row' }}</label>
+              <select v-model="values['site.home.columns']" class="select">
+                <option value="auto">{{ fa ? 'خودکار (متناسب با صفحه)' : 'Auto (fit screen)' }}</option>
+                <option value="2">۲ / 2</option>
+                <option value="3">۳ / 3</option>
+                <option value="4">۴ / 4</option>
+              </select>
+            </div>
+            <label class="chk merge">
+              <input type="checkbox" :checked="values['site.home.merge.featured'] === 'true'"
+                @change="values['site.home.merge.featured'] = $event.target.checked ? 'true' : 'false'" />
+              {{ fa ? 'ویژه و عادی در یک کادر' : 'Merge featured + normal' }}
+            </label>
+          </div>
+          <p class="hint">{{ fa ? 'اگر تیک بزنید، پروژه‌های ویژه جدا نمایش داده نمی‌شوند و همه در یک گرید با هم می‌آیند. در موبایل ستون‌ها خودکار کم می‌شوند.' : 'When checked, featured projects are not separated — all appear in one grid. Columns auto-reduce on mobile.' }}</p>
+        </section>
+
         <!-- Hero text -->
         <section class="card block">
-          <h2>{{ fa ? '۲) متن خوش‌آمد (بنر اصلی)' : '2) Welcome text (hero)' }}</h2>
+          <h2>{{ fa ? '۳) متن خوش‌آمد (بنر اصلی)' : '3) Welcome text (hero)' }}</h2>
           <label class="label">{{ fa ? 'متن فارسی' : 'Persian text' }}</label>
           <textarea v-model="values['site.hero.fa']" class="textarea" rows="2" />
           <div class="label-row">
@@ -155,7 +180,7 @@ async function save() {
 
         <!-- Progress bar -->
         <section class="card block">
-          <h2>{{ fa ? '۳) نوار پیشرفت' : '3) Progress bar' }}</h2>
+          <h2>{{ fa ? '۴) نوار پیشرفت' : '4) Progress bar' }}</h2>
           <label class="label">{{ fa ? 'حالت رنگ' : 'Color mode' }}</label>
           <select v-model="values['site.progress.mode']" class="select">
             <option value="shift">{{ fa ? 'تغییر تدریجی به سبز (پیشنهادی)' : 'Shift to green (recommended)' }}</option>
@@ -175,9 +200,39 @@ async function save() {
           </div>
         </section>
 
+        <!-- Amount text format -->
+        <section class="card block">
+          <h2>{{ fa ? '۵) نمایش مبلغ (چقدر از چقدر)' : '5) Amount text (raised / goal)' }}</h2>
+          <label class="label">{{ fa ? 'قالب فارسی' : 'Persian format' }}</label>
+          <input v-model="values['donation.progress.format.fa']" class="input input-rtl" />
+          <label class="label">{{ fa ? 'قالب انگلیسی' : 'English format' }}</label>
+          <input v-model="values['donation.progress.format.en']" class="input input-ltr" dir="ltr" />
+          <label class="label">{{ fa ? 'رنگ تأکید (برای ~متن~)' : 'Highlight color (for ~text~)' }}</label>
+          <div class="colors"><input type="color" v-model="values['donation.progress.highlight']" class="swatch" /></div>
+
+          <div class="help">
+            <strong>{{ fa ? 'راهنما:' : 'Guide:' }}</strong>
+            <ul>
+              <li><code>{collected}</code> — {{ fa ? 'مبلغ جمع‌آوری‌شده' : 'amount raised' }}</li>
+              <li><code>{target}</code> — {{ fa ? 'مبلغ هدف' : 'goal amount' }}</li>
+              <li><code>{remaining}</code> — {{ fa ? 'مبلغ باقی‌مانده' : 'remaining amount' }}</li>
+              <li><code>{percent}</code> — {{ fa ? 'درصد پیشرفت' : 'progress percent' }}</li>
+              <li><code>*…*</code> — {{ fa ? 'متن داخل ستاره بولد می‌شود' : 'text inside stars becomes bold' }}</li>
+              <li><code>~…~</code> — {{ fa ? 'متن داخل موج با رنگ تأکید نمایش داده می‌شود' : 'text inside tildes is colored' }}</li>
+            </ul>
+            <p class="ex">{{ fa
+              ? 'مثال: «*{collected}* از {target} تومان — ~{remaining}~ مانده»'
+              : 'Example: "*{collected}* of {target} — ~{remaining}~ left"' }}</p>
+            <p class="ex live">{{ fa ? 'پیش‌نمایش:' : 'Preview:' }}
+              <ProgressAmount :collected="6500000" :target="10000000"
+                :format="fa ? values['donation.progress.format.fa'] : values['donation.progress.format.en']"
+                :highlight="values['donation.progress.highlight']" /></p>
+          </div>
+        </section>
+
         <!-- Contributors source -->
         <section class="card block">
-          <h2>{{ fa ? '۴) مشارکت‌کنندگان' : '4) Contributors' }}</h2>
+          <h2>{{ fa ? '۶) مشارکت‌کنندگان' : '6) Contributors' }}</h2>
           <label class="label">{{ fa ? 'منبع لیست' : 'List source' }}</label>
           <select v-model="values['donors.source']" class="select">
             <option value="auto">{{ fa ? 'خودکار (کمک‌های واقعی)' : 'Automatic (real donations)' }}</option>
@@ -241,6 +296,13 @@ async function save() {
 .pp-fill { height: 10px; border-radius: 999px; }
 .pp-bar span { font-size: 0.75rem; color: var(--muted); min-width: 2.4rem; }
 .more-link { display: inline-block; margin-top: 0.75rem; font-size: 0.85rem; color: var(--primary); text-decoration: none; }
+.row-2 { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end; }
+.chk.merge { white-space: nowrap; padding-bottom: 0.5rem; }
+.help { margin-top: 0.85rem; padding: 0.85rem 1rem; border-radius: 10px; background: color-mix(in srgb, var(--primary) 7%, transparent); border: 1px solid var(--border); font-size: 0.85rem; }
+.help ul { margin: 0.5rem 0; padding-inline-start: 1.1rem; display: flex; flex-direction: column; gap: 0.25rem; color: var(--muted); }
+.help code { background: color-mix(in srgb, var(--muted) 18%, transparent); padding: 0.05rem 0.35rem; border-radius: 5px; font-family: 'Inter', monospace; direction: ltr; display: inline-block; }
+.help .ex { margin-top: 0.5rem; color: var(--text); }
+.help .live { margin-top: 0.6rem; font-weight: 600; }
 
 .preview { position: sticky; top: 1rem; }
 .preview-title { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }

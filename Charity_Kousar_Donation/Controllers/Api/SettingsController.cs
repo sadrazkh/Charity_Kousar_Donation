@@ -25,4 +25,18 @@ public class SettingsController(SettingsService settings) : ControllerBase
         await settings.UpdateAsync(req.Settings);
         return Ok();
     }
+
+    // Reusable custom page templates (saved by admins from the page builder).
+    [Authorize(Roles = "Admin")]
+    [HttpGet("templates")]
+    public async Task<ActionResult<object>> GetTemplates() =>
+        Ok(new { json = await settings.GetTemplatesJsonAsync() });
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("templates")]
+    public async Task<IActionResult> SaveTemplates(SaveTemplatesRequest req)
+    {
+        await settings.SaveTemplatesJsonAsync(string.IsNullOrWhiteSpace(req.Json) ? "[]" : req.Json);
+        return Ok();
+    }
 }

@@ -31,4 +31,9 @@ RUN dotnet publish "./Charity_Kousar_Donation.csproj" -c $BUILD_CONFIGURATION -o
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+# Create a writable uploads directory owned by the non-root app user (fixes
+# "خطا در ذخیره فایل" on CapRover). Mount /app/uploads as a persistent volume to keep images.
+USER root
+RUN mkdir -p /app/uploads && chown -R $APP_UID /app/uploads
+USER $APP_UID
 ENTRYPOINT ["dotnet", "Charity_Kousar_Donation.dll"]

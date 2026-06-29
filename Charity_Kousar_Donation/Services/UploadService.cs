@@ -1,9 +1,22 @@
 namespace Charity_Kousar_Donation.Services;
 
-public class UploadService(IWebHostEnvironment env, ILogger<UploadService> logger)
+public class UploadService(IWebHostEnvironment env, IConfiguration config, ILogger<UploadService> logger)
 {
     private static readonly HashSet<string> Allowed = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"];
     private const long MaxBytes = 5 * 1024 * 1024;
+
+    /// <summary>
+    /// Physical directory where uploads are stored. Configurable via "Uploads:Path"
+    /// (set it to a persistent volume on CapRover, e.g. /app/uploads). Defaults to a
+    /// writable folder under the content root rather than wwwroot (which the non-root
+    /// container user often cannot write to).
+    /// </summary>
+    public static string ResolveUploadsDir(IWebHostEnvironment env, IConfiguration config)
+    {
+        var configured = config["Uploads:Path"];
+        if (!string.IsNullOrWhiteSpace(configured)) return configured;
+        return Path.Combine(env.ContentRootPath, "uploads");
+    }
 
     public async Task<(bool Ok, string? Url, string? Error)> SaveImageAsync(IFormFile? file, HttpRequest request)
     {
@@ -16,12 +29,7 @@ public class UploadService(IWebHostEnvironment env, ILogger<UploadService> logge
 
         try
         {
-            // WebRootPath can be null when wwwroot doesn't exist yet (e.g. fresh container) — fall back to content root.
-            var webRoot = string.IsNullOrWhiteSpace(env.WebRootPath)
-                ? Path.Combine(env.ContentRootPath, "wwwroot")
-                : env.WebRootPath;
-
-            var dir = Path.Combine(webRoot, "uploads");
+            var dir = ResolveUploadsDir(env, config);
             Directory.CreateDirectory(dir);
 
             var name = $"{Guid.NewGuid():N}{ext}";
@@ -30,14 +38,14 @@ public class UploadService(IWebHostEnvironment env, ILogger<UploadService> logge
             await using (var stream = File.Create(path))
                 await file.CopyToAsync(stream);
 
-            // Return a root-relative URL so it works regardless of scheme/host/reverse-proxy
-            // (avoids http/https mixed-content issues behind CapRover).
+            // Root-relative URL — served from the uploads static-file mapping in Program.cs.
             return (true, $"/uploads/{name}", null);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Image upload failed");
-            return (false, null, "خطا در ذخیره فایل روی سرور");
+            logger.LogError(ex, "Image upload failed (dir={Dir})", ResolveUploadsDir(env, config));
+            // Surface the real reason to the (admin-only) caller to ease diagnosing CapRover issues.
+            return (false, null, $"خطا در ذخیره فایل روی سرور: {ex.Message}");
         }
     }
 }

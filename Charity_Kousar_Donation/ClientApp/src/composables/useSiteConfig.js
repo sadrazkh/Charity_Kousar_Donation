@@ -22,7 +22,9 @@ const DEFAULTS = {
   donorsTitleFa: 'حامیان اخیر', donorsTitleEn: 'Recent supporters',
   donorsSource: 'auto', donorsManual: '[]',
   shareAiEnabled: true,
-  progressFormatFa: '{collected} از {target} تومان', progressFormatEn: '{collected} of {target} Toman',
+  progressFormatFa: '*{collected}* از {target} تومان', progressFormatEn: '*{collected}* of {target} Toman',
+  progressHighlight: '#0d9488',
+  homeColumns: 'auto', homeMergeFeatured: false,
   otpEnabled: false, otpThresholdAmount: 5000000, paymentBypassEnabled: false
 }
 

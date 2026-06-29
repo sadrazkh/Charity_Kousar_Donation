@@ -4,6 +4,7 @@ using Charity_Kousar_Donation.Hubs;
 using Charity_Kousar_Donation.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -81,6 +82,18 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// Serve uploaded images from a writable directory (separate from wwwroot, which the
+// non-root container user may not be able to write to). Mount this path as a persistent
+// CapRover volume to keep uploads across deploys (set Uploads:Path).
+var uploadsDir = UploadService.ResolveUploadsDir(app.Environment, app.Configuration);
+try { Directory.CreateDirectory(uploadsDir); } catch { /* created lazily on first upload */ }
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsDir),
+    RequestPath = "/uploads"
+});
+
 app.UseRouting();
 app.UseCors();
 app.UseAuthentication();

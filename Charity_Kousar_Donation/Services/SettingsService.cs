@@ -95,7 +95,28 @@ public class SettingsService(AppDbContext db)
         // OTP / misc
         await GetBoolAsync("donation.otp.enabled", false),
         await GetDecimalAsync("donation.otp.threshold", 5_000_000),
-        await GetBoolAsync("payment.bypass.enabled", false));
+        await GetBoolAsync("payment.bypass.enabled", false),
+        // Home grid + amount text styling
+        await GetAsync("site.home.columns", "auto"),
+        await GetBoolAsync("site.home.merge.featured", false),
+        await GetAsync("donation.progress.highlight", "#0d9488"));
+
+    public async Task<string> GetTemplatesJsonAsync() => await GetAsync("page.templates", "[]");
+
+    public async Task SaveTemplatesJsonAsync(string json)
+    {
+        var s = await db.SiteSettings.FirstOrDefaultAsync(x => x.Key == "page.templates");
+        if (s == null)
+            db.SiteSettings.Add(new SiteSetting
+            {
+                Key = "page.templates", Value = json, Group = "advanced",
+                LabelFa = "قالب‌های سفارشی صفحه", LabelEn = "Custom page templates",
+                Type = SettingType.TextArea, SortOrder = 1
+            });
+        else s.Value = json;
+        await db.SaveChangesAsync();
+        InvalidateCache();
+    }
 
     private static List<long> ParseQuickAmounts(string raw) =>
         raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -122,7 +143,9 @@ public class SettingsService(AppDbContext db)
             ["ai"] = ("🤖 هوش مصنوعی و ترجمه", "AI & translation"),
         };
 
-        var items = await db.SiteSettings.OrderBy(s => s.Group).ThenBy(s => s.SortOrder).ToListAsync();
+        var items = await db.SiteSettings
+            .Where(s => s.Key != "page.templates") // managed via the page builder, not the raw settings list
+            .OrderBy(s => s.Group).ThenBy(s => s.SortOrder).ToListAsync();
         var grouped = items.GroupBy(s => s.Group).ToDictionary(g => g.Key, g => g.AsEnumerable());
         return groupOrder
             .Where(g => grouped.ContainsKey(g))

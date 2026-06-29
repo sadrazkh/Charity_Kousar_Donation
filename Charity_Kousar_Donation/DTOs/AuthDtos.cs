@@ -68,4 +68,10 @@ public record PublicSiteConfigDto(
     // OTP / misc
     bool OtpEnabled,
     decimal OtpThresholdAmount,
-    bool PaymentBypassEnabled);
+    bool PaymentBypassEnabled,
+    // Home grid + amount text styling
+    string HomeColumns,
+    bool HomeMergeFeatured,
+    string ProgressHighlight);
+
+public record SaveTemplatesRequest(string Json);

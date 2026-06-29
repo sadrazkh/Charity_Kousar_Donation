@@ -186,8 +186,8 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
           </p>
           <p v-if="g.group === 'donation'" class="section-hint">
             {{ locale === 'fa'
-              ? 'مبالغ پیشنهادی را با کاما جدا کنید، مثلاً: 50000,100000,200000 — در «قالب متن مبلغ» از {collected} و {target} استفاده کنید.'
-              : 'Quick amounts comma-separated, e.g. 50000,100000,200000 — in the amount format use {collected} and {target}.' }}
+              ? 'مبالغ پیشنهادی با کاما جدا شوند. در «قالب متن مبلغ»: {collected} جمع‌آوری‌شده، {target} هدف، {remaining} باقی‌مانده، {percent} درصد — *متن* بولد و ~متن~ رنگی می‌شود. (راهنمای کامل در صفحهٔ «صفحه اصلی»)'
+              : 'Quick amounts comma-separated. In the amount format: {collected}, {target}, {remaining}, {percent}; *text* = bold, ~text~ = colored. (Full guide on the Home page screen.)' }}
           </p>
           <p v-if="g.group === 'donors'" class="section-hint">
             {{ locale === 'fa'

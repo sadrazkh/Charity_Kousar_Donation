@@ -26,10 +26,17 @@ const sections = computed(() => {
 })
 
 const featured = computed(() => campaigns.value.filter(c => c.isFeatured))
-const hasFeaturedSection = computed(() => sections.value.includes('featured') && featured.value.length > 0)
+// When "merge featured" is on, everything shows in one grid (featured just highlighted).
+const hasFeaturedSection = computed(() =>
+  !config.homeMergeFeatured && sections.value.includes('featured') && featured.value.length > 0)
 // Avoid showing the same campaign twice (featured highlight + grid).
 const gridCampaigns = computed(() =>
   hasFeaturedSection.value ? campaigns.value.filter(c => !c.isFeatured) : campaigns.value)
+
+// Card columns: 'auto' (responsive fill) or a fixed number (2/3/4) that still collapses on mobile.
+const gridMode = computed(() => (config.homeColumns && config.homeColumns !== 'auto') ? 'fixed' : 'auto')
+const gridStyle = computed(() => gridMode.value === 'fixed'
+  ? { '--cols': Math.max(1, parseInt(config.homeColumns) || 3) } : {})
 
 onMounted(async () => {
   try {
@@ -59,7 +66,7 @@ const fmt = (n) => formatAmount(n, locale.value)
       <!-- Featured highlight -->
       <section v-else-if="section === 'featured' && hasFeaturedSection" class="featured-section">
         <h2 class="section-title">{{ locale === 'fa' ? '⭐ پروژه‌های ویژه' : '⭐ Featured projects' }}</h2>
-        <div class="cards-grid">
+        <div class="cards-grid" :class="gridMode" :style="gridStyle">
           <CampaignCard
             v-for="c in featured"
             :key="c.id"
@@ -72,7 +79,7 @@ const fmt = (n) => formatAmount(n, locale.value)
       <!-- Campaigns grid -->
       <section v-else-if="section === 'campaigns'">
         <h2 v-if="gridCampaigns.length" class="section-title">{{ t('campaigns') }}</h2>
-        <div v-if="gridCampaigns.length" class="cards-grid">
+        <div v-if="gridCampaigns.length" class="cards-grid" :class="gridMode" :style="gridStyle">
           <CampaignCard
             v-for="c in gridCampaigns"
             :key="c.id"
@@ -115,13 +122,13 @@ const fmt = (n) => formatAmount(n, locale.value)
 .section-title { margin-bottom: 1.25rem; font-size: 1.35rem; }
 .empty { color: var(--muted); text-align: center; padding: 3rem; }
 
-/* Responsive card grid: up to 3 per row on desktop. Cards keep a natural width
-   (max ~360px) instead of stretching when there are only 1–2 items. */
-.cards-grid {
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 360px));
-  justify-content: center;
+/* Card grid. 'auto' = responsive fill; 'fixed' = a chosen number of columns.
+   Both keep cards at a natural width and collapse to fewer columns on small screens. */
+.cards-grid { display: grid; gap: 1.5rem; justify-content: center; }
+.cards-grid.auto { grid-template-columns: repeat(auto-fill, minmax(280px, 360px)); }
+.cards-grid.fixed { grid-template-columns: repeat(var(--cols), minmax(0, 360px)); }
+@media (max-width: 900px) { .cards-grid.fixed { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) {
+  .cards-grid.auto, .cards-grid.fixed { grid-template-columns: 1fr; }
 }
-@media (max-width: 620px) { .cards-grid { grid-template-columns: 1fr; } }
 </style>

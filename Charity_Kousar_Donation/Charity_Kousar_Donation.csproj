@@ -26,16 +26,23 @@
   </ItemGroup>
 
   <!--
-    Build the Vue SPA into wwwroot BEFORE the static web assets are resolved, so the
-    freshly built (hashed) files are the ones discovered and published. Running it later
-    (AfterTargets="ComputeFilesToPublish") breaks because vite's emptyOutDir wipes files
-    that the SDK already catalogued.
+    Build the Vue SPA on publish and add its output explicitly to the publish set.
+    This is deterministic: it does NOT rely on the StaticWebAssets discovery timing
+    (which intermittently dropped the freshly built files), and wwwroot is NOT committed
+    to git so there are never stale hashed files to copy.
     - `npm install` (not `npm ci`) so it works without a committed package-lock.json.
     - Pass -p:SkipSpaBuild=true to skip during pure backend dev builds.
   -->
-  <Target Name="BuildSpa" BeforeTargets="ResolveProjectStaticWebAssets" Condition="'$(SkipSpaBuild)' != 'true'">
+  <Target Name="BuildSpa" AfterTargets="ComputeFilesToPublish" Condition="'$(SkipSpaBuild)' != 'true'">
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" Condition="!Exists('$(SpaRoot)node_modules')" />
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+    <ItemGroup>
+      <_SpaDist Include="$(MSBuildProjectDirectory)\wwwroot\**" />
+      <ResolvedFileToPublish Include="@(_SpaDist)" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
   </Target>
 
 </Project>

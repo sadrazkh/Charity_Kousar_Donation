@@ -1,6 +1,8 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { api } from '@/api/client'
+import { useToast } from '@/composables/useToast'
 import { BLOCK_TYPES, createBlock, blockLabel } from '@/utils/pageBlocks'
 import { PAGE_TEMPLATES } from '@/utils/pageTemplates'
 import NestedBlockList from '@/components/NestedBlockList.vue'
@@ -13,6 +15,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'save'])
 
 const { locale } = useI18n()
+const toast = useToast()
 const blocks = computed({
   get: () => props.modelValue,
   set: v => emit('update:modelValue', v)
@@ -20,15 +23,75 @@ const blocks = computed({
 const showPreview = ref(false)
 const paletteOpen = ref(false)
 const showTemplates = ref(false)
+const customTemplates = ref([])
 
 const campaignTitle = computed(() => props.campaign?.titleFa || '')
 
-function applyTemplate(tpl) {
-  if (blocks.value.length && !confirm(locale.value === 'fa'
+onMounted(async () => {
+  try {
+    const r = await api('/settings/templates')
+    customTemplates.value = JSON.parse(r.json || '[]')
+  } catch { /* */ }
+})
+
+// Give every block (and nested blocks) a fresh id when a template is applied.
+function refreshIds(list) {
+  return (list || []).map(b => {
+    const nb = JSON.parse(JSON.stringify(b))
+    nb.id = Math.random().toString(36).slice(2, 10)
+    if (Array.isArray(nb.data?.columns)) nb.data.columns = nb.data.columns.map(refreshIds)
+    if (Array.isArray(nb.data?.blocks)) nb.data.blocks = refreshIds(nb.data.blocks)
+    return nb
+  })
+}
+
+function confirmReplace() {
+  return !blocks.value.length || confirm(locale.value === 'fa'
     ? 'محتوای فعلی صفحه با این قالب جایگزین شود؟'
-    : 'Replace the current page content with this template?')) return
+    : 'Replace the current page content with this template?')
+}
+
+function applyTemplate(tpl) {
+  if (!confirmReplace()) return
   blocks.value = tpl.build()
   showTemplates.value = false
+}
+
+function applyCustom(tpl) {
+  if (!confirmReplace()) return
+  blocks.value = refreshIds(tpl.blocks)
+  showTemplates.value = false
+}
+
+async function persistTemplates(arr) {
+  await api('/settings/templates', { method: 'PUT', body: JSON.stringify({ json: JSON.stringify(arr) }) })
+  customTemplates.value = arr
+}
+
+async function saveAsTemplate() {
+  if (!blocks.value.length) {
+    toast.error(locale.value === 'fa' ? 'صفحه خالی است' : 'Page is empty')
+    return
+  }
+  const name = (prompt(locale.value === 'fa' ? 'نام قالب (برای ویرایش، همان نام قبلی را وارد کنید):' : 'Template name (reuse a name to overwrite):') || '').trim()
+  if (!name) return
+  const snapshot = JSON.parse(JSON.stringify(blocks.value))
+  const next = [...customTemplates.value]
+  const idx = next.findIndex(t => t.name === name)
+  if (idx >= 0) next[idx] = { ...next[idx], blocks: snapshot }
+  else next.push({ id: Math.random().toString(36).slice(2, 10), name, blocks: snapshot })
+  try {
+    await persistTemplates(next)
+    toast.success(locale.value === 'fa' ? 'قالب ذخیره شد ✓' : 'Template saved ✓')
+  } catch (e) { toast.error(e.message) }
+}
+
+async function deleteCustom(tpl) {
+  if (!confirm(locale.value === 'fa' ? `قالب «${tpl.name}» حذف شود؟` : `Delete template "${tpl.name}"?`)) return
+  try {
+    await persistTemplates(customTemplates.value.filter(t => t.id !== tpl.id))
+    toast.success(locale.value === 'fa' ? 'حذف شد' : 'Deleted')
+  } catch (e) { toast.error(e.message) }
 }
 
 const categories = computed(() => {
@@ -88,6 +151,27 @@ function label(type) {
             <small>{{ locale === 'fa' ? tpl.descFa : tpl.descEn }}</small>
           </button>
         </div>
+
+        <div class="custom-tpls">
+          <div class="ct-head">
+            <strong>{{ locale === 'fa' ? '💾 قالب‌های من' : '💾 My templates' }}</strong>
+            <button type="button" class="btn btn-ghost btn-sm" @click="saveAsTemplate">
+              {{ locale === 'fa' ? 'ذخیرهٔ صفحهٔ فعلی به‌عنوان قالب' : 'Save current page as template' }}
+            </button>
+          </div>
+          <p class="tpl-hint">{{ locale === 'fa' ? 'برای ویرایش یک قالب: «استفاده» را بزنید، تغییر دهید و دوباره با همان نام ذخیره کنید.' : 'To edit a template: Use it, change it, then save again with the same name.' }}</p>
+          <div v-if="customTemplates.length" class="tpl-grid">
+            <div v-for="tpl in customTemplates" :key="tpl.id" class="tpl-card custom">
+              <strong>{{ tpl.name }}</strong>
+              <small>{{ (tpl.blocks || []).length }} {{ locale === 'fa' ? 'بلوک' : 'blocks' }}</small>
+              <div class="ct-actions">
+                <button type="button" class="btn btn-primary btn-sm" @click="applyCustom(tpl)">{{ locale === 'fa' ? 'استفاده' : 'Use' }}</button>
+                <button type="button" class="ct-del" @click="deleteCustom(tpl)">🗑</button>
+              </div>
+            </div>
+          </div>
+          <p v-else class="ct-empty">{{ locale === 'fa' ? 'هنوز قالبی ذخیره نکرده‌اید.' : 'No saved templates yet.' }}</p>
+        </div>
       </div>
 
       <NestedBlockList v-model="blocks" :campaign-title="campaignTitle" />
@@ -145,6 +229,14 @@ function label(type) {
 .tpl-ic { font-size: 1.4rem; }
 .tpl-card strong { font-size: 0.88rem; }
 .tpl-card small { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+.custom-tpls { margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border); }
+.ct-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+.tpl-card.custom { gap: 0.35rem; }
+.ct-actions { display: flex; align-items: center; gap: 0.35rem; margin-top: 0.35rem; }
+.ct-actions .btn { flex: 1; }
+.ct-del { border: none; background: none; cursor: pointer; font-size: 0.95rem; padding: 0.3rem; }
+.ct-del:hover { filter: brightness(1.3); }
+.ct-empty { color: var(--muted); font-size: 0.82rem; }
 .empty { text-align: center; color: var(--muted); padding: 2rem 1rem; border: 2px dashed rgba(148,163,184,0.2); border-radius: 12px; }
 .preview-panel { margin-top: 1rem; padding: 1rem; overflow-x: auto; }
 .preview-panel h3 { margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--muted); }
