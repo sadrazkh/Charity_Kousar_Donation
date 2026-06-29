@@ -20,7 +20,7 @@ function desc() {
 <template>
   <article class="card campaign-card" :class="{ featured: campaign.isFeatured }">
     <div v-if="campaign.imageUrl" class="thumb" :style="{ backgroundImage: `url(${campaign.imageUrl})` }" />
-    <div v-else class="thumb placeholder" />
+    <div v-else class="thumb placeholder"><span class="ph-icon">♥</span></div>
     <div class="body">
       <FeaturedBanner v-if="campaign.isFeatured" :campaign="campaign" compact />
       <h3><router-link :to="`/c/${campaign.slug}`" class="title-link">{{ title() }}</router-link></h3>
@@ -44,7 +44,14 @@ function desc() {
     0 8px 24px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .thumb { height: 160px; background-size: cover; background-position: center; }
-.thumb.placeholder { background: linear-gradient(135deg, var(--bg-soft), var(--primary)); opacity: 0.5; }
+.thumb.placeholder {
+  display: flex; align-items: center; justify-content: center;
+  background:
+    radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--primary) 28%, transparent), transparent 60%),
+    radial-gradient(circle at 75% 70%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
+    var(--bg-soft);
+}
+.ph-icon { font-size: 2.6rem; color: color-mix(in srgb, var(--primary) 65%, var(--text)); opacity: 0.6; }
 .body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
 .body h3 { font-size: 1.1rem; }
 .desc { color: var(--muted); font-size: 0.9rem; flex: 1; }

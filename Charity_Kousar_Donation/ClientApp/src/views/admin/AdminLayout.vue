@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, watch, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { clearToken } from '@/api/client'
@@ -10,6 +10,17 @@ const route = useRoute()
 const { t } = useI18n()
 const { isDark, toggleTheme } = useTheme()
 const menuOpen = ref(false)
+
+const navItems = computed(() => [
+  { to: '/admin', icon: '📊', label: t('dashboard'), exact: true },
+  { to: '/admin/campaigns', icon: '📁', label: t('manageCampaigns'), exact: false },
+  { to: '/admin/donations', icon: '💳', label: t('manageDonations'), exact: false },
+  { to: '/admin/settings', icon: '⚙️', label: t('settings'), exact: false }
+])
+
+function isActive(n) {
+  return n.exact ? route.path === n.to : route.path.startsWith(n.to)
+}
 
 function logout() {
   clearToken()
@@ -57,10 +68,9 @@ onUnmounted(() => document.body.classList.remove('admin-menu-open'))
           </div>
 
           <nav class="drawer-nav">
-            <router-link to="/admin" @click="closeMenu">{{ t('dashboard') }}</router-link>
-            <router-link to="/admin/campaigns" @click="closeMenu">{{ t('manageCampaigns') }}</router-link>
-            <router-link to="/admin/donations" @click="closeMenu">{{ t('manageDonations') }}</router-link>
-            <router-link to="/admin/settings" @click="closeMenu">{{ t('settings') }}</router-link>
+            <router-link v-for="n in navItems" :key="n.to" :to="n.to" :class="{ active: isActive(n) }" @click="closeMenu">
+              <span class="nav-ic">{{ n.icon }}</span>{{ n.label }}
+            </router-link>
           </nav>
 
           <div class="drawer-foot">
@@ -76,12 +86,11 @@ onUnmounted(() => document.body.classList.remove('admin-menu-open'))
 
     <!-- Desktop sidebar (not teleported) -->
     <aside class="admin-sidebar card">
-      <h2>{{ t('admin') }}</h2>
+      <div class="brand"><span class="brand-mark">♥</span><h2>{{ t('admin') }}</h2></div>
       <nav>
-        <router-link to="/admin">{{ t('dashboard') }}</router-link>
-        <router-link to="/admin/campaigns">{{ t('manageCampaigns') }}</router-link>
-        <router-link to="/admin/donations">{{ t('manageDonations') }}</router-link>
-        <router-link to="/admin/settings">{{ t('settings') }}</router-link>
+        <router-link v-for="n in navItems" :key="n.to" :to="n.to" :class="{ active: isActive(n) }">
+          <span class="nav-ic">{{ n.icon }}</span>{{ n.label }}
+        </router-link>
       </nav>
       <div class="drawer-foot">
         <button type="button" class="btn btn-ghost btn-sm" @click="toggleTheme">
@@ -120,6 +129,13 @@ onUnmounted(() => document.body.classList.remove('admin-menu-open'))
 }
 
 .admin-sidebar h2 { font-size: 1.05rem; }
+.brand { display: flex; align-items: center; gap: 0.6rem; padding-bottom: 0.5rem; }
+.brand-mark {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+}
+.drawer-head .brand-mark { display: none; }
 
 .admin-sidebar nav,
 .drawer-nav {
@@ -138,10 +154,12 @@ onUnmounted(() => document.body.classList.remove('admin-menu-open'))
   min-height: 44px;
   display: flex;
   align-items: center;
+  gap: 0.6rem;
 }
+.nav-ic { font-size: 1.05rem; width: 1.4rem; text-align: center; }
 
-.admin-sidebar nav a.router-link-active,
-.drawer-nav a.router-link-active {
+.admin-sidebar nav a.active,
+.drawer-nav a.active {
   background: color-mix(in srgb, var(--primary) 18%, transparent);
   color: var(--primary);
   font-weight: 600;

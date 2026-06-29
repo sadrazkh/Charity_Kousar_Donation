@@ -115,12 +115,11 @@ const fmt = (n) => formatAmount(n, locale.value)
 .section-title { margin-bottom: 1.25rem; font-size: 1.35rem; }
 .empty { color: var(--muted); text-align: center; padding: 3rem; }
 
-/* Responsive card grid: 3 per row on desktop, 2 on tablet, 1 on mobile */
+/* Responsive card grid: up to 3 per row on desktop, fewer items stretch to fill
+   (auto-fit collapses empty columns so 2 cards never leave an empty 3rd column). */
 .cards-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
 }
-@media (max-width: 900px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 600px) { .cards-grid { grid-template-columns: 1fr; } }
 </style>

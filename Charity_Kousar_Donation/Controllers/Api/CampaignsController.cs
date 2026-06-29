@@ -36,8 +36,29 @@ public class CampaignsController(CampaignService campaigns, ShareService share) 
 
     [Authorize(Roles = "Admin")]
     [HttpGet("admin/all")]
-    public async Task<ActionResult<List<CampaignListDto>>> GetAllAdmin() =>
+    public async Task<ActionResult<List<CampaignAdminListDto>>> GetAllAdmin() =>
         Ok(await campaigns.GetAllForAdminAsync());
+
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("{id:guid}/flags")]
+    public async Task<IActionResult> SetFlags(Guid id, SetCampaignFlagsRequest req) =>
+        await campaigns.SetFlagsAsync(id, req.IsActive, req.IsFeatured) ? NoContent() : NotFound();
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("reorder")]
+    public async Task<IActionResult> Reorder(ReorderCampaignsRequest req)
+    {
+        await campaigns.ReorderAsync(req.Ids ?? []);
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("{id:guid}/duplicate")]
+    public async Task<ActionResult<object>> Duplicate(Guid id)
+    {
+        var c = await campaigns.DuplicateAsync(id);
+        return c == null ? NotFound() : Ok(new { id = c.Id, slug = c.Slug });
+    }
 
     [Authorize(Roles = "Admin")]
     [HttpPost]

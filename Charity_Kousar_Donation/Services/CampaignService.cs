@@ -21,13 +21,80 @@ public class CampaignService(AppDbContext db, IHttpContextAccessor http)
         return await MapListAsync(campaigns);
     }
 
-    public async Task<List<CampaignListDto>> GetAllForAdminAsync()
+    public async Task<List<CampaignAdminListDto>> GetAllForAdminAsync()
     {
         var campaigns = await db.Campaigns
             .OrderBy(c => c.SortOrder)
             .ThenByDescending(c => c.CreatedAt)
             .ToListAsync();
-        return await MapListAsync(campaigns);
+
+        var ids = campaigns.Select(c => c.Id).ToList();
+        var stats = await db.Donations
+            .Where(d => ids.Contains(d.CampaignId) && d.Status == DonationStatus.Paid)
+            .GroupBy(d => d.CampaignId)
+            .Select(g => new { g.Key, Sum = g.Sum(x => x.Amount), Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => new { x.Sum, x.Count });
+
+        return campaigns.Select(c =>
+        {
+            var s = stats.GetValueOrDefault(c.Id);
+            var col = s?.Sum ?? 0;
+            var pct = c.TargetAmount > 0 ? (int)Math.Min(100, col / c.TargetAmount * 100) : 0;
+            return new CampaignAdminListDto(
+                c.Id, c.TitleFa, c.TitleEn, c.TargetAmount, col, pct, c.ImageUrl,
+                c.Slug, c.ShortCode, $"{BaseUrl}/d/{c.ShortCode}", $"{BaseUrl}/c/{c.Slug}",
+                c.IsActive, c.IsFeatured, c.SortOrder, s?.Count ?? 0, c.FeaturedTimerEndsAt);
+        }).ToList();
+    }
+
+    public async Task<bool> SetFlagsAsync(Guid id, bool? isActive, bool? isFeatured)
+    {
+        var campaign = await db.Campaigns.FindAsync(id);
+        if (campaign == null) return false;
+        if (isActive.HasValue) campaign.IsActive = isActive.Value;
+        if (isFeatured.HasValue) campaign.IsFeatured = isFeatured.Value;
+        campaign.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task ReorderAsync(List<Guid> ids)
+    {
+        var campaigns = await db.Campaigns.Where(c => ids.Contains(c.Id)).ToListAsync();
+        for (var i = 0; i < ids.Count; i++)
+        {
+            var c = campaigns.FirstOrDefault(x => x.Id == ids[i]);
+            if (c != null) c.SortOrder = i;
+        }
+        await db.SaveChangesAsync();
+    }
+
+    public async Task<Campaign?> DuplicateAsync(Guid id)
+    {
+        var src = await db.Campaigns.FindAsync(id);
+        if (src == null) return null;
+
+        var copy = new Campaign
+        {
+            TitleFa = src.TitleFa + " (کپی)",
+            TitleEn = string.IsNullOrWhiteSpace(src.TitleEn) ? src.TitleEn : src.TitleEn + " (copy)",
+            DescriptionFa = src.DescriptionFa,
+            DescriptionEn = src.DescriptionEn,
+            TargetAmount = src.TargetAmount,
+            ImageUrl = src.ImageUrl,
+            Slug = await EnsureUniqueSlugAsync(src.Slug + "-copy"),
+            ShortCode = await EnsureUniqueShortCodeAsync(),
+            IsActive = false,
+            IsFeatured = false,
+            FeaturedBannerFa = src.FeaturedBannerFa,
+            FeaturedBannerEn = src.FeaturedBannerEn,
+            FeaturedTimerEndsAt = src.FeaturedTimerEndsAt,
+            SortOrder = src.SortOrder,
+            PageBlocksJson = src.PageBlocksJson
+        };
+        db.Campaigns.Add(copy);
+        await db.SaveChangesAsync();
+        return copy;
     }
 
     public async Task<CampaignDetailDto?> GetBySlugAsync(string slug)

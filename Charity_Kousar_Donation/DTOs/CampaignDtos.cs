@@ -68,3 +68,25 @@ public record UpdateCampaignRequest(
     string? FeaturedBannerEn,
     DateTime? FeaturedTimerEndsAt,
     int SortOrder);
+
+public record CampaignAdminListDto(
+    Guid Id,
+    string TitleFa,
+    string TitleEn,
+    decimal TargetAmount,
+    decimal CollectedAmount,
+    int ProgressPercent,
+    string? ImageUrl,
+    string Slug,
+    string ShortCode,
+    string ShortUrl,
+    string PageUrl,
+    bool IsActive,
+    bool IsFeatured,
+    int SortOrder,
+    int DonorCount,
+    DateTime? FeaturedTimerEndsAt);
+
+public record SetCampaignFlagsRequest(bool? IsActive, bool? IsFeatured);
+
+public record ReorderCampaignsRequest(List<Guid> Ids);
