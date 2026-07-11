@@ -11,12 +11,13 @@ const { t } = useI18n()
 const { isDark, toggleTheme } = useTheme()
 const menuOpen = ref(false)
 
+// SVG path data (stroke style) per nav item — replaces emoji icons.
 const navItems = computed(() => [
-  { to: '/admin', icon: '📊', label: t('dashboard'), exact: true },
-  { to: '/admin/home', icon: '🏠', label: t('homePage'), exact: false },
-  { to: '/admin/campaigns', icon: '📁', label: t('manageCampaigns'), exact: false },
-  { to: '/admin/donations', icon: '💳', label: t('manageDonations'), exact: false },
-  { to: '/admin/settings', icon: '⚙️', label: t('settings'), exact: false }
+  { to: '/admin', icon: 'M4 4h7v7H4zM13 4h7v5h-7zM13 13h7v7h-7zM4 15h7v5H4z', label: t('dashboard'), exact: true },
+  { to: '/admin/home', icon: 'M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5', label: t('homePage'), exact: false },
+  { to: '/admin/campaigns', icon: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', label: t('manageCampaigns'), exact: false },
+  { to: '/admin/donations', icon: 'M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM2 9h20M6 15h4', label: t('manageDonations'), exact: false },
+  { to: '/admin/settings', icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-2.9-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.1-2.9H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.1-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.4 1z', label: t('settings'), exact: false }
 ])
 
 function isActive(n) {
@@ -48,10 +49,13 @@ onUnmounted(() => document.body.classList.remove('admin-menu-open'))
 <template>
   <div class="admin-wrap">
     <header class="admin-topbar">
-      <button type="button" class="topbar-btn" aria-label="Menu" @click="openMenu">☰</button>
+      <button type="button" class="topbar-btn" aria-label="Menu" @click="openMenu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
       <span class="topbar-title">{{ t('admin') }}</span>
-      <button type="button" class="topbar-btn" @click="toggleTheme">
-        {{ isDark ? '☀️' : '🌙' }}
+      <button type="button" class="topbar-btn" :aria-label="isDark ? t('themeLight') : t('themeDark')" @click="toggleTheme">
+        <svg v-if="isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
+        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8z"/></svg>
       </button>
     </header>
 
@@ -65,12 +69,14 @@ onUnmounted(() => document.body.classList.remove('admin-menu-open'))
         <aside class="admin-drawer card">
           <div class="drawer-head">
             <h2>{{ t('admin') }}</h2>
-            <button type="button" class="topbar-btn" aria-label="Close" @click="closeMenu">✕</button>
+            <button type="button" class="topbar-btn" aria-label="Close" @click="closeMenu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
           </div>
 
           <nav class="drawer-nav">
             <router-link v-for="n in navItems" :key="n.to" :to="n.to" :class="{ active: isActive(n) }" @click="closeMenu">
-              <span class="nav-ic">{{ n.icon }}</span>{{ n.label }}
+              <svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="n.icon"/></svg><span>{{ n.label }}</span>
             </router-link>
           </nav>
 
@@ -87,10 +93,15 @@ onUnmounted(() => document.body.classList.remove('admin-menu-open'))
 
     <!-- Desktop sidebar (not teleported) -->
     <aside class="admin-sidebar card">
-      <div class="brand"><span class="brand-mark">♥</span><h2>{{ t('admin') }}</h2></div>
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        </span>
+        <h2>{{ t('admin') }}</h2>
+      </div>
       <nav>
         <router-link v-for="n in navItems" :key="n.to" :to="n.to" :class="{ active: isActive(n) }">
-          <span class="nav-ic">{{ n.icon }}</span>{{ n.label }}
+          <svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="n.icon"/></svg><span>{{ n.label }}</span>
         </router-link>
       </nav>
       <div class="drawer-foot">
@@ -133,9 +144,10 @@ onUnmounted(() => document.body.classList.remove('admin-menu-open'))
 .brand { display: flex; align-items: center; gap: 0.6rem; padding-bottom: 0.5rem; }
 .brand-mark {
   width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #fff;
+  display: flex; align-items: center; justify-content: center; color: #fff;
   background: linear-gradient(135deg, var(--primary), var(--accent));
 }
+.brand-mark svg { width: 20px; height: 20px; }
 .drawer-head .brand-mark { display: none; }
 
 .admin-sidebar nav,
@@ -155,16 +167,21 @@ onUnmounted(() => document.body.classList.remove('admin-menu-open'))
   min-height: 44px;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.7rem;
+  transition: background 0.15s, color 0.15s;
 }
-.nav-ic { font-size: 1.05rem; width: 1.4rem; text-align: center; }
+.admin-sidebar nav a:hover,
+.drawer-nav a:hover { background: var(--chip-bg); color: var(--text); }
+.nav-ic { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
 
 .admin-sidebar nav a.active,
 .drawer-nav a.active {
-  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
   color: var(--primary);
   font-weight: 600;
 }
+
+.topbar-btn svg { width: 22px; height: 22px; }
 
 .drawer-foot {
   display: flex;

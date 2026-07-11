@@ -67,10 +67,12 @@ async function exportFile(type) {
       <h1>{{ t('manageDonations') }}</h1>
       <div class="export-btns">
         <button type="button" class="btn btn-ghost btn-sm" :disabled="!!exporting" @click="exportFile('csv')">
-          {{ exporting === 'csv' ? '...' : '⬇ CSV' }}
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          {{ exporting === 'csv' ? '…' : 'CSV' }}
         </button>
         <button type="button" class="btn btn-ghost btn-sm" :disabled="!!exporting" @click="exportFile('report')">
-          {{ exporting === 'report' ? '...' : (locale === 'fa' ? '⬇ گزارش HTML' : '⬇ HTML report') }}
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          {{ exporting === 'report' ? '…' : (locale === 'fa' ? 'گزارش HTML' : 'HTML report') }}
         </button>
       </div>
     </div>
@@ -83,8 +85,11 @@ async function exportFile(type) {
     </div>
 
     <div class="filters">
-      <input v-model="search" class="input" :placeholder="locale === 'fa' ? '🔍 جستجو نام/موبایل/پروژه' : '🔍 Search name/phone/project'" />
-      <select v-model="statusFilter" class="select status-sel">
+      <div class="search-field">
+        <svg class="search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input v-model="search" class="input search-input" :aria-label="locale === 'fa' ? 'جستجو' : 'Search'" :placeholder="locale === 'fa' ? 'جستجو نام/موبایل/پروژه' : 'Search name/phone/project'" />
+      </div>
+      <select v-model="statusFilter" class="select status-sel" :aria-label="locale === 'fa' ? 'فیلتر وضعیت' : 'Filter status'">
         <option value="all">{{ locale === 'fa' ? 'همه وضعیت‌ها' : 'All statuses' }}</option>
         <option value="1">{{ statusText(1) }}</option>
         <option value="0">{{ statusText(0) }}</option>
@@ -114,7 +119,10 @@ async function exportFile(type) {
             <td>{{ methodText(d.paymentMethod) }}</td>
             <td><span class="badge" :class="statusClass(d.status)">{{ statusText(d.status) }}</span></td>
             <td>{{ fmtDate(d.paidAt || d.createdAt) }}</td>
-            <td>{{ d.smsSent ? '✓' : '—' }}</td>
+            <td>
+              <svg v-if="d.smsSent" class="sms-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :aria-label="locale === 'fa' ? 'ارسال شد' : 'Sent'"><path d="M20 6 9 17l-5-5"/></svg>
+              <span v-else class="sms-no" aria-hidden="true">—</span>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -131,8 +139,12 @@ async function exportFile(type) {
 .s-card span { color: var(--muted); font-size: 0.8rem; }
 .s-card strong { font-size: 1.3rem; font-variant-numeric: tabular-nums; }
 .filters { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
-.filters .input { flex: 1; min-width: 200px; }
+.search-field { position: relative; flex: 1; min-width: 200px; display: flex; align-items: center; }
+.search-ic { position: absolute; inset-inline-start: 0.75rem; width: 18px; height: 18px; color: var(--muted); pointer-events: none; }
+.search-input { padding-inline-start: 2.4rem; }
 .status-sel { max-width: 200px; }
+.sms-ok { width: 18px; height: 18px; color: var(--success); }
+.sms-no { color: var(--muted); }
 .table-wrap { padding: 0.5rem; overflow-x: auto; }
 .donor { display: flex; flex-direction: column; }
 .donor .ph { color: var(--muted); font-size: 0.8rem; }

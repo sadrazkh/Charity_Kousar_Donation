@@ -26,10 +26,10 @@ const KEYS = [
 ]
 
 const SECTIONS = [
-  { id: 'hero', icon: '✍️', fa: 'متن خوش‌آمد و مجموع کمک‌ها', en: 'Welcome text & total raised' },
-  { id: 'featured', icon: '⭐', fa: 'پروژه‌های ویژه', en: 'Featured projects' },
-  { id: 'campaigns', icon: '📁', fa: 'لیست پروژه‌ها', en: 'All projects' },
-  { id: 'donors', icon: '👥', fa: 'مشارکت‌کنندگان اخیر', en: 'Recent contributors' }
+  { id: 'hero', icon: 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z', fa: 'متن خوش‌آمد و مجموع کمک‌ها', en: 'Welcome text & total raised' },
+  { id: 'featured', icon: 'M12 2l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.8 6.1 20.8l1.2-6.6L2.5 9l6.6-.9L12 2z', fa: 'پروژه‌های ویژه', en: 'Featured projects' },
+  { id: 'campaigns', icon: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', fa: 'لیست پروژه‌ها', en: 'All projects' },
+  { id: 'donors', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8', fa: 'مشارکت‌کنندگان اخیر', en: 'Recent contributors' }
 ]
 const KNOWN = SECTIONS.map(s => s.id)
 
@@ -57,7 +57,7 @@ onMounted(async () => {
 watch(sec, (v) => { values.value['site.home.order'] = v.join(',') }, { deep: true })
 
 function secLabel(id) { const s = SECTIONS.find(x => x.id === id); return s ? (fa.value ? s.fa : s.en) : id }
-function secIcon(id) { return SECTIONS.find(x => x.id === id)?.icon || '▫' }
+function secIcon(id) { return SECTIONS.find(x => x.id === id)?.icon || 'M4 6h16M4 12h16M4 18h16' }
 
 const hidden = computed(() => SECTIONS.filter(s => !sec.value.includes(s.id)))
 function hide(id) { sec.value = sec.value.filter(s => s !== id) }
@@ -97,11 +97,14 @@ async function save() {
   <div v-if="!loading" class="home-editor">
     <div class="toolbar">
       <div>
-        <h1>🏠 {{ fa ? 'سفارشی‌سازی صفحه اصلی' : 'Customize home page' }}</h1>
+        <h1>{{ fa ? 'سفارشی‌سازی صفحه اصلی' : 'Customize home page' }}</h1>
         <p class="sub">{{ fa ? 'ترتیب و نمایش بخش‌ها، متن خوش‌آمد و ظاهر نوار پیشرفت را تعیین کنید.' : 'Arrange sections, edit the welcome text and the progress bar look.' }}</p>
       </div>
       <div class="tb-actions">
-        <a href="/" target="_blank" class="btn btn-ghost btn-sm">🌐 {{ fa ? 'مشاهده' : 'Preview' }}</a>
+        <a href="/" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+          {{ fa ? 'مشاهده' : 'Preview' }}
+        </a>
         <button class="btn btn-primary" :disabled="saving" @click="save">{{ saving ? '...' : t('save') }}</button>
       </div>
     </div>
@@ -111,7 +114,7 @@ async function save() {
       <div class="controls">
         <!-- Quick presets -->
         <section class="card block">
-          <h2>{{ fa ? '⚡ قالب‌های آماده چیدمان' : '⚡ Quick layout presets' }}</h2>
+          <h2>{{ fa ? 'قالب‌های آماده چیدمان' : 'Quick layout presets' }}</h2>
           <p class="hint">{{ fa ? 'یک چیدمان آماده را انتخاب کنید، سپس در صورت نیاز با کشیدن تغییر دهید.' : 'Pick a ready layout, then drag to fine-tune.' }}</p>
           <div class="presets">
             <button v-for="p in PRESETS" :key="p.id" type="button" class="preset-chip" @click="applyPreset(p)">
@@ -127,17 +130,23 @@ async function save() {
           <draggable v-model="sec" :item-key="el => el" handle=".sec-drag" class="sec-list" ghost-class="sec-ghost" animation="200" :delay="60" :delay-on-touch-only="true">
             <template #item="{ element: id }">
               <div class="sec-row">
-                <span class="sec-drag" aria-label="Drag">⠿</span>
-                <span class="sec-ic">{{ secIcon(id) }}</span>
+                <span class="sec-drag" aria-label="Drag" title="Drag">
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+                </span>
+                <svg class="sec-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="secIcon(id)"/></svg>
                 <span class="sec-name">{{ secLabel(id) }}</span>
-                <button type="button" class="mini danger" :title="fa ? 'مخفی کن' : 'Hide'" @click="hide(id)">🚫</button>
+                <button type="button" class="mini danger" :aria-label="fa ? 'مخفی کن' : 'Hide'" :title="fa ? 'مخفی کن' : 'Hide'" @click="hide(id)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.2A10 10 0 0 1 12 4c6.5 0 10 8 10 8a15 15 0 0 1-2.9 3.7M6.6 6.6A15 15 0 0 0 2 12s3.5 7 10 7a10 10 0 0 0 4.4-1M3 3l18 18"/></svg>
+                </button>
               </div>
             </template>
           </draggable>
           <div v-if="hidden.length" class="hidden-row">
             <span class="muted">{{ fa ? 'مخفی:' : 'Hidden:' }}</span>
             <button v-for="s in hidden" :key="s.id" type="button" class="chip" @click="show(s.id)">
-              + {{ secIcon(s.id) }} {{ secLabel(s.id) }}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              <svg class="chip-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="secIcon(s.id)"/></svg>
+              {{ secLabel(s.id) }}
             </button>
           </div>
         </section>
@@ -172,7 +181,8 @@ async function save() {
           <div class="label-row">
             <label class="label">{{ fa ? 'متن انگلیسی' : 'English text' }}</label>
             <button type="button" class="translate-btn" :disabled="translating" @click="translateHero">
-              {{ translating ? '...' : (fa ? '🌐 ترجمه از فارسی' : '🌐 Translate from FA') }}
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h10M9 3v2c0 5-2.5 8-6 9M6 9c0 3 3 5 6 6M13 21l4-9 4 9M14.5 17h5"/></svg>
+              {{ translating ? '…' : (fa ? 'ترجمه از فارسی' : 'Translate from FA') }}
             </button>
           </div>
           <textarea v-model="values['site.hero.en']" class="textarea input-ltr" dir="ltr" rows="2" />
@@ -250,7 +260,7 @@ async function save() {
         <p class="preview-title">{{ fa ? 'پیش‌نمایش چیدمان' : 'Layout preview' }}</p>
         <div class="phone">
           <div v-for="id in sec" :key="id" class="pv-block" :class="'pv-' + id">
-            <span class="pv-ic">{{ secIcon(id) }}</span>
+            <svg class="pv-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="secIcon(id)"/></svg>
             <span>{{ secLabel(id) }}</span>
           </div>
           <p v-if="!sec.length" class="pv-empty">{{ fa ? 'هیچ بخشی فعال نیست' : 'No sections enabled' }}</p>
@@ -275,18 +285,24 @@ async function save() {
 
 .sec-list { display: flex; flex-direction: column; gap: 0.5rem; min-height: 40px; }
 .sec-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--input-bg); }
-.sec-drag { cursor: grab; color: var(--muted); font-size: 1.2rem; touch-action: none; }
+.sec-drag { cursor: grab; color: var(--muted); touch-action: none; display: inline-flex; }
+.sec-drag svg { width: 20px; height: 20px; }
 .sec-ghost { opacity: 0.4; }
-.sec-ic { font-size: 1.1rem; }
+.sec-ic { width: 20px; height: 20px; color: var(--primary); flex-shrink: 0; }
 .sec-name { flex: 1; font-size: 0.92rem; }
-.mini { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); cursor: pointer; }
-.mini.danger { color: #f87171; }
+.mini { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.mini svg { width: 17px; height: 17px; }
+.mini.danger { color: var(--danger); }
 .presets { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .preset-chip { padding: 0.45rem 0.9rem; border-radius: 999px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); cursor: pointer; font-family: inherit; font-size: 0.85rem; }
 .preset-chip:hover { border-color: color-mix(in srgb, var(--primary) 50%, transparent); color: var(--primary); }
 .hidden-row { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-top: 0.75rem; }
 .hidden-row .muted { color: var(--muted); font-size: 0.85rem; }
-.chip { padding: 0.35rem 0.7rem; border-radius: 999px; border: 1px dashed var(--border); background: transparent; color: var(--text); cursor: pointer; font-family: inherit; font-size: 0.82rem; }
+.chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.35rem 0.7rem; border-radius: 999px; border: 1px dashed var(--border); background: transparent; color: var(--text); cursor: pointer; font-family: inherit; font-size: 0.82rem; }
+.chip svg { width: 14px; height: 14px; }
+.chip .chip-ic { color: var(--primary); }
+.translate-btn { display: inline-flex; align-items: center; gap: 0.3rem; }
+.translate-btn .icon { width: 14px; height: 14px; }
 
 .colors { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
 .swatch { width: 56px; height: 38px; border: 1px solid var(--border); border-radius: 8px; background: none; cursor: pointer; padding: 2px; }
@@ -310,7 +326,7 @@ async function save() {
 .pv-block { display: flex; align-items: center; gap: 0.5rem; padding: 0.85rem 0.75rem; border-radius: 10px; font-size: 0.85rem; color: var(--text); background: var(--card); border: 1px solid var(--border); }
 .pv-hero { background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 22%, transparent), color-mix(in srgb, var(--accent) 14%, transparent)); font-weight: 700; }
 .pv-featured { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
-.pv-ic { font-size: 1.1rem; }
+.pv-ic { width: 18px; height: 18px; flex-shrink: 0; }
 .pv-empty { color: var(--muted); text-align: center; font-size: 0.85rem; padding: 2rem 0; }
 
 @media (max-width: 820px) {
