@@ -19,7 +19,8 @@ const showLabel = computed(() =>
 
 <template>
   <div class="progress-wrap">
-    <div class="progress-bar" :style="{ height: height + 'px' }">
+    <div class="progress-bar" :style="{ height: height + 'px' }"
+      role="progressbar" :aria-valuenow="pct" aria-valuemin="0" aria-valuemax="100">
       <div class="progress-bar-fill" :style="fillStyle" />
     </div>
     <span v-if="showLabel" class="progress-pct" :style="{ color: fillStyle.background }">{{ pct }}%</span>

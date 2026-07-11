@@ -71,9 +71,11 @@ async function copyLink() {
 
       <section class="share-section">
         <div class="share-header">
-          <div class="share-icon">📤</div>
+          <div class="share-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+          </div>
           <div>
-            <h3>{{ locale === 'fa' ? 'اشتراک‌گذاری و دعوت دیگران' : 'Share & invite others' }}</h3>
+            <h3>{{ t('shareInvite') }}</h3>
             <p>{{ locale === 'fa' ? 'لینک را بفرستید یا با واتساپ/تلگرام به اشتراک بگذارید' : 'Send the link or share via WhatsApp/Telegram' }}</p>
           </div>
         </div>
@@ -87,15 +89,15 @@ async function copyLink() {
 
         <div class="share-channels">
           <a :href="waUrl" class="channel-btn whatsapp" target="_blank" rel="noopener">
-            <span class="ch-icon">💬</span>
+            <svg class="ch-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.2 14.8l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 0 1 12 4zm-2.6 3.6c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.7 2.7 4.2 3.7 2.1.8 2.5.7 2.9.6.4 0 1.3-.5 1.5-1.1.2-.5.2-1 .1-1.1 0-.1-.2-.2-.5-.3l-1.3-.7c-.2-.1-.4-.1-.5.1l-.6.8c-.1.1-.2.2-.4.1-.6-.2-1.3-.5-2.2-1.3-.6-.6-1-1.3-1.2-1.5-.1-.2 0-.3.1-.4l.3-.4c.1-.1.1-.2.2-.4 0-.1 0-.3 0-.4l-.6-1.5c-.2-.4-.3-.4-.5-.4z"/></svg>
             <span>WhatsApp</span>
           </a>
           <a :href="tgUrl" class="channel-btn telegram" target="_blank" rel="noopener">
-            <span class="ch-icon">✈️</span>
+            <svg class="ch-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.7.8l-4.7-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.7 13.2 2 11.7c-1-.3-1-1 .2-1.5l18.4-7.1c.9-.3 1.6.2 1.3 1.2z"/></svg>
             <span>Telegram</span>
           </a>
           <button type="button" class="channel-btn ai" @click="showShare = true">
-            <span class="ch-icon">📝</span>
+            <svg class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
             <span>{{ locale === 'fa' ? 'متن آماده' : 'Ready text' }}</span>
           </button>
         </div>
@@ -116,7 +118,8 @@ async function copyLink() {
       <p class="sticky-amount"><ProgressAmount :collected="campaign.collectedAmount" :target="campaign.targetAmount" /></p>
       <button class="btn btn-primary" style="width:100%" @click="showDonate = true">{{ t('pay') }}</button>
       <button type="button" class="btn btn-accent btn-sm share-side-btn" @click="showShare = true">
-        {{ locale === 'fa' ? '📤 اشتراک‌گذاری' : '📤 Share' }}
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+        {{ locale === 'fa' ? 'اشتراک‌گذاری' : 'Share' }}
       </button>
     </aside>
   </main>
@@ -165,22 +168,28 @@ async function copyLink() {
 .share-icon {
   width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
   background: color-mix(in srgb, var(--primary) 20%, transparent);
-  display: flex; align-items: center; justify-content: center; font-size: 1.35rem;
+  color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
 }
+.share-icon .icon { width: 22px; height: 22px; }
 .share-header h3 { font-size: 1rem; margin-bottom: 0.2rem; }
 .share-header p { font-size: 0.82rem; color: var(--muted); margin: 0; line-height: 1.5; }
 .share-link-box { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.share-input { flex: 1; min-width: 180px; background: rgba(0,0,0,0.25); }
+.share-input { flex: 1; min-width: 180px; background: var(--input-bg); }
 .copy-btn { min-width: 100px; }
 .share-channels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
 @media (max-width: 480px) { .share-channels { grid-template-columns: 1fr; } }
 .channel-btn {
   display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
-  padding: 0.75rem 0.5rem; border-radius: 10px; border: 1px solid rgba(148,163,184,0.2);
-  background: rgba(0,0,0,0.2); color: inherit; text-decoration: none;
+  padding: 0.75rem 0.5rem; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--chip-bg); color: inherit; text-decoration: none;
   font-family: inherit; font-size: 0.82rem; cursor: pointer; transition: transform 0.15s, border-color 0.15s;
   min-height: 72px; justify-content: center;
 }
+.ch-icon { width: 1.5rem; height: 1.5rem; }
+.channel-btn.whatsapp .ch-icon { color: #25d366; }
+.channel-btn.telegram .ch-icon { color: #2aabee; }
+.channel-btn.ai .ch-icon { color: var(--accent); }
 .channel-btn:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--primary) 40%, transparent); }
 .channel-btn.whatsapp { border-color: rgba(37,211,102,0.3); }
 .channel-btn.telegram { border-color: rgba(42,171,238,0.3); }
@@ -188,7 +197,7 @@ async function copyLink() {
 .ch-icon { font-size: 1.4rem; }
 .qr-card {
   display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
-  padding: 0.85rem; border-radius: 10px; background: rgba(0,0,0,0.2);
+  padding: 0.85rem; border-radius: 10px; background: var(--chip-bg);
 }
 .qr-info strong { display: block; font-size: 0.9rem; margin-bottom: 0.25rem; }
 .qr-info p { font-size: 0.78rem; color: var(--muted); margin: 0; line-height: 1.5; max-width: 280px; }

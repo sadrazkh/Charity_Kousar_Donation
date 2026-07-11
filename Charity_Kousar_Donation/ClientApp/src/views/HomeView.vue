@@ -16,6 +16,14 @@ const total = ref(0)
 const selected = ref(null)
 
 const heroText = computed(() => locale.value === 'fa' ? config.heroTextFa : config.heroTextEn)
+const tagline = computed(() => locale.value === 'fa' ? config.taglineFa : config.taglineEn)
+const activeCount = computed(() => campaigns.value.length)
+
+function scrollToCampaigns() {
+  const el = document.getElementById('campaigns-anchor')
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  else window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+}
 
 // Section order is admin-configurable (e.g. "hero,featured,campaigns,donors").
 const KNOWN_SECTIONS = ['hero', 'featured', 'campaigns', 'donors']
@@ -56,16 +64,46 @@ const fmt = (n) => formatAmount(n, locale.value)
   <AppHeader />
   <main class="container home">
     <template v-for="section in sections" :key="section">
-      <!-- Hero -->
-      <section v-if="section === 'hero'" class="hero card">
-        <p class="hero-text">{{ heroText }}</p>
-        <p class="hero-label">{{ t('totalCollected') }}</p>
-        <p class="stat-value">{{ fmt(total) }} <span class="unit">{{ t('toman') }}</span></p>
+      <!-- Hero: storytelling + clear donate CTA + impact (charity best practice) -->
+      <section v-if="section === 'hero'" class="hero">
+        <div class="hero-content">
+          <span v-if="tagline" class="hero-eyebrow">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+            <span>{{ tagline }}</span>
+          </span>
+          <h1 class="hero-title">{{ heroText }}</h1>
+          <div class="hero-cta">
+            <button class="btn btn-primary btn-lg" @click="scrollToCampaigns">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+              {{ t('donateNow') }}
+            </button>
+            <button class="btn btn-ghost btn-lg" @click="scrollToCampaigns">{{ t('campaigns') }}</button>
+          </div>
+          <div class="hero-trust">
+            <span class="chip">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+              {{ t('securePayment') }}
+            </span>
+          </div>
+        </div>
+        <div class="hero-impact card">
+          <p class="impact-label">{{ t('totalCollected') }}</p>
+          <p class="impact-value stat-value">{{ fmt(total) }} <span class="unit">{{ t('toman') }}</span></p>
+          <div class="impact-mini">
+            <div class="impact-cell">
+              <strong>{{ activeCount }}</strong>
+              <span>{{ t('campaigns') }}</span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- Featured highlight -->
       <section v-else-if="section === 'featured' && hasFeaturedSection" class="featured-section">
-        <h2 class="section-title">{{ locale === 'fa' ? '⭐ پروژه‌های ویژه' : '⭐ Featured projects' }}</h2>
+        <h2 class="section-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.8 6.1 20.8l1.2-6.6L2.5 9l6.6-.9L12 2z"/></svg>
+          {{ locale === 'fa' ? 'پروژه‌های ویژه' : 'Featured projects' }}
+        </h2>
         <div class="cards-grid" :class="gridMode" :style="gridStyle">
           <CampaignCard
             v-for="c in featured"
@@ -77,8 +115,11 @@ const fmt = (n) => formatAmount(n, locale.value)
       </section>
 
       <!-- Campaigns grid -->
-      <section v-else-if="section === 'campaigns'">
-        <h2 v-if="gridCampaigns.length" class="section-title">{{ t('campaigns') }}</h2>
+      <section v-else-if="section === 'campaigns'" id="campaigns-anchor">
+        <h2 v-if="gridCampaigns.length" class="section-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          {{ t('campaigns') }}
+        </h2>
         <div v-if="gridCampaigns.length" class="cards-grid" :class="gridMode" :style="gridStyle">
           <CampaignCard
             v-for="c in gridCampaigns"
@@ -106,20 +147,58 @@ const fmt = (n) => formatAmount(n, locale.value)
 </template>
 
 <style scoped>
-.home { display: flex; flex-direction: column; gap: 2.25rem; }
-.hero { text-align: center; padding: 2.5rem; position: relative; overflow: hidden; }
-.hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 15%, transparent), color-mix(in srgb, var(--accent) 10%, transparent));
-  pointer-events: none;
+.home { display: flex; flex-direction: column; gap: 2.5rem; }
+
+/* Storytelling hero: message + CTA on one side, live impact on the other. */
+.hero {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.75rem;
+  align-items: center;
+  padding: 0.5rem 0 1rem;
 }
-.hero-text { font-size: 1.35rem; font-weight: 600; margin-bottom: 1.25rem; position: relative; line-height: 1.7; }
-.hero-label { color: var(--muted); margin-bottom: 0.5rem; position: relative; }
-.stat-value { position: relative; }
+.hero-content { display: flex; flex-direction: column; gap: 1.25rem; align-items: flex-start; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.4rem 0.9rem; border-radius: 999px;
+  background: var(--warm-soft); color: var(--accent);
+  font-size: 0.85rem; font-weight: 600;
+}
+[data-theme="light"] .hero-eyebrow { color: #b45309; }
+.hero-title {
+  font-size: clamp(1.7rem, 4.5vw, 2.9rem);
+  font-weight: 800; line-height: 1.25; margin: 0;
+  letter-spacing: -0.5px;
+}
+.hero-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.hero-trust { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+.hero-impact {
+  text-align: center;
+  background:
+    radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 70%),
+    var(--card);
+  padding: 2rem 1.5rem;
+}
+.impact-label { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
+.impact-value { font-size: clamp(1.6rem, 5vw, 2.4rem); }
+.impact-mini { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+.impact-cell { display: flex; flex-direction: column; gap: 0.15rem; }
+.impact-cell strong { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.impact-cell span { color: var(--muted); font-size: 0.85rem; }
 .unit { font-size: 1rem; color: var(--muted); -webkit-text-fill-color: var(--muted); }
-.section-title { margin-bottom: 1.25rem; font-size: 1.35rem; }
+
+.section-title {
+  display: flex; align-items: center; gap: 0.55rem;
+  margin-bottom: 1.25rem; font-size: 1.4rem;
+}
+.section-title .icon { width: 1.2rem; height: 1.2rem; color: var(--accent); }
+
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; gap: 1.25rem; }
+  .hero-content { align-items: center; text-align: center; }
+  .hero-cta, .hero-trust { justify-content: center; }
+}
 .empty { color: var(--muted); text-align: center; padding: 3rem; }
 
 /* Card grid. 'auto' = responsive fill; 'fixed' = a chosen number of columns.

@@ -59,5 +59,8 @@
   "todayCollected": "کمک امروز",
   "pending": "در انتظار",
   "regenerateLink": "لینک جدید",
-  "language": "زبان"
+  "language": "زبان",
+  "securePayment": "پرداخت امن",
+  "shareInvite": "اشتراک‌گذاری و دعوت دیگران",
+  "scanToDonate": "اسکن برای کمک"
 }

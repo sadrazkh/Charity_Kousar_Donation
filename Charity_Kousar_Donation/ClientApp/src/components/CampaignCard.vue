@@ -20,7 +20,9 @@ function desc() {
 <template>
   <article class="card campaign-card" :class="{ featured: campaign.isFeatured }">
     <div v-if="campaign.imageUrl" class="thumb" :style="{ backgroundImage: `url(${campaign.imageUrl})` }" />
-    <div v-else class="thumb placeholder"><span class="ph-icon">♥</span></div>
+    <div v-else class="thumb placeholder" aria-hidden="true">
+      <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+    </div>
     <div class="body">
       <FeaturedBanner v-if="campaign.isFeatured" :campaign="campaign" compact />
       <h3><router-link :to="`/c/${campaign.slug}`" class="title-link">{{ title() }}</router-link></h3>
@@ -51,7 +53,9 @@ function desc() {
     radial-gradient(circle at 75% 70%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
     var(--bg-soft);
 }
-.ph-icon { font-size: 2.6rem; color: color-mix(in srgb, var(--primary) 65%, var(--text)); opacity: 0.6; }
+.ph-icon { width: 3rem; height: 3rem; color: color-mix(in srgb, var(--primary) 70%, var(--text)); opacity: 0.55; }
+.campaign-card { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+.campaign-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--primary) 35%, var(--border)); }
 .body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
 .body h3 { font-size: 1.1rem; }
 .desc { color: var(--muted); font-size: 0.9rem; flex: 1; }

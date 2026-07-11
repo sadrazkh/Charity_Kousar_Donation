@@ -11,7 +11,16 @@
   --border: rgba(148, 163, 184, 0.22);
   --overlay: rgba(0, 0, 0, 0.6);
   --radius: 16px;
+  --radius-sm: 10px;
   --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 6px 18px -8px rgba(0, 0, 0, 0.5);
+  /* Warm "trust" surfaces for chips / soft badges (charity storytelling accent). */
+  --warm-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  --chip-bg: rgba(148, 163, 184, 0.12);
+  --success: #10b981;
+  --danger: #f43f5e;
+  /* Keyboard focus ring token (WCAG 2.4.7). */
+  --ring: color-mix(in srgb, var(--primary) 70%, transparent);
   font-family: 'Vazirmatn', 'Inter', system-ui, sans-serif;
 }
 
@@ -32,6 +41,29 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Accessibility: visible keyboard focus on every interactive element (WCAG 2.4.7).
+   Mouse users don't see it (:focus-visible), keyboard users always do. */
+:focus { outline: none; }
+:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+a:focus-visible, .btn:focus-visible { border-radius: 999px; }
+
+/* Respect users who prefer reduced motion (WCAG 2.3.3 / vestibular safety). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Inline SVG icon helper — keeps icons crisp and sized to the current text. */
+.icon { width: 1.15em; height: 1.15em; flex-shrink: 0; display: inline-block; vertical-align: -0.15em; }
 
 body {
   background: var(--bg);
@@ -101,7 +133,29 @@ a:hover { text-decoration: underline; }
   color: var(--text);
 }
 .btn-sm { padding: 0.45rem 1rem; font-size: 0.85rem; }
+.btn-lg { padding: 0.95rem 2rem; font-size: 1.05rem; min-height: 52px; }
 .btn-danger { background: #dc2626; color: white; }
+
+/* Icon-only control (theme/lang/home in the header). 44px = min touch target. */
+.icon-btn {
+  width: 44px; height: 44px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12px; border: 1px solid var(--border);
+  background: var(--chip-bg); color: var(--text); cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.icon-btn:hover { background: color-mix(in srgb, var(--primary) 14%, transparent); border-color: color-mix(in srgb, var(--primary) 35%, transparent); }
+.icon-btn:active { transform: scale(0.95); }
+.icon-btn .icon { width: 20px; height: 20px; }
+
+/* Soft pill chip for trust signals / meta. */
+.chip {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 0.8rem; border-radius: 999px;
+  background: var(--chip-bg); border: 1px solid var(--border);
+  font-size: 0.82rem; color: var(--text);
+}
+.chip .icon { width: 1rem; height: 1rem; color: var(--primary); }
 
 .card {
   background: var(--card);

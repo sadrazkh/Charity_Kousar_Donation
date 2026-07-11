@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import AmountInput from '@/components/AmountInput.vue'
@@ -35,6 +35,22 @@ const title = computed(() =>
 function pickAmount(n) {
   amount.value = n
 }
+
+// Dialog a11y: close on Escape, restore focus to the opener on unmount.
+const dialogEl = ref(null)
+let opener = null
+function onKeydown(e) {
+  if (e.key === 'Escape') emit('close')
+}
+onMounted(() => {
+  opener = document.activeElement
+  window.addEventListener('keydown', onKeydown)
+  dialogEl.value?.focus()
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  if (opener && typeof opener.focus === 'function') opener.focus()
+})
 
 async function submit() {
   error.value = ''
@@ -123,8 +139,8 @@ async function confirmCrypto() {
 
 <template>
   <div class="modal-overlay" @click.self="emit('close')">
-    <div class="card modal">
-      <h2>{{ t('pay') }} — {{ title }}</h2>
+    <div class="card modal" ref="dialogEl" role="dialog" aria-modal="true" aria-labelledby="donate-title" tabindex="-1">
+      <h2 id="donate-title">{{ t('pay') }} — {{ title }}</h2>
 
       <template v-if="otpStep">
         <p class="hint">{{ otpStep.message }}</p>
@@ -157,7 +173,8 @@ async function confirmCrypto() {
           </div>
 
           <p v-if="config.paymentBypassEnabled" class="test-hint">
-            🧪 {{ locale === 'fa' ? 'حالت تست پرداخت فعال است' : 'Payment test mode is on' }}
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.5L5.5 18a2 2 0 0 0 1.8 3h9.4a2 2 0 0 0 1.8-3L14 9.5V3"/></svg>
+            {{ locale === 'fa' ? 'حالت تست پرداخت فعال است' : 'Payment test mode is on' }}
           </p>
 
           <p v-if="error" class="error">{{ error }}</p>
@@ -185,18 +202,24 @@ async function confirmCrypto() {
 
 <style scoped>
 .form { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
-.quick-amounts { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.quick-amounts { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .quick-btn {
-  padding: 0.4rem 0.65rem; border-radius: 999px; border: 1px solid rgba(148,163,184,0.3);
-  background: rgba(15,23,42,0.5); color: var(--muted); font-size: 0.8rem; cursor: pointer;
-  font-family: inherit; min-height: 36px; touch-action: manipulation;
+  padding: 0.5rem 0.85rem; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--chip-bg); color: var(--text); font-size: 0.82rem; cursor: pointer;
+  font-family: inherit; min-height: 44px; touch-action: manipulation;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
-.quick-btn.active { border-color: var(--primary); color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, transparent); }
+.quick-btn:hover { border-color: color-mix(in srgb, var(--primary) 40%, transparent); }
+.quick-btn.active {
+  border-color: var(--primary); color: #fff; font-weight: 600;
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 72%, #000));
+}
 .actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.5rem; flex-wrap: wrap; }
 .actions .btn { flex: 1; min-width: 120px; }
 .error { color: #f87171; font-size: 0.9rem; }
-.test-hint { font-size: 0.8rem; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); padding: 0.45rem 0.65rem; border-radius: 8px; margin: 0; }
+.test-hint { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 0.5rem 0.7rem; border-radius: 8px; margin: 0; }
+.test-hint .icon { width: 1rem; height: 1rem; }
 .hint { color: var(--muted); margin: 1rem 0; }
-.wallet { display: block; word-break: break-all; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px; margin: 0.5rem 0; font-size: 0.85rem; }
+.wallet { display: block; word-break: break-all; padding: 0.75rem; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; margin: 0.5rem 0; font-size: 0.85rem; }
 h2 { font-size: 1.05rem; line-height: 1.5; }
 </style>
