@@ -5,11 +5,16 @@ import FeaturedBanner from '@/components/FeaturedBanner.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
 import ProgressAmount from '@/components/ProgressAmount.vue'
 import { useSiteConfig } from '@/composables/useSiteConfig'
+import { featuredStyleFor } from '@/utils/featuredStyles'
 
 const props = defineProps({ campaign: { type: Object, required: true } })
 const emit = defineEmits(['donate'])
 const { locale, t } = useI18n()
 const { config } = useSiteConfig()
+
+// The highlight ring follows the campaign's featured style (gold, red, blue, ...).
+const accent = computed(() => featuredStyleFor(props.campaign, config).color)
+const completed = computed(() => props.campaign.isCompleted === true)
 
 // Square ready-made illustrations look best uncropped ("contain"); photos usually want "cover".
 const contain = computed(() => config.cardImageFit === 'contain')
@@ -28,13 +33,18 @@ function desc() {
 </script>
 
 <template>
-  <article class="card campaign-card" :class="{ featured: campaign.isFeatured }">
+  <article class="card campaign-card" :class="{ featured: campaign.isFeatured && !completed, done: completed }"
+    :style="{ '--card-accent': accent }">
     <div v-if="campaign.imageUrl" class="thumb" :class="{ contain }" :style="thumbStyle" />
     <div v-else class="thumb placeholder" aria-hidden="true">
       <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
     </div>
     <div class="body">
-      <FeaturedBanner v-if="campaign.isFeatured" :campaign="campaign" compact />
+      <span v-if="completed" class="done-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+        {{ locale === 'fa' ? 'هدف تأمین شد' : 'Goal reached' }}
+      </span>
+      <FeaturedBanner v-else-if="campaign.isFeatured" :campaign="campaign" compact />
       <h3><router-link :to="`/c/${campaign.slug}`" class="title-link">{{ title() }}</router-link></h3>
       <p class="desc">{{ desc() }}</p>
       <ProgressBar :percent="campaign.progressPercent" />
@@ -42,7 +52,10 @@ function desc() {
         <ProgressAmount :collected="campaign.collectedAmount" :target="campaign.targetAmount" />
       </div>
       <div class="actions">
-        <button class="btn btn-primary btn-sm pay-btn" @click="emit('donate', campaign)">{{ t('pay') }}</button>
+        <router-link v-if="completed" :to="`/c/${campaign.slug}`" class="btn btn-ghost btn-sm pay-btn">
+          {{ locale === 'fa' ? 'مشاهده پرونده' : 'View project' }}
+        </router-link>
+        <button v-else class="btn btn-primary btn-sm pay-btn" @click="emit('donate', campaign)">{{ t('pay') }}</button>
       </div>
     </div>
   </article>
@@ -51,10 +64,20 @@ function desc() {
 <style scoped>
 .campaign-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
 .campaign-card.featured {
-  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent),
-    0 8px 24px color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--card-accent, var(--accent)) 50%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--card-accent, var(--accent)) 20%, transparent),
+    0 8px 24px color-mix(in srgb, var(--card-accent, var(--accent)) 12%, transparent);
 }
+.campaign-card.done { border-color: color-mix(in srgb, var(--success) 40%, transparent); }
+.campaign-card.done .thumb { filter: saturate(0.85); }
+.done-badge {
+  display: inline-flex; align-items: center; gap: 0.35rem; align-self: flex-start;
+  padding: 0.25rem 0.7rem; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 700;
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+}
+.done-badge svg { width: 0.9rem; height: 0.9rem; }
 .thumb { height: 160px; background-size: cover; background-position: center; background-repeat: no-repeat; }
 .thumb.contain { background-color: var(--bg-soft); }
 .thumb.placeholder {

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatAmount } from '@/utils/amount'
+import { toPersianDigits } from '@/utils/jalali'
 import { useSiteConfig } from '@/composables/useSiteConfig'
 
 const props = defineProps({
@@ -26,7 +27,7 @@ const values = computed(() => {
     collected: formatAmount(props.collected, locale.value),
     target: formatAmount(props.target, locale.value),
     remaining: formatAmount(remaining, locale.value),
-    percent: percent + '%'
+    percent: locale.value === 'fa' ? toPersianDigits(String(percent)) + '٪' : percent + '%'
   }
 })
 

@@ -18,6 +18,7 @@ public record CampaignAdminDetailDto(
     string PageUrl,
     bool IsActive,
     bool IsFeatured,
+    string? FeaturedStyle,
     string? FeaturedBannerFa,
     string? FeaturedBannerEn,
     DateTime? FeaturedTimerEndsAt,

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { toPersianDigits } from '@/utils/jalali'
 import { useSiteConfig } from '@/composables/useSiteConfig'
+import { featuredStyleFor, styleLabel } from '@/utils/featuredStyles'
 
 const props = defineProps({
   campaign: { type: Object, required: true },
@@ -47,9 +48,11 @@ const endsAt = computed(() => {
   return Number.isNaN(t) ? null : t
 })
 
-const badgeText = computed(() => locale.value === 'fa' ? config.featuredBadgeFa : config.featuredBadgeEn)
+// Each campaign picks a highlight style (color + badge label); e.g. «ویژه» or «اضطراری».
+const style = computed(() => featuredStyleFor(props.campaign, config))
+const badgeText = computed(() => styleLabel(style.value, locale.value))
 const expiredText = computed(() => locale.value === 'fa' ? config.featuredExpiredFa : config.featuredExpiredEn)
-const accent = computed(() => config.featuredColor || 'var(--accent)')
+const accent = computed(() => style.value.color || 'var(--accent)')
 const isInline = computed(() => config.featuredLayout === 'inline')
 
 const remaining = computed(() => {

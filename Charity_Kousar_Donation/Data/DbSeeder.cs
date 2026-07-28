@@ -1,4 +1,5 @@
 using Charity_Kousar_Donation.Models;
+using Charity_Kousar_Donation.Services;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -33,6 +34,8 @@ public static class DbSeeder
                 new() { Key = "site.tagline.en", Value = "Building hope together", Group = "site", LabelFa = "شعار (انگلیسی)", LabelEn = "Tagline (EN)", SortOrder = 4 },
                 new() { Key = "site.hero.fa", Value = "با هم می‌توانیم زندگی‌ها را روشن کنیم", Group = "site", LabelFa = "متن بنر اصلی (فارسی)", LabelEn = "Hero text (FA)", Type = SettingType.TextArea, SortOrder = 5 },
                 new() { Key = "site.hero.en", Value = "Together we can light up lives", Group = "site", LabelFa = "متن بنر اصلی (انگلیسی)", LabelEn = "Hero text (EN)", Type = SettingType.TextArea, SortOrder = 6 },
+                new() { Key = "site.hero.badge.fa", Value = "همراه شما برای ساختن امید", Group = "site", LabelFa = "متن نشان بالای بنر (فارسی)", LabelEn = "Hero badge text (FA)", SortOrder = 15 },
+                new() { Key = "site.hero.badge.en", Value = "Building hope together", Group = "site", LabelFa = "متن نشان بالای بنر (انگلیسی)", LabelEn = "Hero badge text (EN)", SortOrder = 16 },
                 new() { Key = "site.logo.url", Value = "", Group = "site", LabelFa = "آدرس لوگو", LabelEn = "Logo URL", Type = SettingType.Url, SortOrder = 7 },
                 new() { Key = "site.color.primary", Value = "#0d9488", Group = "site", LabelFa = "رنگ اصلی", LabelEn = "Primary color", Type = SettingType.Color, SortOrder = 8 },
                 new() { Key = "site.color.accent", Value = "#f59e0b", Group = "site", LabelFa = "رنگ تأکید", LabelEn = "Accent color", Type = SettingType.Color, SortOrder = 9 },
@@ -62,6 +65,10 @@ public static class DbSeeder
                 new() { Key = "featured.color", Value = "#f59e0b", Group = "featured", LabelFa = "رنگ تایمر", LabelEn = "Timer color", Type = SettingType.Color, SortOrder = 6 },
                 new() { Key = "featured.expired.fa", Value = "⏱ فرصت به پایان رسید", Group = "featured", LabelFa = "متن پایان زمان (فارسی)", LabelEn = "Expired text (FA)", SortOrder = 7 },
                 new() { Key = "featured.expired.en", Value = "⏱ Time ended", Group = "featured", LabelFa = "متن پایان زمان (انگلیسی)", LabelEn = "Expired text (EN)", SortOrder = 8 },
+                new() { Key = "featured.styles", Value = SettingsService.DefaultFeaturedStyles, Group = "featured", LabelFa = "حالت‌های نشان ویژه", LabelEn = "Featured highlight styles", Type = SettingType.TextArea, SortOrder = 9 },
+                new() { Key = "site.completed.show", Value = "true", Group = "home", LabelFa = "تب پرونده‌های تکمیل‌شده", LabelEn = "Completed projects tab", Type = SettingType.Boolean, SortOrder = 12 },
+                new() { Key = "site.completed.title.fa", Value = "پرونده‌های تکمیل‌شده", Group = "home", LabelFa = "عنوان تب تکمیل‌شده (فارسی)", LabelEn = "Completed tab title (FA)", SortOrder = 13 },
+                new() { Key = "site.completed.title.en", Value = "Completed projects", Group = "home", LabelFa = "عنوان تب تکمیل‌شده (انگلیسی)", LabelEn = "Completed tab title (EN)", SortOrder = 14 },
 
                 new() { Key = "zarinpal.merchant", Value = "", Group = "payment", LabelFa = "مرچنت زرین‌پال", LabelEn = "ZarinPal Merchant ID", SortOrder = 1 },
                 new() { Key = "zarinpal.sandbox", Value = "true", Group = "payment", LabelFa = "حالت تست (سندباکس)", LabelEn = "Sandbox mode", Type = SettingType.Boolean, SortOrder = 2 },
@@ -180,6 +187,16 @@ public static class DbSeeder
             await EnsureSettingAsync(db, "site.progress.animate.ms", "1400", "home", "مدت انیمیشن نوار (میلی‌ثانیه)", "Fill animation duration (ms)", SettingType.Number, 9);
             await EnsureSettingAsync(db, "site.progress.track.color", "", "home", "رنگ زمینه نوار (خالی = پیش‌فرض)", "Progress track color (empty = default)", SettingType.Color, 10);
             await EnsureSettingAsync(db, "site.card.image.fit", "cover", "home", "نمایش تصویر کارت (cover/contain)", "Card image fit (cover/contain)", SettingType.Text, 11);
+
+            // Hero badge text (separate from the header tagline)
+            await EnsureSettingAsync(db, "site.hero.badge.fa", "همراه شما برای ساختن امید", "site", "متن نشان بالای بنر (فارسی)", "Hero badge text (FA)", SettingType.Text, 15);
+            await EnsureSettingAsync(db, "site.hero.badge.en", "Building hope together", "site", "متن نشان بالای بنر (انگلیسی)", "Hero badge text (EN)", SettingType.Text, 16);
+
+            // Featured highlight styles + completed projects tab
+            await EnsureSettingAsync(db, "featured.styles", SettingsService.DefaultFeaturedStyles, "featured", "حالت‌های نشان ویژه", "Featured highlight styles", SettingType.TextArea, 9);
+            await EnsureSettingAsync(db, "site.completed.show", "true", "home", "تب پرونده‌های تکمیل‌شده", "Completed projects tab", SettingType.Boolean, 12);
+            await EnsureSettingAsync(db, "site.completed.title.fa", "پرونده‌های تکمیل‌شده", "home", "عنوان تب تکمیل‌شده (فارسی)", "Completed tab title (FA)", SettingType.Text, 13);
+            await EnsureSettingAsync(db, "site.completed.title.en", "Completed projects", "home", "عنوان تب تکمیل‌شده (انگلیسی)", "Completed tab title (EN)", SettingType.Text, 14);
 
             // Amount text colors (empty = follow theme)
             await EnsureSettingAsync(db, "donation.progress.color.collected", "", "donation", "رنگ مبلغ جمع‌آوری‌شده", "Raised amount color", SettingType.Color, 8);

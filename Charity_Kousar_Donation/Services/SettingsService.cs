@@ -112,7 +112,26 @@ public class SettingsService(AppDbContext db)
         await GetAsync("donation.progress.color.text"),
         await GetIntAsync("donation.progress.size", 100),
         // Campaign card image
-        await GetAsync("site.card.image.fit", "cover"));
+        await GetAsync("site.card.image.fit", "cover"),
+        // Hero badge
+        await GetAsync("site.hero.badge.fa"),
+        await GetAsync("site.hero.badge.en"),
+        // Featured highlight styles
+        await GetAsync("featured.styles", DefaultFeaturedStyles),
+        // Completed projects
+        await GetBoolAsync("site.completed.show", true),
+        await GetAsync("site.completed.title.fa", "پرونده‌های تکمیل‌شده"),
+        await GetAsync("site.completed.title.en", "Completed projects"));
+
+    /// <summary>Built-in highlight styles for featured campaigns (admins can edit the list).</summary>
+    public const string DefaultFeaturedStyles = """
+        [{"id":"gold","color":"#f59e0b","labelFa":"ویژه","labelEn":"Featured"},
+         {"id":"urgent","color":"#ef4444","labelFa":"اضطراری","labelEn":"Urgent"},
+         {"id":"limited","color":"#fb923c","labelFa":"فرصت محدود","labelEn":"Limited time"},
+         {"id":"important","color":"#3b82f6","labelFa":"مهم","labelEn":"Important"},
+         {"id":"almost","color":"#22c55e","labelFa":"نزدیک به تکمیل","labelEn":"Almost funded"},
+         {"id":"spotlight","color":"#a855f7","labelFa":"ویژهٔ ماه","labelEn":"Spotlight"}]
+        """;
 
     public async Task<string> GetTemplatesJsonAsync() => await GetAsync("page.templates", "[]");
 
@@ -166,8 +185,9 @@ public class SettingsService(AppDbContext db)
         };
 
         var items = await db.SiteSettings
-            // Managed by dedicated screens (page builder / media library), not the raw settings list.
-            .Where(s => s.Key != "page.templates" && s.Key != "media.gallery")
+            // Managed by dedicated screens (page builder / media library / home editor),
+            // not the raw settings list.
+            .Where(s => s.Key != "page.templates" && s.Key != "media.gallery" && s.Key != "featured.styles")
             .OrderBy(s => s.Group).ThenBy(s => s.SortOrder).ToListAsync();
         var grouped = items.GroupBy(s => s.Group).ToDictionary(g => g.Key, g => g.AsEnumerable());
         return groupOrder

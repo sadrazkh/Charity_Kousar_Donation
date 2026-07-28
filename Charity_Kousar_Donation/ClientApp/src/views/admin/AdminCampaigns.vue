@@ -4,10 +4,15 @@ import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import { formatAmount } from '@/utils/amount'
+import { useSiteConfig } from '@/composables/useSiteConfig'
+import { featuredStyleFor, styleLabel } from '@/utils/featuredStyles'
 import ProgressBar from '@/components/ProgressBar.vue'
 
 const { t, locale } = useI18n()
 const toast = useToast()
+const { config } = useSiteConfig()
+
+const featuredStyle = (c) => featuredStyleFor(c, config)
 const campaigns = ref([])
 const search = ref('')
 const busy = ref('')
@@ -19,7 +24,19 @@ async function load() {
 }
 onMounted(load)
 
-const filtered = computed(() => {
+// Tabs keep finished and switched-off projects out of the working list.
+const tab = ref('open')
+const TABS = [
+  { id: 'open', fa: 'در حال جمع‌آوری', en: 'In progress', match: c => c.isActive && !c.isCompleted },
+  { id: 'completed', fa: 'تکمیل‌شده', en: 'Completed', match: c => c.isCompleted },
+  { id: 'inactive', fa: 'غیرفعال', en: 'Inactive', match: c => !c.isActive && !c.isCompleted },
+  { id: 'all', fa: 'همه', en: 'All', match: () => true }
+]
+function tabCount(id) {
+  return campaigns.value.filter(TABS.find(x => x.id === id).match).length
+}
+
+const searched = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (!q) return campaigns.value
   return campaigns.value.filter(c =>
@@ -27,6 +44,10 @@ const filtered = computed(() => {
     (c.titleEn || '').toLowerCase().includes(q) ||
     (c.slug || '').toLowerCase().includes(q))
 })
+const filtered = computed(() => searched.value.filter(TABS.find(x => x.id === tab.value).match))
+
+// Reordering always works on the full list, even while a tab or search narrows the view.
+function realIndex(c) { return campaigns.value.findIndex(x => x.id === c.id) }
 
 async function toggleActive(c) {
   busy.value = c.id
@@ -43,9 +64,10 @@ async function toggleFeatured(c) {
   } catch (e) { toast.error(e.message) } finally { busy.value = '' }
 }
 
-async function move(i, dir) {
+async function move(c, dir) {
+  const i = realIndex(c)
   const ni = i + dir
-  if (ni < 0 || ni >= campaigns.value.length) return
+  if (i < 0 || ni < 0 || ni >= campaigns.value.length) return
   const arr = [...campaigns.value]
   ;[arr[i], arr[ni]] = [arr[ni], arr[i]]
   campaigns.value = arr
@@ -100,8 +122,17 @@ async function remove(c) {
       <input v-model="search" class="input search" :aria-label="locale === 'fa' ? 'جستجو' : 'Search'" :placeholder="locale === 'fa' ? 'جستجوی پروژه...' : 'Search projects...'" />
     </div>
 
+    <div class="list-tabs" role="tablist">
+      <button v-for="tb in TABS" :key="tb.id" type="button" role="tab" :aria-selected="tab === tb.id"
+        :class="{ active: tab === tb.id }" @click="tab = tb.id">
+        {{ locale === 'fa' ? tb.fa : tb.en }}
+        <span class="tab-count">{{ fmt(tabCount(tb.id)) }}</span>
+      </button>
+    </div>
+
     <div class="campaign-grid">
-      <article v-for="(c, i) in filtered" :key="c.id" class="card campaign-row" :class="{ inactive: !c.isActive }">
+      <article v-for="c in filtered" :key="c.id" class="card campaign-row"
+        :class="{ inactive: !c.isActive, done: c.isCompleted }">
         <div class="thumb" :style="c.imageUrl ? { backgroundImage: `url(${c.imageUrl})` } : null">
           <svg v-if="!c.imageUrl" class="thumb-ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
         </div>
@@ -109,9 +140,14 @@ async function remove(c) {
         <div class="info">
           <div class="title-line">
             <h3>{{ c.titleFa }}</h3>
-            <span v-if="c.isFeatured" class="badge badge-warning">
+            <span v-if="c.isFeatured" class="badge badge-style"
+              :style="{ '--chip': featuredStyle(c).color }">
               <svg class="badge-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.8 6.1 20.8l1.2-6.6L2.5 9l6.6-.9L12 2z"/></svg>
-              {{ t('featured') }}
+              {{ styleLabel(featuredStyle(c), locale) || t('featured') }}
+            </span>
+            <span v-if="c.isCompleted" class="badge badge-success">
+              <svg class="badge-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+              {{ locale === 'fa' ? 'تکمیل‌شده' : 'Completed' }}
             </span>
             <span class="badge" :class="c.isActive ? 'badge-success' : 'badge-danger'">
               {{ c.isActive ? (locale === 'fa' ? 'فعال' : 'Active') : (locale === 'fa' ? 'غیرفعال' : 'Inactive') }}
@@ -128,10 +164,10 @@ async function remove(c) {
 
         <div class="actions">
           <div class="reorder">
-            <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="locale==='fa'?'بالا':'Move up'" :title="locale==='fa'?'بالا':'Up'" @click="move(i, -1)">
+            <button type="button" class="icon-btn" :disabled="realIndex(c) === 0" :aria-label="locale==='fa'?'بالا':'Move up'" :title="locale==='fa'?'بالا':'Up'" @click="move(c, -1)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>
             </button>
-            <button type="button" class="icon-btn" :disabled="i === filtered.length - 1" :aria-label="locale==='fa'?'پایین':'Move down'" :title="locale==='fa'?'پایین':'Down'" @click="move(i, 1)">
+            <button type="button" class="icon-btn" :disabled="realIndex(c) === campaigns.length - 1" :aria-label="locale==='fa'?'پایین':'Move down'" :title="locale==='fa'?'پایین':'Down'" @click="move(c, 1)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </button>
           </div>
@@ -158,7 +194,13 @@ async function remove(c) {
       </article>
     </div>
 
-    <p v-if="!filtered.length" class="empty">{{ search ? (locale==='fa'?'نتیجه‌ای یافت نشد':'No results') : t('noCampaigns') }}</p>
+    <p v-if="!filtered.length" class="empty">
+      {{ search
+        ? (locale === 'fa' ? 'نتیجه‌ای یافت نشد' : 'No results')
+        : campaigns.length
+          ? (locale === 'fa' ? 'در این تب پرونده‌ای نیست.' : 'Nothing in this tab.')
+          : t('noCampaigns') }}
+    </p>
   </div>
 </template>
 
@@ -170,6 +212,24 @@ async function remove(c) {
 .search { padding-inline-start: 2.4rem; }
 .badge-ic { width: 0.85rem; height: 0.85rem; vertical-align: -0.1em; margin-inline-end: 0.15rem; }
 .badge { display: inline-flex; align-items: center; }
+.badge-style { color: var(--chip); background: color-mix(in srgb, var(--chip) 16%, transparent); }
+
+.list-tabs { display: flex; gap: 0.35rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.list-tabs button {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.45rem 1rem; border-radius: 999px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-family: inherit; font-size: 0.87rem;
+}
+.list-tabs button:hover { color: var(--text); }
+.list-tabs button.active {
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  color: var(--primary); font-weight: 700;
+}
+.tab-count { font-size: 0.75rem; opacity: 0.8; font-variant-numeric: tabular-nums; }
+.campaign-row.done { border-color: color-mix(in srgb, var(--success) 35%, transparent); }
+.campaign-row.done.inactive { opacity: 1; }
 .campaign-grid { display: flex; flex-direction: column; gap: 0.75rem; }
 .campaign-row { display: flex; align-items: center; gap: 1rem; padding: 1rem; flex-wrap: wrap; }
 .campaign-row.inactive { opacity: 0.65; }

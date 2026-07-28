@@ -26,6 +26,12 @@ public class SettingsController(SettingsService settings) : ControllerBase
         return Ok();
     }
 
+    // Featured highlight styles — hidden from the raw list, edited in the home screen.
+    [Authorize(Roles = "Admin")]
+    [HttpGet("featured-styles")]
+    public async Task<ActionResult<object>> GetFeaturedStyles() =>
+        Ok(new { json = await settings.GetAsync("featured.styles", SettingsService.DefaultFeaturedStyles) });
+
     // Reusable custom page templates (saved by admins from the page builder).
     [Authorize(Roles = "Admin")]
     [HttpGet("templates")]

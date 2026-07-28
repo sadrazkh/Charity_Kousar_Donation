@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import { useToast } from '@/composables/useToast'
+import { useSiteConfig } from '@/composables/useSiteConfig'
+import { parseFeaturedStyles, styleLabel } from '@/utils/featuredStyles'
 import PageBuilder from '@/components/PageBuilder.vue'
 import ShareModal from '@/components/ShareModal.vue'
 import AmountInput from '@/components/AmountInput.vue'
@@ -14,6 +16,11 @@ const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
 const toast = useToast()
+const { config } = useSiteConfig()
+
+// Highlight styles an admin can choose from (ویژه، اضطراری، ...) — defined in the home editor.
+const featuredStyles = computed(() => parseFeaturedStyles(config.featuredStyles))
+const styleName = (s) => styleLabel(s, locale.value)
 
 const isNew = computed(() => route.name === 'admin-campaign-new')
 const campaignId = computed(() => route.params.id)
@@ -24,7 +31,7 @@ const pageBlocks = ref([])
 const form = ref({
   titleFa: '', titleEn: '', descriptionFa: '', descriptionEn: '',
   targetAmount: 0, imageUrl: '', slug: '', isActive: true, isFeatured: false,
-  featuredBannerFa: '', featuredBannerEn: '', featuredTimerEndsAt: null,
+  featuredStyle: '', featuredBannerFa: '', featuredBannerEn: '', featuredTimerEndsAt: null,
   sortOrder: 0
 })
 
@@ -73,7 +80,7 @@ async function loadCampaign() {
     titleFa: c.titleFa, titleEn: c.titleEn,
     descriptionFa: c.descriptionFa, descriptionEn: c.descriptionEn,
     targetAmount: c.targetAmount, imageUrl: c.imageUrl || '', slug: c.slug,
-    isActive: c.isActive, isFeatured: c.isFeatured,
+    isActive: c.isActive, isFeatured: c.isFeatured, featuredStyle: c.featuredStyle || '',
     featuredBannerFa: c.featuredBannerFa || '', featuredBannerEn: c.featuredBannerEn || '',
     featuredTimerEndsAt: c.featuredTimerEndsAt || null,
     sortOrder: c.sortOrder
@@ -185,6 +192,23 @@ async function savePage() {
 
       <div v-if="form.isFeatured" class="featured-config card">
         <h3>{{ locale === 'fa' ? '⭐ تنظیمات بخش ویژه' : '⭐ Featured section' }}</h3>
+
+        <label class="label">{{ locale === 'fa' ? 'حالت نشان (رنگ کادر و برچسب)' : 'Highlight style (card color & badge)' }}</label>
+        <div class="style-picker">
+          <button v-for="s in featuredStyles" :key="s.id" type="button"
+            class="style-chip" :class="{ on: form.featuredStyle === s.id }"
+            :style="{ '--chip': s.color }" @click="form.featuredStyle = s.id">
+            <span class="dot" />{{ styleName(s) }}
+          </button>
+          <button type="button" class="style-chip default" :class="{ on: !form.featuredStyle }"
+            @click="form.featuredStyle = ''">
+            {{ locale === 'fa' ? 'پیش‌فرض سایت' : 'Site default' }}
+          </button>
+        </div>
+        <p class="hint">{{ locale === 'fa'
+          ? 'حالت‌ها و رنگ‌هایشان در «صفحه اصلی → حالت‌های نشان ویژه» قابل ویرایش‌اند.'
+          : 'Styles and their colors are editable in “Home page → Featured styles”.' }}</p>
+
         <label class="label">{{ locale === 'fa' ? 'متن بنر (فارسی)' : 'Banner text (FA)' }}</label>
         <textarea v-model="form.featuredBannerFa" class="textarea" rows="2"
           :placeholder="locale === 'fa' ? 'مثلاً: امروز باید جمع شود!' : 'e.g. Must be collected today!'" />
@@ -230,6 +254,21 @@ async function savePage() {
 .featured-config { padding: 1rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.65rem; background: color-mix(in srgb, var(--accent) 8%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
 .featured-config h3 { font-size: 0.95rem; margin: 0; }
 .featured-config .hint { font-size: 0.8rem; color: var(--muted); margin: 0; }
+.style-picker { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.style-chip {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 0.85rem; border-radius: 999px; cursor: pointer; font-family: inherit; font-size: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--chip, var(--border)) 45%, var(--border));
+  background: color-mix(in srgb, var(--chip, transparent) 10%, transparent);
+  color: var(--text);
+}
+.style-chip .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--chip); }
+.style-chip.on {
+  border-color: var(--chip, var(--primary));
+  background: color-mix(in srgb, var(--chip, var(--primary)) 22%, transparent);
+  font-weight: 700;
+}
+.style-chip.default { --chip: var(--muted); }
 .label-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
 .translate-btn {
   background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent);

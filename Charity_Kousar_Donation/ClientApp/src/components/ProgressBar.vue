@@ -1,7 +1,9 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSiteConfig } from '@/composables/useSiteConfig'
 import { progressFillStyle } from '@/utils/progress'
+import { toPersianDigits } from '@/utils/jalali'
 
 const props = defineProps({
   percent: { type: Number, default: 0 },
@@ -11,6 +13,7 @@ const props = defineProps({
   cfg: { type: Object, default: null }           // overrides the site config (admin live preview)
 })
 
+const { locale } = useI18n()
 const { config } = useSiteConfig()
 const conf = computed(() => props.cfg || config)
 
@@ -27,6 +30,9 @@ const animated = computed(() =>
 const duration = computed(() => Math.max(0, Number(conf.value.progressAnimateMs) || 0))
 
 const pct = computed(() => Math.round(shown.value))
+const pctLabel = computed(() => locale.value === 'fa'
+  ? toPersianDigits(String(pct.value)) + '٪'
+  : pct.value + '%')
 const fillStyle = computed(() => ({
   ...progressFillStyle(shown.value, conf.value),
   // While the frame loop drives the width, CSS must not smooth it a second time.
@@ -101,7 +107,7 @@ onBeforeUnmount(() => {
       role="progressbar" :aria-valuenow="Math.round(target)" aria-valuemin="0" aria-valuemax="100">
       <div class="progress-bar-fill" :style="fillStyle" />
     </div>
-    <span v-if="showLabel" class="progress-pct" :style="{ color: fillStyle.background }">{{ pct }}%</span>
+    <span v-if="showLabel" class="progress-pct" :style="{ color: fillStyle.background }">{{ pctLabel }}</span>
   </div>
 </template>
 

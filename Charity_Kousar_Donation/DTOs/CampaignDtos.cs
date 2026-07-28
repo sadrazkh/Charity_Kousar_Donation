@@ -14,9 +14,11 @@ public record CampaignListDto(
     string ShortCode,
     string ShortUrl,
     bool IsFeatured,
+    string? FeaturedStyle,
     string? FeaturedBannerFa,
     string? FeaturedBannerEn,
-    DateTime? FeaturedTimerEndsAt);
+    DateTime? FeaturedTimerEndsAt,
+    bool IsCompleted);
 
 public record CampaignDetailDto(
     Guid Id,
@@ -34,6 +36,7 @@ public record CampaignDetailDto(
     bool IsActive,
     int DonorCount,
     bool IsFeatured,
+    string? FeaturedStyle,
     string? FeaturedBannerFa,
     string? FeaturedBannerEn,
     DateTime? FeaturedTimerEndsAt,
@@ -49,6 +52,7 @@ public record CreateCampaignRequest(
     string? Slug,
     bool IsActive,
     bool IsFeatured,
+    string? FeaturedStyle,
     string? FeaturedBannerFa,
     string? FeaturedBannerEn,
     DateTime? FeaturedTimerEndsAt,
@@ -64,6 +68,7 @@ public record UpdateCampaignRequest(
     string? Slug,
     bool IsActive,
     bool IsFeatured,
+    string? FeaturedStyle,
     string? FeaturedBannerFa,
     string? FeaturedBannerEn,
     DateTime? FeaturedTimerEndsAt,
@@ -83,9 +88,11 @@ public record CampaignAdminListDto(
     string PageUrl,
     bool IsActive,
     bool IsFeatured,
+    string? FeaturedStyle,
     int SortOrder,
     int DonorCount,
-    DateTime? FeaturedTimerEndsAt);
+    DateTime? FeaturedTimerEndsAt,
+    bool IsCompleted);
 
 public record SetCampaignFlagsRequest(bool? IsActive, bool? IsFeatured);
 

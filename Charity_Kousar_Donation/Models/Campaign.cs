@@ -13,6 +13,8 @@ public class Campaign
     public string ShortCode { get; set; } = "";
     public bool IsActive { get; set; } = true;
     public bool IsFeatured { get; set; }
+    /// <summary>Id of the highlight style (see the "featured.styles" setting), e.g. "gold" or "urgent".</summary>
+    public string? FeaturedStyle { get; set; }
     public string? FeaturedBannerFa { get; set; }
     public string? FeaturedBannerEn { get; set; }
     public DateTime? FeaturedTimerEndsAt { get; set; }

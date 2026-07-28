@@ -85,7 +85,16 @@ public record PublicSiteConfigDto(
     string AmountTextColor,
     int AmountFontScale,
     // Campaign card image
-    string CardImageFit);
+    string CardImageFit,
+    // Hero badge (its own text, separate from the header tagline)
+    string HeroBadgeFa,
+    string HeroBadgeEn,
+    // Highlight styles for featured campaigns (JSON: [{id,color,labelFa,labelEn}])
+    string FeaturedStyles,
+    // Completed projects
+    bool ShowCompletedTab,
+    string CompletedTitleFa,
+    string CompletedTitleEn);
 
 public record SaveTemplatesRequest(string Json);
 public record SaveGalleryRequest(string Json);

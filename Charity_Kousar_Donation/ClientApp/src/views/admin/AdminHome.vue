@@ -6,6 +6,7 @@ import { api } from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import ProgressAmount from '@/components/ProgressAmount.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
+import { parseFeaturedStyles } from '@/utils/featuredStyles'
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -18,7 +19,9 @@ const translating = ref(false)
 
 // Keys this page owns. Only these are sent on save.
 const KEYS = [
-  'site.hero.fa', 'site.hero.en', 'site.home.order',
+  'site.hero.fa', 'site.hero.en', 'site.hero.badge.fa', 'site.hero.badge.en', 'site.home.order',
+  'featured.styles',
+  'site.completed.show', 'site.completed.title.fa', 'site.completed.title.en',
   'site.home.columns', 'site.home.merge.featured', 'site.card.image.fit',
   'site.progress.mode', 'site.progress.color.start', 'site.progress.color.end', 'site.progress.show.percent',
   'site.progress.animate', 'site.progress.animate.ms', 'site.progress.track.color',
@@ -61,10 +64,28 @@ onMounted(async () => {
     const groups = await api('/settings')
     const map = {}
     for (const g of groups) for (const it of g.items) map[it.key] = it.value
+    // "featured.styles" is hidden from the raw settings list, so read it on its own.
+    const raw = await api('/settings/featured-styles')
+    map['featured.styles'] = raw.json
     values.value = map
     sec.value = (map['site.home.order'] || '').split(',').map(s => s.trim()).filter(s => KNOWN.includes(s))
+    styleRows.value = parseFeaturedStyles(map['featured.styles'])
   } catch (e) { toast.error(e.message) } finally { loading.value = false }
 })
+
+/* ---- Featured highlight styles (color + badge label per campaign) ---- */
+const styleRows = ref([])
+watch(styleRows, (rows) => {
+  values.value['featured.styles'] = JSON.stringify(rows.filter(s => s.id && (s.labelFa || s.labelEn)))
+}, { deep: true })
+
+function addStyle() {
+  styleRows.value.push({
+    id: 'style-' + Math.random().toString(36).slice(2, 7),
+    color: '#0d9488', labelFa: '', labelEn: ''
+  })
+}
+function removeStyle(i) { styleRows.value.splice(i, 1) }
 
 // Keep the setting string in sync with the draggable list.
 watch(sec, (v) => { values.value['site.home.order'] = v.join(',') }, { deep: true })
@@ -221,6 +242,51 @@ async function save() {
             </button>
           </div>
           <textarea v-model="values['site.hero.en']" class="textarea input-ltr" dir="ltr" rows="2" />
+
+          <label class="label">{{ fa ? 'متن نشان کوچک بالای بنر (فارسی)' : 'Small badge above the title (FA)' }}</label>
+          <input v-model="values['site.hero.badge.fa']" class="input" />
+          <label class="label">{{ fa ? 'متن نشان کوچک بالای بنر (انگلیسی)' : 'Small badge above the title (EN)' }}</label>
+          <input v-model="values['site.hero.badge.en']" class="input input-ltr" dir="ltr" />
+          <p class="hint">{{ fa
+            ? 'این متن جدا از «شعار» کنار لوگو در بالای سایت است؛ شعار را در تنظیمات → ظاهر و لوگو تغییر دهید. خالی بگذارید تا نشان نمایش داده نشود.'
+            : 'This is separate from the tagline next to the logo (edit that in Settings → Appearance). Leave empty to hide the badge.' }}</p>
+        </section>
+
+        <!-- Featured highlight styles -->
+        <section class="card block">
+          <h2>{{ fa ? 'حالت‌های نشان ویژه' : 'Featured highlight styles' }}</h2>
+          <p class="hint">{{ fa
+            ? 'برای هر پروژه می‌توانید یکی از این حالت‌ها را انتخاب کنید؛ رنگ کادر و برچسب کارت از همین‌جا می‌آید (مثلاً ویژه، اضطراری، فرصت محدود).'
+            : 'Each project can use one of these; the card ring and badge take their color and label from here (e.g. Featured, Urgent, Limited time).' }}</p>
+          <div class="style-list">
+            <div v-for="(s, i) in styleRows" :key="s.id" class="style-row" :style="{ '--chip': s.color }">
+              <span class="style-preview">{{ (fa ? s.labelFa : s.labelEn) || (fa ? 'بدون نام' : 'Untitled') }}</span>
+              <input type="color" v-model="s.color" class="swatch sm" :aria-label="fa ? 'رنگ' : 'Color'" />
+              <input v-model="s.labelFa" class="input input-sm" :placeholder="fa ? 'برچسب فارسی' : 'Persian label'" />
+              <input v-model="s.labelEn" class="input input-sm input-ltr" dir="ltr" placeholder="English label" />
+              <button type="button" class="mini danger" :aria-label="t('delete')" :title="t('delete')" @click="removeStyle(i)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm add-style" @click="addStyle">
+            + {{ fa ? 'افزودن حالت جدید' : 'Add a style' }}
+          </button>
+        </section>
+
+        <!-- Completed projects -->
+        <section class="card block">
+          <h2>{{ fa ? 'پرونده‌های تکمیل‌شده' : 'Completed projects' }}</h2>
+          <label class="chk"><input type="checkbox" :checked="values['site.completed.show'] !== 'false'"
+            @change="values['site.completed.show'] = $event.target.checked ? 'true' : 'false'" />
+            {{ fa ? 'نمایش در تب جداگانه' : 'Show them on their own tab' }}</label>
+          <p class="hint">{{ fa
+            ? 'پروژه‌ای که به مبلغ هدف رسیده از لیست اصلی خارج و در تب «تکمیل‌شده» با نشان «هدف تأمین شد» نمایش داده می‌شود. اگر تیک را بردارید، پرونده‌های تکمیل‌شده اصلاً در صفحهٔ اصلی دیده نمی‌شوند.'
+            : 'A project that reaches its goal leaves the main list and appears on the “completed” tab with a “goal reached” badge. Unchecked, completed projects are hidden from the home page.' }}</p>
+          <label class="label">{{ fa ? 'عنوان تب (فارسی)' : 'Tab title (FA)' }}</label>
+          <input v-model="values['site.completed.title.fa']" class="input" />
+          <label class="label">{{ fa ? 'عنوان تب (انگلیسی)' : 'Tab title (EN)' }}</label>
+          <input v-model="values['site.completed.title.en']" class="input input-ltr" dir="ltr" />
         </section>
 
         <!-- Progress bar -->
@@ -429,6 +495,27 @@ async function save() {
   padding: 0.6rem; border: 1px solid var(--border); border-radius: 10px; background: var(--input-bg);
 }
 .part-name { font-size: 0.85rem; }
+
+.style-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.style-row {
+  display: grid; grid-template-columns: minmax(90px, 130px) auto 1fr 1fr auto;
+  align-items: center; gap: 0.5rem;
+  padding: 0.5rem; border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--chip) 40%, var(--border));
+  background: color-mix(in srgb, var(--chip) 8%, transparent);
+}
+.style-preview {
+  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 700; text-align: center;
+  color: var(--chip); background: color-mix(in srgb, var(--chip) 16%, transparent);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.input-sm { padding: 0.4rem 0.55rem; font-size: 0.82rem; }
+.add-style { margin-top: 0.6rem; }
+@media (max-width: 700px) {
+  .style-row { grid-template-columns: 1fr auto; grid-auto-rows: auto; }
+  .style-row .input-sm { grid-column: 1 / -1; }
+}
 .part-token { font-size: 0.72rem; color: var(--muted); direction: ltr; align-self: flex-start; }
 .more-link { display: inline-block; margin-top: 0.75rem; font-size: 0.85rem; color: var(--primary); text-decoration: none; }
 .row-2 { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end; }

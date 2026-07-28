@@ -16,8 +16,9 @@ const total = ref(0)
 const selected = ref(null)
 
 const heroText = computed(() => locale.value === 'fa' ? config.heroTextFa : config.heroTextEn)
-const tagline = computed(() => locale.value === 'fa' ? config.taglineFa : config.taglineEn)
-const activeCount = computed(() => campaigns.value.length)
+// The chip above the hero title has its own text (separate from the header tagline).
+const heroBadge = computed(() => locale.value === 'fa' ? config.heroBadgeFa : config.heroBadgeEn)
+const activeCount = computed(() => openCampaigns.value.length)
 
 function scrollToCampaigns() {
   const el = document.getElementById('campaigns-anchor')
@@ -33,13 +34,28 @@ const sections = computed(() => {
   return raw.length ? [...new Set(raw)] : KNOWN_SECTIONS
 })
 
-const featured = computed(() => campaigns.value.filter(c => c.isFeatured))
+// Finished projects move out of the main list into their own tab.
+const completedCampaigns = computed(() => campaigns.value.filter(c => c.isCompleted))
+const openCampaigns = computed(() => campaigns.value.filter(c => !c.isCompleted))
+const showCompletedTab = computed(() =>
+  config.showCompletedTab !== false && completedCampaigns.value.length > 0)
+const completedTitle = computed(() =>
+  (locale.value === 'fa' ? config.completedTitleFa : config.completedTitleEn) ||
+  (locale.value === 'fa' ? 'پرونده‌های تکمیل‌شده' : 'Completed projects'))
+const tab = ref('open')
+
+const featured = computed(() => openCampaigns.value.filter(c => c.isFeatured))
 // When "merge featured" is on, everything shows in one grid (featured just highlighted).
+// Featured projects belong to the open list, so they step aside on the completed tab.
 const hasFeaturedSection = computed(() =>
-  !config.homeMergeFeatured && sections.value.includes('featured') && featured.value.length > 0)
+  !config.homeMergeFeatured && sections.value.includes('featured') &&
+  featured.value.length > 0 && tab.value === 'open')
 // Avoid showing the same campaign twice (featured highlight + grid).
 const gridCampaigns = computed(() =>
-  hasFeaturedSection.value ? campaigns.value.filter(c => !c.isFeatured) : campaigns.value)
+  hasFeaturedSection.value ? openCampaigns.value.filter(c => !c.isFeatured) : openCampaigns.value)
+// What the campaigns section renders for the selected tab.
+const listedCampaigns = computed(() =>
+  tab.value === 'completed' && showCompletedTab.value ? completedCampaigns.value : gridCampaigns.value)
 
 // Card columns: 'auto' (responsive fill) or a fixed number (2/3/4) that still collapses on mobile.
 const gridMode = computed(() => (config.homeColumns && config.homeColumns !== 'auto') ? 'fixed' : 'auto')
@@ -67,9 +83,9 @@ const fmt = (n) => formatAmount(n, locale.value)
       <!-- Hero: storytelling + clear donate CTA + impact (charity best practice) -->
       <section v-if="section === 'hero'" class="hero">
         <div class="hero-content">
-          <span v-if="tagline" class="hero-eyebrow">
+          <span v-if="heroBadge" class="hero-eyebrow">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-            <span>{{ tagline }}</span>
+            <span>{{ heroBadge }}</span>
           </span>
           <h1 class="hero-title">{{ heroText }}</h1>
           <div class="hero-cta">
@@ -91,7 +107,7 @@ const fmt = (n) => formatAmount(n, locale.value)
           <p class="impact-value stat-value">{{ fmt(total) }} <span class="unit">{{ t('toman') }}</span></p>
           <div class="impact-mini">
             <div class="impact-cell">
-              <strong>{{ activeCount }}</strong>
+              <strong>{{ fmt(activeCount) }}</strong>
               <span>{{ t('campaigns') }}</span>
             </div>
           </div>
@@ -114,21 +130,42 @@ const fmt = (n) => formatAmount(n, locale.value)
         </div>
       </section>
 
-      <!-- Campaigns grid -->
+      <!-- Campaigns grid — open projects, with finished ones on their own tab -->
       <section v-else-if="section === 'campaigns'" id="campaigns-anchor">
-        <h2 v-if="gridCampaigns.length" class="section-title">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-          {{ t('campaigns') }}
-        </h2>
-        <div v-if="gridCampaigns.length" class="cards-grid" :class="gridMode" :style="gridStyle">
+        <div v-if="campaigns.length" class="list-head">
+          <h2 class="section-title">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+            {{ tab === 'completed' ? completedTitle : t('campaigns') }}
+          </h2>
+          <div v-if="showCompletedTab" class="list-tabs" role="tablist">
+            <button type="button" role="tab" :aria-selected="tab === 'open'"
+              :class="{ active: tab === 'open' }" @click="tab = 'open'">
+              {{ locale === 'fa' ? 'در حال جمع‌آوری' : 'In progress' }}
+              <span class="tab-count">{{ fmt(openCampaigns.length) }}</span>
+            </button>
+            <button type="button" role="tab" :aria-selected="tab === 'completed'"
+              :class="{ active: tab === 'completed' }" @click="tab = 'completed'">
+              {{ completedTitle }}
+              <span class="tab-count">{{ fmt(completedCampaigns.length) }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="listedCampaigns.length" class="cards-grid" :class="gridMode" :style="gridStyle">
           <CampaignCard
-            v-for="c in gridCampaigns"
+            v-for="c in listedCampaigns"
             :key="c.id"
             :campaign="c"
             @donate="selected = c"
           />
         </div>
         <p v-else-if="!campaigns.length" class="empty">{{ t('noCampaigns') }}</p>
+        <p v-else-if="tab === 'completed'" class="empty">
+          {{ locale === 'fa' ? 'هنوز پرونده‌ای تکمیل نشده است.' : 'No completed projects yet.' }}
+        </p>
+        <p v-else-if="!openCampaigns.length" class="empty">
+          {{ locale === 'fa' ? 'همهٔ پرونده‌ها تکمیل شده‌اند 🎉' : 'All projects are fully funded 🎉' }}
+        </p>
       </section>
 
       <!-- Recent contributors (global) -->
@@ -193,6 +230,27 @@ const fmt = (n) => formatAmount(n, locale.value)
   margin-bottom: 1.25rem; font-size: 1.4rem;
 }
 .section-title .icon { width: 1.2rem; height: 1.2rem; color: var(--accent); }
+
+.list-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+}
+.list-head .section-title { margin-bottom: 1.25rem; }
+.list-tabs { display: flex; gap: 0.35rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.list-tabs button {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1.1rem; border-radius: 999px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-family: inherit; font-size: 0.9rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.list-tabs button:hover { color: var(--text); }
+.list-tabs button.active {
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  color: var(--primary); font-weight: 700;
+}
+.tab-count { font-size: 0.78rem; opacity: 0.8; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 820px) {
   .hero { grid-template-columns: 1fr; gap: 1.25rem; }
