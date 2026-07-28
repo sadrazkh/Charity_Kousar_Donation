@@ -72,6 +72,20 @@ public record PublicSiteConfigDto(
     // Home grid + amount text styling
     string HomeColumns,
     bool HomeMergeFeatured,
-    string ProgressHighlight);
+    string ProgressHighlight,
+    // Progress bar fill animation
+    bool ProgressAnimate,
+    int ProgressAnimateMs,
+    string ProgressTrackColor,
+    // Amount text colors (empty string = follow the theme)
+    string AmountColorCollected,
+    string AmountColorTarget,
+    string AmountColorRemaining,
+    string AmountColorPercent,
+    string AmountTextColor,
+    int AmountFontScale,
+    // Campaign card image
+    string CardImageFit);
 
 public record SaveTemplatesRequest(string Json);
+public record SaveGalleryRequest(string Json);

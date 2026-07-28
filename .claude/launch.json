@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kousar-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "Charity_Kousar_Donation/Charity_Kousar_Donation.csproj", "--launch-profile", "http"],
+      "port": 5276
+    }
+  ]
+}

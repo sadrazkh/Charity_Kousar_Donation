@@ -1,12 +1,22 @@
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import FeaturedBanner from '@/components/FeaturedBanner.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
 import ProgressAmount from '@/components/ProgressAmount.vue'
+import { useSiteConfig } from '@/composables/useSiteConfig'
 
 const props = defineProps({ campaign: { type: Object, required: true } })
 const emit = defineEmits(['donate'])
 const { locale, t } = useI18n()
+const { config } = useSiteConfig()
+
+// Square ready-made illustrations look best uncropped ("contain"); photos usually want "cover".
+const contain = computed(() => config.cardImageFit === 'contain')
+const thumbStyle = computed(() => ({
+  backgroundImage: `url(${props.campaign.imageUrl})`,
+  backgroundSize: contain.value ? 'contain' : 'cover'
+}))
 
 function title() {
   return locale.value === 'fa' ? props.campaign.titleFa : props.campaign.titleEn
@@ -19,7 +29,7 @@ function desc() {
 
 <template>
   <article class="card campaign-card" :class="{ featured: campaign.isFeatured }">
-    <div v-if="campaign.imageUrl" class="thumb" :style="{ backgroundImage: `url(${campaign.imageUrl})` }" />
+    <div v-if="campaign.imageUrl" class="thumb" :class="{ contain }" :style="thumbStyle" />
     <div v-else class="thumb placeholder" aria-hidden="true">
       <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
     </div>
@@ -45,7 +55,8 @@ function desc() {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent),
     0 8px 24px color-mix(in srgb, var(--accent) 12%, transparent);
 }
-.thumb { height: 160px; background-size: cover; background-position: center; }
+.thumb { height: 160px; background-size: cover; background-position: center; background-repeat: no-repeat; }
+.thumb.contain { background-color: var(--bg-soft); }
 .thumb.placeholder {
   display: flex; align-items: center; justify-content: center;
   background:

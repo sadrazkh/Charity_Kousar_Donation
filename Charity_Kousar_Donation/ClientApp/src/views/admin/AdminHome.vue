@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 import draggable from 'vuedraggable'
 import { api } from '@/api/client'
 import { useToast } from '@/composables/useToast'
-import { progressFillStyle } from '@/utils/progress'
 import ProgressAmount from '@/components/ProgressAmount.vue'
+import ProgressBar from '@/components/ProgressBar.vue'
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -19,10 +19,23 @@ const translating = ref(false)
 // Keys this page owns. Only these are sent on save.
 const KEYS = [
   'site.hero.fa', 'site.hero.en', 'site.home.order',
-  'site.home.columns', 'site.home.merge.featured',
+  'site.home.columns', 'site.home.merge.featured', 'site.card.image.fit',
   'site.progress.mode', 'site.progress.color.start', 'site.progress.color.end', 'site.progress.show.percent',
+  'site.progress.animate', 'site.progress.animate.ms', 'site.progress.track.color',
   'donation.progress.format.fa', 'donation.progress.format.en', 'donation.progress.highlight',
+  'donation.progress.color.collected', 'donation.progress.color.target',
+  'donation.progress.color.remaining', 'donation.progress.color.percent',
+  'donation.progress.color.text', 'donation.progress.size',
   'donors.source'
+]
+
+// Amount-text pieces that can each get their own color.
+const AMOUNT_PARTS = [
+  { key: 'donation.progress.color.collected', token: '{collected}', fa: 'مبلغ جمع‌آوری‌شده', en: 'Raised amount' },
+  { key: 'donation.progress.color.target', token: '{target}', fa: 'مبلغ هدف', en: 'Goal amount' },
+  { key: 'donation.progress.color.remaining', token: '{remaining}', fa: 'مبلغ باقی‌مانده', en: 'Remaining' },
+  { key: 'donation.progress.color.percent', token: '{percent}', fa: 'درصد پیشرفت', en: 'Percent' },
+  { key: 'donation.progress.color.text', token: 'abc', fa: 'متن ساده', en: 'Plain text' }
 ]
 
 const SECTIONS = [
@@ -67,9 +80,25 @@ function applyPreset(p) { sec.value = [...p.order] }
 const progressCfg = computed(() => ({
   progressMode: values.value['site.progress.mode'],
   progressColorStart: values.value['site.progress.color.start'],
-  progressColorEnd: values.value['site.progress.color.end']
+  progressColorEnd: values.value['site.progress.color.end'],
+  progressTrackColor: values.value['site.progress.track.color'],
+  progressAnimate: values.value['site.progress.animate'] !== 'false',
+  progressAnimateMs: Number(values.value['site.progress.animate.ms']) || 0,
+  showProgressPercent: values.value['site.progress.show.percent'] !== 'false'
 }))
-function previewFill(p) { return progressFillStyle(p, progressCfg.value) }
+
+// Bumping the key remounts the preview bars so the fill animation replays.
+const replayKey = ref(0)
+function replayPreview() { replayKey.value++ }
+
+const amountColors = computed(() => ({
+  collected: values.value['donation.progress.color.collected'],
+  target: values.value['donation.progress.color.target'],
+  remaining: values.value['donation.progress.color.remaining'],
+  percent: values.value['donation.progress.color.percent'],
+  text: values.value['donation.progress.color.text']
+}))
+function resetColor(key) { values.value[key] = '' }
 
 async function translateHero() {
   const text = values.value['site.hero.fa']
@@ -171,6 +200,12 @@ async function save() {
             </label>
           </div>
           <p class="hint">{{ fa ? 'اگر تیک بزنید، پروژه‌های ویژه جدا نمایش داده نمی‌شوند و همه در یک گرید با هم می‌آیند. در موبایل ستون‌ها خودکار کم می‌شوند.' : 'When checked, featured projects are not separated — all appear in one grid. Columns auto-reduce on mobile.' }}</p>
+          <label class="label">{{ fa ? 'نمایش تصویر روی کارت' : 'Card image display' }}</label>
+          <select v-model="values['site.card.image.fit']" class="select">
+            <option value="cover">{{ fa ? 'پر کردن کادر (برش لبه‌ها)' : 'Fill the box (crop edges)' }}</option>
+            <option value="contain">{{ fa ? 'نمایش کامل تصویر (بدون برش)' : 'Show the whole image (no crop)' }}</option>
+          </select>
+          <p class="hint">{{ fa ? 'برای تصویرهای آمادهٔ مربعی، حالت «نمایش کامل» مناسب‌تر است.' : 'For the square ready-made illustrations, “show the whole image” fits better.' }}</p>
         </section>
 
         <!-- Hero text -->
@@ -202,11 +237,44 @@ async function save() {
               <input type="color" v-model="values['site.progress.color.start']" class="swatch" /></div>
             <div><label class="label">{{ fa ? 'رنگ پایان (سبز)' : 'End color (green)' }}</label>
               <input type="color" v-model="values['site.progress.color.end']" class="swatch" /></div>
+            <div>
+              <label class="label">{{ fa ? 'رنگ زمینه نوار' : 'Track color' }}</label>
+              <div class="swatch-row">
+                <input type="color" :value="values['site.progress.track.color'] || '#94a3b8'" class="swatch"
+                  @input="values['site.progress.track.color'] = $event.target.value" />
+                <button type="button" class="reset-btn" :disabled="!values['site.progress.track.color']"
+                  @click="resetColor('site.progress.track.color')">{{ fa ? 'پیش‌فرض' : 'Default' }}</button>
+              </div>
+            </div>
             <label class="chk"><input type="checkbox" :checked="values['site.progress.show.percent'] === 'true'"
               @change="values['site.progress.show.percent'] = $event.target.checked ? 'true' : 'false'" /> {{ fa ? 'نمایش درصد' : 'Show %' }}</label>
           </div>
+
+          <div class="anim-row">
+            <label class="chk"><input type="checkbox" :checked="values['site.progress.animate'] !== 'false'"
+              @change="values['site.progress.animate'] = $event.target.checked ? 'true' : 'false'" />
+              {{ fa ? 'پر شدن متحرک (از صفر تا مقدار واقعی)' : 'Animate the fill (sweep from zero)' }}</label>
+            <div class="speed" :class="{ off: values['site.progress.animate'] === 'false' }">
+              <label class="label">{{ fa ? 'سرعت پر شدن' : 'Fill speed' }}</label>
+              <div class="speed-row">
+                <input type="range" min="300" max="4000" step="100"
+                  :value="Number(values['site.progress.animate.ms']) || 1400"
+                  :disabled="values['site.progress.animate'] === 'false'"
+                  @input="values['site.progress.animate.ms'] = $event.target.value" />
+                <span class="speed-val">{{ ((Number(values['site.progress.animate.ms']) || 1400) / 1000).toFixed(1) }}s</span>
+              </div>
+            </div>
+          </div>
+          <p class="hint">{{ fa
+            ? 'نوار وقتی وارد دید کاربر می‌شود از صفر تا مقدار واقعی پر می‌شود و رنگ هم همراه آن تغییر می‌کند. برای کاربرانی که «کاهش انیمیشن» را در سیستم‌عامل فعال کرده‌اند، مقدار نهایی بدون حرکت نمایش داده می‌شود.'
+            : 'The bar sweeps from zero to the real value when it scrolls into view, with the color shifting along. Users with reduced-motion enabled see the final value instantly.' }}</p>
+
           <div class="prog-preview">
-            <div v-for="p in [25, 60, 95]" :key="p" class="pp-bar"><div class="pp-fill" :style="previewFill(p)" /><span>{{ p }}%</span></div>
+            <div class="preview-head">
+              <span class="label">{{ fa ? 'پیش‌نمایش زنده' : 'Live preview' }}</span>
+              <button type="button" class="reset-btn" @click="replayPreview">{{ fa ? 'پخش دوباره' : 'Replay' }}</button>
+            </div>
+            <ProgressBar v-for="p in [25, 60, 95]" :key="`${replayKey}-${p}`" :percent="p" :cfg="progressCfg" />
           </div>
         </section>
 
@@ -219,6 +287,32 @@ async function save() {
           <input v-model="values['donation.progress.format.en']" class="input input-ltr" dir="ltr" />
           <label class="label">{{ fa ? 'رنگ تأکید (برای ~متن~)' : 'Highlight color (for ~text~)' }}</label>
           <div class="colors"><input type="color" v-model="values['donation.progress.highlight']" class="swatch" /></div>
+
+          <label class="label">{{ fa ? 'رنگ هر بخش از متن مبلغ' : 'Color of each amount part' }}</label>
+          <div class="part-colors">
+            <div v-for="p in AMOUNT_PARTS" :key="p.key" class="part">
+              <span class="part-name">{{ fa ? p.fa : p.en }}</span>
+              <code class="part-token">{{ p.token }}</code>
+              <div class="swatch-row">
+                <input type="color" :value="values[p.key] || '#0d9488'" class="swatch sm"
+                  @input="values[p.key] = $event.target.value" />
+                <button type="button" class="reset-btn" :disabled="!values[p.key]" @click="resetColor(p.key)">
+                  {{ fa ? 'پیش‌فرض' : 'Default' }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <p class="hint">{{ fa
+            ? 'رنگ خالی یعنی «رنگ پیش‌فرض قالب». رنگ هر بخش بر رنگ تأکید اولویت دارد.'
+            : 'An empty color means “theme default”. A part color overrides the highlight color.' }}</p>
+
+          <label class="label">{{ fa ? 'اندازه متن مبلغ' : 'Amount text size' }}</label>
+          <div class="speed-row">
+            <input type="range" min="80" max="180" step="5"
+              :value="Number(values['donation.progress.size']) || 100"
+              @input="values['donation.progress.size'] = $event.target.value" />
+            <span class="speed-val">{{ Number(values['donation.progress.size']) || 100 }}%</span>
+          </div>
 
           <div class="help">
             <strong>{{ fa ? 'راهنما:' : 'Guide:' }}</strong>
@@ -236,7 +330,9 @@ async function save() {
             <p class="ex live">{{ fa ? 'پیش‌نمایش:' : 'Preview:' }}
               <ProgressAmount :collected="6500000" :target="10000000"
                 :format="fa ? values['donation.progress.format.fa'] : values['donation.progress.format.en']"
-                :highlight="values['donation.progress.highlight']" /></p>
+                :highlight="values['donation.progress.highlight']"
+                :colors="amountColors"
+                :scale="Number(values['donation.progress.size']) || 100" /></p>
           </div>
         </section>
 
@@ -307,10 +403,33 @@ async function save() {
 .colors { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
 .swatch { width: 56px; height: 38px; border: 1px solid var(--border); border-radius: 8px; background: none; cursor: pointer; padding: 2px; }
 .chk { display: flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; color: var(--muted); }
-.prog-preview { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.75rem; }
-.pp-bar { display: flex; align-items: center; gap: 0.5rem; background: color-mix(in srgb, var(--muted) 18%, transparent); border-radius: 999px; padding-inline-end: 0.5rem; }
-.pp-fill { height: 10px; border-radius: 999px; }
-.pp-bar span { font-size: 0.75rem; color: var(--muted); min-width: 2.4rem; }
+.prog-preview { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; }
+.preview-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.preview-head .label { margin: 0; }
+
+.swatch-row { display: flex; align-items: center; gap: 0.4rem; }
+.swatch.sm { width: 44px; height: 32px; }
+.reset-btn {
+  border: 1px solid var(--border); background: var(--input-bg); color: var(--muted);
+  border-radius: 999px; padding: 0.25rem 0.7rem; font-size: 0.75rem; cursor: pointer; font-family: inherit;
+}
+.reset-btn:hover:not(:disabled) { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 45%, transparent); }
+.reset-btn:disabled { opacity: 0.45; cursor: default; }
+
+.anim-row { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: center; margin-top: 0.9rem; }
+.speed.off { opacity: 0.45; }
+.speed .label { margin-top: 0; }
+.speed-row { display: flex; align-items: center; gap: 0.6rem; }
+.speed-row input[type="range"] { width: 180px; accent-color: var(--primary); }
+.speed-val { font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 3rem; }
+
+.part-colors { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.6rem; }
+.part {
+  display: flex; flex-direction: column; gap: 0.35rem;
+  padding: 0.6rem; border: 1px solid var(--border); border-radius: 10px; background: var(--input-bg);
+}
+.part-name { font-size: 0.85rem; }
+.part-token { font-size: 0.72rem; color: var(--muted); direction: ltr; align-self: flex-start; }
 .more-link { display: inline-block; margin-top: 0.75rem; font-size: 0.85rem; color: var(--primary); text-decoration: none; }
 .row-2 { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end; }
 .chk.merge { white-space: nowrap; padding-bottom: 0.5rem; }

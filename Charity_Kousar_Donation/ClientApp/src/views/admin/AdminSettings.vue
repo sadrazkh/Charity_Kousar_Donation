@@ -288,8 +288,13 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
             <template v-else-if="item.type === 'Color'">
               <label class="label">{{ label(item) }}</label>
               <div class="color-row">
-                <input type="color" v-model="values[item.key]" class="color-swatch" />
-                <input type="text" v-model="values[item.key]" class="input input-ltr" dir="ltr" />
+                <input type="color" :value="values[item.key] || '#0d9488'" class="color-swatch"
+                  @input="values[item.key] = $event.target.value" />
+                <input type="text" v-model="values[item.key]" class="input input-ltr" dir="ltr"
+                  :placeholder="locale === 'fa' ? 'خالی = رنگ پیش‌فرض قالب' : 'empty = theme default'" />
+                <button type="button" class="mini danger" :disabled="!values[item.key]"
+                  :title="locale === 'fa' ? 'بازگشت به پیش‌فرض' : 'Reset to default'"
+                  @click="values[item.key] = ''">✕</button>
               </div>
             </template>
 

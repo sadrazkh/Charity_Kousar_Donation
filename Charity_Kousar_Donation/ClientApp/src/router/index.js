@@ -18,6 +18,7 @@ const routes = [
       { path: 'campaigns', name: 'admin-campaigns', component: () => import('@/views/admin/AdminCampaigns.vue') },
       { path: 'campaigns/new', name: 'admin-campaign-new', component: () => import('@/views/admin/AdminCampaignEditor.vue') },
       { path: 'campaigns/:id/edit', name: 'admin-campaign-edit', component: () => import('@/views/admin/AdminCampaignEditor.vue') },
+      { path: 'media', name: 'admin-media', component: () => import('@/views/admin/AdminMedia.vue') },
       { path: 'donations', name: 'admin-donations', component: () => import('@/views/admin/AdminDonations.vue') },
       { path: 'settings', name: 'admin-settings', component: () => import('@/views/admin/AdminSettings.vue') }
     ]

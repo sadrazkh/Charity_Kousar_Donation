@@ -49,6 +49,10 @@ public static class DbSeeder
                 new() { Key = "site.progress.color.start", Value = "#ef4444", Group = "home", LabelFa = "رنگ شروع نوار پیشرفت", LabelEn = "Progress start color", Type = SettingType.Color, SortOrder = 3 },
                 new() { Key = "site.progress.color.end", Value = "#22c55e", Group = "home", LabelFa = "رنگ پایان نوار (سبز)", LabelEn = "Progress end color (green)", Type = SettingType.Color, SortOrder = 4 },
                 new() { Key = "site.progress.show.percent", Value = "true", Group = "home", LabelFa = "نمایش درصد روی نوار", LabelEn = "Show percent on bar", Type = SettingType.Boolean, SortOrder = 5 },
+                new() { Key = "site.progress.animate", Value = "true", Group = "home", LabelFa = "پر شدن متحرک نوار پیشرفت", LabelEn = "Animate progress fill", Type = SettingType.Boolean, SortOrder = 8 },
+                new() { Key = "site.progress.animate.ms", Value = "1400", Group = "home", LabelFa = "مدت انیمیشن نوار (میلی‌ثانیه)", LabelEn = "Fill animation duration (ms)", Type = SettingType.Number, SortOrder = 9 },
+                new() { Key = "site.progress.track.color", Value = "", Group = "home", LabelFa = "رنگ زمینه نوار (خالی = پیش‌فرض)", LabelEn = "Progress track color (empty = default)", Type = SettingType.Color, SortOrder = 10 },
+                new() { Key = "site.card.image.fit", Value = "cover", Group = "home", LabelFa = "نمایش تصویر کارت (cover/contain)", LabelEn = "Card image fit (cover/contain)", SortOrder = 11 },
 
                 new() { Key = "featured.units", Value = "days,hours,minutes,seconds", Group = "featured", LabelFa = "واحدهای شمارش معکوس", LabelEn = "Countdown units", SortOrder = 1 },
                 new() { Key = "featured.layout", Value = "boxes", Group = "featured", LabelFa = "چیدمان تایمر (boxes یا inline)", LabelEn = "Timer layout (boxes/inline)", SortOrder = 2 },
@@ -81,6 +85,12 @@ public static class DbSeeder
                 new() { Key = "donation.progress.format.fa", Value = "*{collected}* از {target} تومان", Group = "donation", LabelFa = "قالب متن مبلغ (فارسی)", LabelEn = "Amount text format (FA)", SortOrder = 5 },
                 new() { Key = "donation.progress.format.en", Value = "*{collected}* of {target} Toman", Group = "donation", LabelFa = "قالب متن مبلغ (انگلیسی)", LabelEn = "Amount text format (EN)", SortOrder = 6 },
                 new() { Key = "donation.progress.highlight", Value = "#0d9488", Group = "donation", LabelFa = "رنگ تأکید متن مبلغ", LabelEn = "Amount highlight color", Type = SettingType.Color, SortOrder = 7 },
+                new() { Key = "donation.progress.color.collected", Value = "", Group = "donation", LabelFa = "رنگ مبلغ جمع‌آوری‌شده", LabelEn = "Raised amount color", Type = SettingType.Color, SortOrder = 8 },
+                new() { Key = "donation.progress.color.target", Value = "", Group = "donation", LabelFa = "رنگ مبلغ هدف", LabelEn = "Goal amount color", Type = SettingType.Color, SortOrder = 9 },
+                new() { Key = "donation.progress.color.remaining", Value = "", Group = "donation", LabelFa = "رنگ مبلغ باقی‌مانده", LabelEn = "Remaining amount color", Type = SettingType.Color, SortOrder = 10 },
+                new() { Key = "donation.progress.color.percent", Value = "", Group = "donation", LabelFa = "رنگ درصد پیشرفت", LabelEn = "Percent color", Type = SettingType.Color, SortOrder = 11 },
+                new() { Key = "donation.progress.color.text", Value = "", Group = "donation", LabelFa = "رنگ متن ساده مبلغ", LabelEn = "Plain amount text color", Type = SettingType.Color, SortOrder = 12 },
+                new() { Key = "donation.progress.size", Value = "100", Group = "donation", LabelFa = "اندازه متن مبلغ (درصد)", LabelEn = "Amount text size (%)", Type = SettingType.Number, SortOrder = 13 },
                 new() { Key = "donation.otp.enabled", Value = "false", Group = "donation", LabelFa = "تأیید OTP برای مبالغ بالا", LabelEn = "OTP for large amounts", Type = SettingType.Boolean, SortOrder = 3 },
                 new() { Key = "donation.otp.threshold", Value = "5000000", Group = "donation", LabelFa = "آستانه OTP (تومان)", LabelEn = "OTP threshold (Toman)", Type = SettingType.Number, SortOrder = 4 },
 
@@ -166,6 +176,18 @@ public static class DbSeeder
             await EnsureSettingAsync(db, "site.progress.color.start", "#ef4444", "home", "رنگ شروع نوار پیشرفت", "Progress start color", SettingType.Color, 3);
             await EnsureSettingAsync(db, "site.progress.color.end", "#22c55e", "home", "رنگ پایان نوار (سبز)", "Progress end color (green)", SettingType.Color, 4);
             await EnsureSettingAsync(db, "site.progress.show.percent", "true", "home", "نمایش درصد روی نوار", "Show percent on bar", SettingType.Boolean, 5);
+            await EnsureSettingAsync(db, "site.progress.animate", "true", "home", "پر شدن متحرک نوار پیشرفت", "Animate progress fill", SettingType.Boolean, 8);
+            await EnsureSettingAsync(db, "site.progress.animate.ms", "1400", "home", "مدت انیمیشن نوار (میلی‌ثانیه)", "Fill animation duration (ms)", SettingType.Number, 9);
+            await EnsureSettingAsync(db, "site.progress.track.color", "", "home", "رنگ زمینه نوار (خالی = پیش‌فرض)", "Progress track color (empty = default)", SettingType.Color, 10);
+            await EnsureSettingAsync(db, "site.card.image.fit", "cover", "home", "نمایش تصویر کارت (cover/contain)", "Card image fit (cover/contain)", SettingType.Text, 11);
+
+            // Amount text colors (empty = follow theme)
+            await EnsureSettingAsync(db, "donation.progress.color.collected", "", "donation", "رنگ مبلغ جمع‌آوری‌شده", "Raised amount color", SettingType.Color, 8);
+            await EnsureSettingAsync(db, "donation.progress.color.target", "", "donation", "رنگ مبلغ هدف", "Goal amount color", SettingType.Color, 9);
+            await EnsureSettingAsync(db, "donation.progress.color.remaining", "", "donation", "رنگ مبلغ باقی‌مانده", "Remaining amount color", SettingType.Color, 10);
+            await EnsureSettingAsync(db, "donation.progress.color.percent", "", "donation", "رنگ درصد پیشرفت", "Percent color", SettingType.Color, 11);
+            await EnsureSettingAsync(db, "donation.progress.color.text", "", "donation", "رنگ متن ساده مبلغ", "Plain amount text color", SettingType.Color, 12);
+            await EnsureSettingAsync(db, "donation.progress.size", "100", "donation", "اندازه متن مبلغ (درصد)", "Amount text size (%)", SettingType.Number, 13);
 
             // Featured / countdown timer
             await EnsureSettingAsync(db, "featured.units", "days,hours,minutes,seconds", "featured", "واحدهای شمارش معکوس", "Countdown units", SettingType.Text, 1);

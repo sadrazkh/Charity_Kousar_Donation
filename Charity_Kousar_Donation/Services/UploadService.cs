@@ -18,6 +18,30 @@ public class UploadService(IWebHostEnvironment env, IConfiguration config, ILogg
         return Path.Combine(env.ContentRootPath, "uploads");
     }
 
+    /// <summary>
+    /// Ready-made campaign illustrations that ship with the site. The files live in
+    /// ClientApp/public/presets and the frontend build copies them to wwwroot/presets,
+    /// so dropping a new image into that folder is enough to offer it in the picker.
+    /// </summary>
+    public List<string> ListPresetUrls()
+    {
+        string[] dirs = [
+            Path.Combine(env.WebRootPath ?? env.ContentRootPath, "presets"),
+            Path.Combine(env.ContentRootPath, "ClientApp", "public", "presets")
+        ];
+        foreach (var dir in dirs)
+        {
+            if (!Directory.Exists(dir)) continue;
+            var files = Directory.EnumerateFiles(dir)
+                .Where(f => Allowed.Contains(Path.GetExtension(f).ToLowerInvariant()))
+                .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+                .Select(f => $"/presets/{Path.GetFileName(f)}")
+                .ToList();
+            if (files.Count > 0) return files;
+        }
+        return [];
+    }
+
     public async Task<(bool Ok, string? Url, string? Error)> SaveImageAsync(IFormFile? file, HttpRequest request)
     {
         if (file is null || file.Length == 0) return (false, null, "فایلی انتخاب نشده است");

@@ -99,18 +99,40 @@ public class SettingsService(AppDbContext db)
         // Home grid + amount text styling
         await GetAsync("site.home.columns", "auto"),
         await GetBoolAsync("site.home.merge.featured", false),
-        await GetAsync("donation.progress.highlight", "#0d9488"));
+        await GetAsync("donation.progress.highlight", "#0d9488"),
+        // Progress bar fill animation
+        await GetBoolAsync("site.progress.animate", true),
+        await GetIntAsync("site.progress.animate.ms", 1400),
+        await GetAsync("site.progress.track.color"),
+        // Amount text colors
+        await GetAsync("donation.progress.color.collected"),
+        await GetAsync("donation.progress.color.target"),
+        await GetAsync("donation.progress.color.remaining"),
+        await GetAsync("donation.progress.color.percent"),
+        await GetAsync("donation.progress.color.text"),
+        await GetIntAsync("donation.progress.size", 100),
+        // Campaign card image
+        await GetAsync("site.card.image.fit", "cover"));
 
     public async Task<string> GetTemplatesJsonAsync() => await GetAsync("page.templates", "[]");
 
-    public async Task SaveTemplatesJsonAsync(string json)
+    public async Task SaveTemplatesJsonAsync(string json) =>
+        await SaveRawJsonAsync("page.templates", json, "قالب‌های سفارشی صفحه", "Custom page templates");
+
+    /// <summary>Reusable image library shown in the media picker (uploaded by admins).</summary>
+    public async Task<string> GetGalleryJsonAsync() => await GetAsync("media.gallery", "[]");
+
+    public async Task SaveGalleryJsonAsync(string json) =>
+        await SaveRawJsonAsync("media.gallery", json, "گالری تصاویر", "Image gallery");
+
+    private async Task SaveRawJsonAsync(string key, string json, string labelFa, string labelEn)
     {
-        var s = await db.SiteSettings.FirstOrDefaultAsync(x => x.Key == "page.templates");
+        var s = await db.SiteSettings.FirstOrDefaultAsync(x => x.Key == key);
         if (s == null)
             db.SiteSettings.Add(new SiteSetting
             {
-                Key = "page.templates", Value = json, Group = "advanced",
-                LabelFa = "قالب‌های سفارشی صفحه", LabelEn = "Custom page templates",
+                Key = key, Value = json, Group = "advanced",
+                LabelFa = labelFa, LabelEn = labelEn,
                 Type = SettingType.TextArea, SortOrder = 1
             });
         else s.Value = json;
@@ -144,7 +166,8 @@ public class SettingsService(AppDbContext db)
         };
 
         var items = await db.SiteSettings
-            .Where(s => s.Key != "page.templates") // managed via the page builder, not the raw settings list
+            // Managed by dedicated screens (page builder / media library), not the raw settings list.
+            .Where(s => s.Key != "page.templates" && s.Key != "media.gallery")
             .OrderBy(s => s.Group).ThenBy(s => s.SortOrder).ToListAsync();
         var grouped = items.GroupBy(s => s.Group).ToDictionary(g => g.Key, g => g.AsEnumerable());
         return groupOrder

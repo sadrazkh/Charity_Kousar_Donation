@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { uploadFile } from '@/api/client'
+import MediaPicker from '@/components/MediaPicker.vue'
 
 defineProps({
   modelValue: { type: String, default: '' }
@@ -12,6 +13,7 @@ const { locale } = useI18n()
 const uploading = ref(false)
 const error = ref('')
 const dragOver = ref(false)
+const showPicker = ref(false)
 
 async function handleFile(file) {
   if (!file) return
@@ -53,6 +55,11 @@ function onDrop(e) {
       </button>
     </div>
 
+    <button type="button" class="btn btn-ghost btn-sm pick-btn" @click="showPicker = true">
+      <svg class="pick-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      {{ locale === 'fa' ? 'انتخاب از تصاویر آماده و گالری' : 'Pick from ready-made images & gallery' }}
+    </button>
+
     <label
       class="dropzone"
       :class="{ over: dragOver, busy: uploading }"
@@ -72,6 +79,9 @@ function onDrop(e) {
     </label>
 
     <p v-if="error" class="err">⚠ {{ error }}</p>
+
+    <MediaPicker :show="showPicker" :current="modelValue"
+      @close="showPicker = false" @select="emit('update:modelValue', $event)" />
   </div>
 </template>
 
@@ -79,6 +89,8 @@ function onDrop(e) {
 .image-upload { display: flex; flex-direction: column; gap: 0.5rem; }
 .iu-row { display: flex; gap: 0.5rem; align-items: center; }
 .iu-row .input { flex: 1; min-width: 0; }
+.pick-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.4rem; }
+.pick-ic { width: 16px; height: 16px; }
 .dropzone {
   display: flex; align-items: center; justify-content: center;
   min-height: 120px; padding: 0.75rem;
