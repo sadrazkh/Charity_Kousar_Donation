@@ -41,7 +41,7 @@ const showCompletedTab = computed(() =>
   config.showCompletedTab !== false && completedCampaigns.value.length > 0)
 const completedTitle = computed(() =>
   (locale.value === 'fa' ? config.completedTitleFa : config.completedTitleEn) ||
-  (locale.value === 'fa' ? 'پرونده‌های تکمیل‌شده' : 'Completed projects'))
+  (t('ui.completedProjects')))
 const tab = ref('open')
 
 const featured = computed(() => openCampaigns.value.filter(c => c.isFeatured))
@@ -118,7 +118,7 @@ const fmt = (n) => formatAmount(n, locale.value)
       <section v-else-if="section === 'featured' && hasFeaturedSection" class="featured-section">
         <h2 class="section-title">
           <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.8 6.1 20.8l1.2-6.6L2.5 9l6.6-.9L12 2z"/></svg>
-          {{ locale === 'fa' ? 'پروژه‌های ویژه' : 'Featured projects' }}
+          {{ t('ui.featuredProjects') }}
         </h2>
         <div class="cards-grid" :class="gridMode" :style="gridStyle">
           <CampaignCard
@@ -140,7 +140,7 @@ const fmt = (n) => formatAmount(n, locale.value)
           <div v-if="showCompletedTab" class="list-tabs" role="tablist">
             <button type="button" role="tab" :aria-selected="tab === 'open'"
               :class="{ active: tab === 'open' }" @click="tab = 'open'">
-              {{ locale === 'fa' ? 'در حال جمع‌آوری' : 'In progress' }}
+              {{ t('ui.inProgress') }}
               <span class="tab-count">{{ fmt(openCampaigns.length) }}</span>
             </button>
             <button type="button" role="tab" :aria-selected="tab === 'completed'"
@@ -161,10 +161,10 @@ const fmt = (n) => formatAmount(n, locale.value)
         </div>
         <p v-else-if="!campaigns.length" class="empty">{{ t('noCampaigns') }}</p>
         <p v-else-if="tab === 'completed'" class="empty">
-          {{ locale === 'fa' ? 'هنوز پرونده‌ای تکمیل نشده است.' : 'No completed projects yet.' }}
+          {{ t('ui.noCompletedProjectsYet') }}
         </p>
         <p v-else-if="!openCampaigns.length" class="empty">
-          {{ locale === 'fa' ? 'همهٔ پرونده‌ها تکمیل شده‌اند 🎉' : 'All projects are fully funded 🎉' }}
+          {{ t('ui.allProjectsAreFullyFunded') }}
         </p>
       </section>
 

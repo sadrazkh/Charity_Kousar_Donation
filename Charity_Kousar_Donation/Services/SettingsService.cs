@@ -9,119 +9,116 @@ public class SettingsService(AppDbContext db)
 {
     private Dictionary<string, string>? _cache;
 
-    public async Task<string> GetAsync(string key, string defaultValue = "")
+    /// <summary>
+    /// Reads a setting. When the database has no row for the key, the built-in value from
+    /// <see cref="SettingsCatalog"/> is used unless the caller passes its own fallback.
+    /// </summary>
+    public async Task<string> GetAsync(string key, string? defaultValue = null)
     {
         _cache ??= await db.SiteSettings.AsNoTracking().ToDictionaryAsync(s => s.Key, s => s.Value);
-        return _cache.TryGetValue(key, out var v) ? v : defaultValue;
+        return _cache.TryGetValue(key, out var v) ? v : defaultValue ?? SettingsCatalog.DefaultOf(key);
     }
 
     public void InvalidateCache() => _cache = null;
 
-    public async Task<bool> GetBoolAsync(string key, bool defaultValue = false)
+    public async Task<bool> GetBoolAsync(string key, bool? defaultValue = null)
     {
-        var v = await GetAsync(key);
-        return bool.TryParse(v, out var b) ? b : defaultValue;
+        var v = await GetAsync(key, defaultValue?.ToString());
+        return bool.TryParse(v, out var b) ? b : defaultValue ?? false;
     }
 
-    public async Task<decimal> GetDecimalAsync(string key, decimal defaultValue = 0)
+    public async Task<decimal> GetDecimalAsync(string key, decimal? defaultValue = null)
     {
-        var v = await GetAsync(key);
-        return decimal.TryParse(v, out var d) ? d : defaultValue;
+        var v = await GetAsync(key, defaultValue?.ToString());
+        return decimal.TryParse(v, out var d) ? d : defaultValue ?? 0;
     }
 
-    public async Task<int> GetIntAsync(string key, int defaultValue = 0)
+    public async Task<int> GetIntAsync(string key, int? defaultValue = null)
     {
-        var v = await GetAsync(key);
-        return int.TryParse(v, out var i) ? i : defaultValue;
+        var v = await GetAsync(key, defaultValue?.ToString());
+        return int.TryParse(v, out var i) ? i : defaultValue ?? 0;
     }
 
+    /// <summary>
+    /// Everything the public site needs in one call. Values are named, not positional, so a
+    /// new setting can be added anywhere without silently shifting its neighbours, and the
+    /// fallbacks all come from <see cref="SettingsCatalog"/>.
+    /// </summary>
     public async Task<PublicSiteConfigDto> GetPublicConfigAsync() => new(
-        await GetAsync("site.name.fa", "خیریه کوثر"),
-        await GetAsync("site.name.en", "Kousar Charity"),
-        await GetAsync("site.tagline.fa"),
-        await GetAsync("site.tagline.en"),
-        await GetAsync("site.hero.fa", "با هم می‌توانیم زندگی‌ها را روشن کنیم"),
-        await GetAsync("site.hero.en", "Together we can light up lives"),
-        // Logo / branding
-        string.IsNullOrWhiteSpace(await GetAsync("site.logo.url")) ? null : await GetAsync("site.logo.url"),
-        await GetIntAsync("site.logo.height", 48),
-        await GetBoolAsync("site.logo.show.text", true),
-        // Theme colors
-        await GetAsync("site.color.primary", "#0d9488"),
-        await GetAsync("site.color.accent", "#f59e0b"),
-        await GetAsync("site.color.background", "#0f172a"),
-        await GetAsync("site.footer.fa"),
-        await GetAsync("site.footer.en"),
-        // Home page layout
-        await GetAsync("site.home.order", "hero,featured,campaigns,donors"),
-        // Progress bar
-        await GetAsync("site.progress.mode", "shift"),
-        await GetAsync("site.progress.color.start", "#ef4444"),
-        await GetAsync("site.progress.color.end", "#22c55e"),
-        await GetBoolAsync("site.progress.show.percent", true),
-        // Featured / countdown timer
-        await GetAsync("featured.units", "days,hours,minutes,seconds"),
-        await GetAsync("featured.layout", "boxes"),
-        await GetBoolAsync("featured.badge.show", true),
-        await GetAsync("featured.badge.fa", "⭐ ویژه"),
-        await GetAsync("featured.badge.en", "⭐ Featured"),
-        await GetAsync("featured.color", "#f59e0b"),
-        await GetAsync("featured.expired.fa", "⏱ فرصت به پایان رسید"),
-        await GetAsync("featured.expired.en", "⏱ Time ended"),
-        // Payments
-        await GetBoolAsync("crypto.enabled"),
-        await GetBoolAsync("zarinpal.enabled", true),
-        await GetDecimalAsync("donation.min.amount", 10000),
-        ParseQuickAmounts(await GetAsync("donation.quick.amounts", "50000,100000,200000,500000,1000000")),
-        // Donors / contributors display
-        await GetBoolAsync("donors.show.recent", true),
-        await GetIntAsync("donors.show.count", 10),
-        await GetBoolAsync("donors.show.home", true),
-        await GetBoolAsync("donors.show.name", true),
-        await GetBoolAsync("donors.show.amount", true),
-        await GetBoolAsync("donors.show.date", false),
-        await GetBoolAsync("donors.show.campaign", false),
-        await GetAsync("donors.anonymous.fa", "نیکوکار"),
-        await GetAsync("donors.anonymous.en", "Well-wisher"),
-        await GetAsync("donors.title.fa", "حامیان اخیر"),
-        await GetAsync("donors.title.en", "Recent supporters"),
-        await GetAsync("donors.source", "auto"),
-        await GetAsync("donors.manual", "[]"),
-        // Sharing
-        await GetBoolAsync("share.ai.enabled", true),
-        // Amount/progress text format
-        await GetAsync("donation.progress.format.fa", "{collected} از {target} تومان"),
-        await GetAsync("donation.progress.format.en", "{collected} of {target} Toman"),
-        // OTP / misc
-        await GetBoolAsync("donation.otp.enabled", false),
-        await GetDecimalAsync("donation.otp.threshold", 5_000_000),
-        await GetBoolAsync("payment.bypass.enabled", false),
-        // Home grid + amount text styling
-        await GetAsync("site.home.columns", "auto"),
-        await GetBoolAsync("site.home.merge.featured", false),
-        await GetAsync("donation.progress.highlight", "#0d9488"),
-        // Progress bar fill animation
-        await GetBoolAsync("site.progress.animate", true),
-        await GetIntAsync("site.progress.animate.ms", 1400),
-        await GetAsync("site.progress.track.color"),
-        // Amount text colors
-        await GetAsync("donation.progress.color.collected"),
-        await GetAsync("donation.progress.color.target"),
-        await GetAsync("donation.progress.color.remaining"),
-        await GetAsync("donation.progress.color.percent"),
-        await GetAsync("donation.progress.color.text"),
-        await GetIntAsync("donation.progress.size", 100),
-        // Campaign card image
-        await GetAsync("site.card.image.fit", "cover"),
-        // Hero badge
-        await GetAsync("site.hero.badge.fa"),
-        await GetAsync("site.hero.badge.en"),
-        // Featured highlight styles
-        await GetAsync("featured.styles", DefaultFeaturedStyles),
-        // Completed projects
-        await GetBoolAsync("site.completed.show", true),
-        await GetAsync("site.completed.title.fa", "پرونده‌های تکمیل‌شده"),
-        await GetAsync("site.completed.title.en", "Completed projects"));
+        SiteNameFa: await GetAsync("site.name.fa"),
+        SiteNameEn: await GetAsync("site.name.en"),
+        TaglineFa: await GetAsync("site.tagline.fa"),
+        TaglineEn: await GetAsync("site.tagline.en"),
+        HeroTextFa: await GetAsync("site.hero.fa"),
+        HeroTextEn: await GetAsync("site.hero.en"),
+        LogoUrl: string.IsNullOrWhiteSpace(await GetAsync("site.logo.url")) ? null : await GetAsync("site.logo.url"),
+        LogoHeight: await GetIntAsync("site.logo.height"),
+        ShowLogoText: await GetBoolAsync("site.logo.show.text"),
+        PrimaryColor: await GetAsync("site.color.primary"),
+        AccentColor: await GetAsync("site.color.accent"),
+        BackgroundColor: await GetAsync("site.color.background"),
+        FooterTextFa: await GetAsync("site.footer.fa"),
+        FooterTextEn: await GetAsync("site.footer.en"),
+        HomeOrder: await GetAsync("site.home.order"),
+        ProgressMode: await GetAsync("site.progress.mode"),
+        ProgressColorStart: await GetAsync("site.progress.color.start"),
+        ProgressColorEnd: await GetAsync("site.progress.color.end"),
+        ShowProgressPercent: await GetBoolAsync("site.progress.show.percent"),
+        FeaturedUnits: await GetAsync("featured.units"),
+        FeaturedLayout: await GetAsync("featured.layout"),
+        FeaturedBadgeShow: await GetBoolAsync("featured.badge.show"),
+        FeaturedBadgeFa: await GetAsync("featured.badge.fa"),
+        FeaturedBadgeEn: await GetAsync("featured.badge.en"),
+        FeaturedColor: await GetAsync("featured.color"),
+        FeaturedExpiredFa: await GetAsync("featured.expired.fa"),
+        FeaturedExpiredEn: await GetAsync("featured.expired.en"),
+        CryptoEnabled: await GetBoolAsync("crypto.enabled"),
+        ZarinPalEnabled: await GetBoolAsync("zarinpal.enabled"),
+        MinDonationAmount: await GetDecimalAsync("donation.min.amount"),
+        QuickDonationAmounts: ParseQuickAmounts(await GetAsync("donation.quick.amounts")),
+        ShowRecentDonors: await GetBoolAsync("donors.show.recent"),
+        RecentDonorsCount: await GetIntAsync("donors.show.count"),
+        ShowDonorsHome: await GetBoolAsync("donors.show.home"),
+        ShowDonorName: await GetBoolAsync("donors.show.name"),
+        ShowDonorAmount: await GetBoolAsync("donors.show.amount"),
+        ShowDonorDate: await GetBoolAsync("donors.show.date"),
+        ShowDonorCampaign: await GetBoolAsync("donors.show.campaign"),
+        DonorAnonymousFa: await GetAsync("donors.anonymous.fa"),
+        DonorAnonymousEn: await GetAsync("donors.anonymous.en"),
+        DonorsTitleFa: await GetAsync("donors.title.fa"),
+        DonorsTitleEn: await GetAsync("donors.title.en"),
+        DonorsSource: await GetAsync("donors.source"),
+        DonorsManual: await GetAsync("donors.manual"),
+        ShareAiEnabled: await GetBoolAsync("share.ai.enabled"),
+        ProgressFormatFa: await GetAsync("donation.progress.format.fa"),
+        ProgressFormatEn: await GetAsync("donation.progress.format.en"),
+        OtpEnabled: await GetBoolAsync("donation.otp.enabled"),
+        OtpThresholdAmount: await GetDecimalAsync("donation.otp.threshold"),
+        // Deliberately not the catalog default: a missing row must never switch the
+        // "skip the real gateway" test mode on.
+        PaymentBypassEnabled: await GetBoolAsync("payment.bypass.enabled", false),
+        HomeColumns: await GetAsync("site.home.columns"),
+        HomeMergeFeatured: await GetBoolAsync("site.home.merge.featured"),
+        ProgressHighlight: await GetAsync("donation.progress.highlight"),
+        ProgressAnimate: await GetBoolAsync("site.progress.animate"),
+        ProgressAnimateMs: await GetIntAsync("site.progress.animate.ms"),
+        ProgressTrackColor: await GetAsync("site.progress.track.color"),
+        ProgressFlow: await GetBoolAsync("site.progress.flow"),
+        ProgressFlowStyle: await GetAsync("site.progress.flow.style"),
+        ProgressFlowMs: await GetIntAsync("site.progress.flow.ms"),
+        AmountColorCollected: await GetAsync("donation.progress.color.collected"),
+        AmountColorTarget: await GetAsync("donation.progress.color.target"),
+        AmountColorRemaining: await GetAsync("donation.progress.color.remaining"),
+        AmountColorPercent: await GetAsync("donation.progress.color.percent"),
+        AmountTextColor: await GetAsync("donation.progress.color.text"),
+        AmountFontScale: await GetIntAsync("donation.progress.size"),
+        CardImageFit: await GetAsync("site.card.image.fit"),
+        HeroBadgeFa: await GetAsync("site.hero.badge.fa"),
+        HeroBadgeEn: await GetAsync("site.hero.badge.en"),
+        FeaturedStyles: await GetAsync("featured.styles"),
+        ShowCompletedTab: await GetBoolAsync("site.completed.show"),
+        CompletedTitleFa: await GetAsync("site.completed.title.fa"),
+        CompletedTitleEn: await GetAsync("site.completed.title.en"));
 
     /// <summary>Built-in highlight styles for featured campaigns (admins can edit the list).</summary>
     public const string DefaultFeaturedStyles = """

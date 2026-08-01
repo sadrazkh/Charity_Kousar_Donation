@@ -18,7 +18,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 const blocks = computed({
   get: () => props.modelValue,
   set: v => emit('update:modelValue', v)
@@ -103,13 +103,13 @@ function label(type) {
         <div v-if="expanded === block.id" class="block-editor">
           <!-- Columns -->
           <template v-if="block.type === 'columns'">
-            <label class="label">{{ locale === 'fa' ? 'تعداد ستون (۱ تا ۵)' : 'Columns (1–5)' }}</label>
+            <label class="label">{{ t('ui.columns15') }}</label>
             <div class="col-picker">
               <button v-for="n in 5" :key="n" type="button"
                 class="col-btn" :class="{ active: block.data.count === n }"
                 @click="setColumnCount(block, n)">{{ n }}</button>
             </div>
-            <label class="label">{{ locale === 'fa' ? 'فاصله' : 'Gap' }}</label>
+            <label class="label">{{ t('ui.gap') }}</label>
             <select v-model="block.data.gap" class="select">
               <option value="sm">کم</option><option value="md">متوسط</option><option value="lg">زیاد</option>
             </select>
@@ -123,12 +123,12 @@ function label(type) {
 
           <!-- Section -->
           <template v-else-if="block.type === 'section'">
-            <label class="label">{{ locale === 'fa' ? 'رنگ پس‌زمینه' : 'Background' }}</label>
+            <label class="label">{{ t('ui.background') }}</label>
             <input v-model="block.data.bgColor" class="input" placeholder="#1e293b یا خالی" />
-            <label class="label">{{ locale === 'fa' ? 'تراز' : 'Align' }}</label>
+            <label class="label">{{ t('ui.align') }}</label>
             <select v-model="block.data.align" class="select">
-              <option value="start">{{ locale === 'fa' ? 'راست/چپ' : 'Start' }}</option>
-              <option value="center">{{ locale === 'fa' ? 'وسط' : 'Center' }}</option>
+              <option value="start">{{ t('ui.start') }}</option>
+              <option value="center">{{ t('ui.center') }}</option>
             </select>
             <NestedBlockList v-model="block.data.blocks" :depth="depth + 1" :campaign-title="campaignTitle" />
           </template>
@@ -149,10 +149,10 @@ function label(type) {
                 <select v-model="block.data.align" class="select"><option value="start">Start</option><option value="center">Center</option></select>
               </div>
             </div>
-            <label class="label">{{ locale === 'fa' ? 'رنگ (اختیاری)' : 'Color (optional)' }}</label>
+            <label class="label">{{ t('ui.colorOptional') }}</label>
             <div class="color-field">
               <input type="color" v-model="block.data.color" class="color-pick" />
-              <button type="button" class="btn btn-ghost btn-sm" @click="block.data.color = ''">{{ locale === 'fa' ? 'پیش‌فرض' : 'Default' }}</button>
+              <button type="button" class="btn btn-ghost btn-sm" @click="block.data.color = ''">{{ t('ui.default') }}</button>
             </div>
           </template>
 
@@ -195,13 +195,13 @@ function label(type) {
 
           <!-- Gallery -->
           <template v-else-if="block.type === 'gallery'">
-            <label class="label">{{ locale === 'fa' ? 'ستون‌های گالری' : 'Gallery columns' }}</label>
+            <label class="label">{{ t('ui.galleryColumns') }}</label>
             <select v-model.number="block.data.columns" class="select"><option v-for="n in 5" :key="n" :value="n">{{ n }}</option></select>
             <div v-for="(img, i) in block.data.images" :key="i" class="gallery-edit">
               <input v-model="img.url" class="input input-ltr" dir="ltr" placeholder="URL" />
               <button type="button" class="icon-btn danger" @click="block.data.images.splice(i,1)">✕</button>
             </div>
-            <button type="button" class="btn btn-ghost btn-sm" @click="addGalleryImage(block)">+ {{ locale === 'fa' ? 'تصویر' : 'Image' }}</button>
+            <button type="button" class="btn btn-ghost btn-sm" @click="addGalleryImage(block)">+ {{ t('ui.image') }}</button>
           </template>
 
           <!-- Video -->
@@ -248,13 +248,13 @@ function label(type) {
               <textarea v-model="qa.aEn" class="textarea input-ltr" dir="ltr" rows="2" placeholder="Answer (EN)" />
             </div>
             <button type="button" class="btn btn-ghost btn-sm" @click="block.data.items.push({ qFa:'', qEn:'', aFa:'', aEn:'' })">
-              + {{ locale === 'fa' ? 'سوال' : 'Question' }}
+              + {{ t('ui.question') }}
             </button>
           </template>
 
           <!-- Steps / impact -->
           <template v-else-if="block.type === 'steps'">
-            <label class="label">{{ locale === 'fa' ? 'تعداد ستون' : 'Columns' }}</label>
+            <label class="label">{{ t('ui.columns') }}</label>
             <select v-model.number="block.data.columns" class="select"><option v-for="n in 4" :key="n" :value="n">{{ n }}</option></select>
             <div v-for="(st, i) in block.data.items" :key="i" class="qa-edit">
               <div class="qa-head">
@@ -267,7 +267,7 @@ function label(type) {
               <input v-model="st.textEn" class="input input-ltr" dir="ltr" placeholder="Text (EN)" />
             </div>
             <button type="button" class="btn btn-ghost btn-sm" @click="block.data.items.push({ icon:'•', titleFa:'', titleEn:'', textFa:'', textEn:'' })">
-              + {{ locale === 'fa' ? 'مرحله' : 'Step' }}
+              + {{ t('ui.step') }}
             </button>
           </template>
 
@@ -281,10 +281,10 @@ function label(type) {
               <input v-model="block.data.btnFa" class="input input-rtl" placeholder="متن دکمه (فارسی)" />
               <input v-model="block.data.btnEn" class="input input-ltr" dir="ltr" placeholder="Button (EN)" />
             </div>
-            <label class="label">{{ locale === 'fa' ? 'رنگ پس‌زمینه (اختیاری)' : 'Background color (optional)' }}</label>
+            <label class="label">{{ t('ui.backgroundColorOptional') }}</label>
             <div class="color-field">
               <input type="color" v-model="block.data.color" class="color-pick" />
-              <button type="button" class="btn btn-ghost btn-sm" @click="block.data.color = ''">{{ locale === 'fa' ? 'پیش‌فرض' : 'Default' }}</button>
+              <button type="button" class="btn btn-ghost btn-sm" @click="block.data.color = ''">{{ t('ui.default') }}</button>
             </div>
           </template>
 
@@ -294,12 +294,12 @@ function label(type) {
             <AiAssistButton v-model="block.data.textFa" language="fa" field-type="cta" :campaign-title="campaignTitle" />
             <input v-model="block.data.textEn" class="input input-ltr" dir="ltr" />
             <div class="row-2">
-              <div><label class="label">{{ locale === 'fa' ? 'تراز' : 'Align' }}</label>
+              <div><label class="label">{{ t('ui.align') }}</label>
                 <select v-model="block.data.align" class="select"><option value="center">Center</option><option value="start">Start</option></select>
               </div>
-              <div><label class="label">{{ locale === 'fa' ? 'رنگ دکمه' : 'Button color' }}</label>
+              <div><label class="label">{{ t('ui.buttonColor') }}</label>
                 <div class="color-field"><input type="color" v-model="block.data.color" class="color-pick" />
-                  <button type="button" class="btn btn-ghost btn-sm" @click="block.data.color = ''">{{ locale === 'fa' ? 'پیش‌فرض' : 'Default' }}</button></div>
+                  <button type="button" class="btn btn-ghost btn-sm" @click="block.data.color = ''">{{ t('ui.default') }}</button></div>
               </div>
             </div>
           </template>
@@ -314,10 +314,10 @@ function label(type) {
             <select v-model="block.data.size" class="select"><option value="sm">کوچک</option><option value="md">متوسط</option><option value="lg">بزرگ</option><option value="xl">خیلی بزرگ</option></select>
           </template>
           <template v-else-if="block.type === 'stats'">
-            <p class="hint">{{ locale === 'fa' ? 'آمار خودکار از کمپین' : 'Auto stats from campaign' }}</p>
+            <p class="hint">{{ t('ui.autoStatsFromCampaign') }}</p>
           </template>
           <template v-else-if="block.type === 'divider'">
-            <p class="hint">{{ locale === 'fa' ? 'خط جداکننده' : 'Divider line' }}</p>
+            <p class="hint">{{ t('ui.dividerLine') }}</p>
           </template>
         </div>
       </div>

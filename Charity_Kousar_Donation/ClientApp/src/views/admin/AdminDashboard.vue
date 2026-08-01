@@ -48,7 +48,7 @@ const cards = computed(() => stats.value ? [
   { key: 'total', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6', label: t('totalCollected'), value: fmt(stats.value.totalCollected), accent: '#22c55e' },
   { key: 'today', icon: 'M3 17l6-6 4 4 8-8M15 7h6v6', label: t('todayCollected'), value: fmt(stats.value.todayCollected), accent: '#0ea5e9' },
   { key: 'donors', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8', label: t('donors'), value: stats.value.totalDonors, accent: '#f59e0b' },
-  { key: 'active', icon: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', label: locale.value === 'fa' ? 'پروژه‌های فعال' : 'Active projects', value: stats.value.activeCampaigns, accent: '#8b5cf6' },
+  { key: 'active', icon: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', label: t('ui.activeProjects'), value: stats.value.activeCampaigns, accent: '#8b5cf6' },
   { key: 'pending', icon: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', label: t('pending'), value: stats.value.pendingDonations, accent: '#ef4444' }
 ] : [])
 
@@ -61,16 +61,16 @@ const topCampaigns = computed(() =>
     <div class="dash-head">
       <div>
         <h1>{{ t('dashboard') }}</h1>
-        <p class="sub">{{ locale === 'fa' ? 'نمای کلی فعالیت‌های خیریه' : 'Overview of charity activity' }}</p>
+        <p class="sub">{{ t('ui.overviewOfCharityActivity') }}</p>
       </div>
       <div class="quick-actions">
         <router-link to="/admin/campaigns/new" class="btn btn-primary btn-sm">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          {{ locale === 'fa' ? 'پروژه جدید' : 'New project' }}
+          {{ t('ui.newProject') }}
         </router-link>
         <a href="/" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
-          {{ locale === 'fa' ? 'مشاهده سایت' : 'View site' }}
+          {{ t('ui.viewSite') }}
         </a>
       </div>
     </div>
@@ -90,7 +90,7 @@ const topCampaigns = computed(() =>
     <transition-group v-if="liveFeed.length" name="feed" tag="div" class="live-feed">
       <div v-for="ev in liveFeed" :key="ev._id" class="card live-row">
         <svg class="live-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7a2.5 2.5 0 1 1 3-4 2.5 2.5 0 0 1-3 4M12 7a2.5 2.5 0 1 0-3-4 2.5 2.5 0 0 0 3 4"/></svg>
-        <span>{{ locale === 'fa' ? 'کمک جدید' : 'New donation' }}:
+        <span>{{ t('ui.newDonation') }}:
         <strong>{{ fmt(ev.amount) }}</strong> — {{ ev.campaignTitle }}
         <span class="phone">{{ ev.phone }}</span></span>
       </div>
@@ -100,9 +100,9 @@ const topCampaigns = computed(() =>
       <div class="ts-head">
         <h2>
           <svg class="ts-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0zM7 4H4v2a3 3 0 0 0 3 3M17 4h3v2a3 3 0 0 1-3 3"/></svg>
-          {{ locale === 'fa' ? 'پروژه‌های برتر' : 'Top projects' }}
+          {{ t('ui.topProjects') }}
         </h2>
-        <router-link to="/admin/campaigns" class="see-all">{{ locale === 'fa' ? 'مدیریت همه ←' : 'Manage all →' }}</router-link>
+        <router-link to="/admin/campaigns" class="see-all">{{ t('ui.manageAll') }}</router-link>
       </div>
       <div v-if="topCampaigns.length" class="top-list">
         <router-link v-for="c in topCampaigns" :key="c.id" :to="`/admin/campaigns/${c.id}/edit`" class="top-row">

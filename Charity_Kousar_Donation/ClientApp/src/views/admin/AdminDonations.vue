@@ -22,7 +22,7 @@ function statusText(s) {
   return (locale.value === 'fa' ? fa : en)[s] ?? s
 }
 function methodText(m) {
-  return m === 1 ? (locale.value === 'fa' ? 'رمزارز' : 'Crypto') : (locale.value === 'fa' ? 'زرین‌پال' : 'ZarinPal')
+  return m === 1 ? (t('ui.crypto')) : (t('ui.zarinpal'))
 }
 function fmtDate(d) {
   if (!d) return '—'
@@ -72,25 +72,25 @@ async function exportFile(type) {
         </button>
         <button type="button" class="btn btn-ghost btn-sm" :disabled="!!exporting" @click="exportFile('report')">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-          {{ exporting === 'report' ? '…' : (locale === 'fa' ? 'گزارش HTML' : 'HTML report') }}
+          {{ exporting === 'report' ? '…' : (t('ui.htmlReport')) }}
         </button>
       </div>
     </div>
 
     <div class="summary">
-      <div class="card s-card"><span>{{ locale === 'fa' ? 'مجموع پرداخت‌شده' : 'Total paid' }}</span><strong>{{ fmt(summary.paidAmount) }}</strong></div>
-      <div class="card s-card"><span>{{ locale === 'fa' ? 'تعداد پرداخت موفق' : 'Successful' }}</span><strong>{{ summary.paidCount }}</strong></div>
+      <div class="card s-card"><span>{{ t('ui.totalPaid') }}</span><strong>{{ fmt(summary.paidAmount) }}</strong></div>
+      <div class="card s-card"><span>{{ t('ui.successful') }}</span><strong>{{ summary.paidCount }}</strong></div>
       <div class="card s-card"><span>{{ t('pending') }}</span><strong>{{ summary.pending }}</strong></div>
-      <div class="card s-card"><span>{{ locale === 'fa' ? 'کل تراکنش‌ها' : 'Total records' }}</span><strong>{{ summary.total }}</strong></div>
+      <div class="card s-card"><span>{{ t('ui.totalRecords') }}</span><strong>{{ summary.total }}</strong></div>
     </div>
 
     <div class="filters">
       <div class="search-field">
         <svg class="search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input v-model="search" class="input search-input" :aria-label="locale === 'fa' ? 'جستجو' : 'Search'" :placeholder="locale === 'fa' ? 'جستجو نام/موبایل/پروژه' : 'Search name/phone/project'" />
+        <input v-model="search" class="input search-input" :aria-label="t('ui.search')" :placeholder="t('ui.searchNamePhoneProject')" />
       </div>
-      <select v-model="statusFilter" class="select status-sel" :aria-label="locale === 'fa' ? 'فیلتر وضعیت' : 'Filter status'">
-        <option value="all">{{ locale === 'fa' ? 'همه وضعیت‌ها' : 'All statuses' }}</option>
+      <select v-model="statusFilter" class="select status-sel" :aria-label="t('ui.filterStatus')">
+        <option value="all">{{ t('ui.allStatuses') }}</option>
         <option value="1">{{ statusText(1) }}</option>
         <option value="0">{{ statusText(0) }}</option>
         <option value="2">{{ statusText(2) }}</option>
@@ -102,12 +102,12 @@ async function exportFile(type) {
       <table class="table">
         <thead>
           <tr>
-            <th>{{ locale === 'fa' ? 'پروژه' : 'Project' }}</th>
-            <th>{{ locale === 'fa' ? 'حامی' : 'Donor' }}</th>
+            <th>{{ t('ui.project') }}</th>
+            <th>{{ t('ui.donor') }}</th>
             <th>{{ t('amount') }}</th>
-            <th>{{ locale === 'fa' ? 'روش' : 'Method' }}</th>
-            <th>{{ locale === 'fa' ? 'وضعیت' : 'Status' }}</th>
-            <th>{{ locale === 'fa' ? 'تاریخ' : 'Date' }}</th>
+            <th>{{ t('ui.method') }}</th>
+            <th>{{ t('ui.status') }}</th>
+            <th>{{ t('ui.date') }}</th>
             <th>SMS</th>
           </tr>
         </thead>
@@ -120,13 +120,13 @@ async function exportFile(type) {
             <td><span class="badge" :class="statusClass(d.status)">{{ statusText(d.status) }}</span></td>
             <td>{{ fmtDate(d.paidAt || d.createdAt) }}</td>
             <td>
-              <svg v-if="d.smsSent" class="sms-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :aria-label="locale === 'fa' ? 'ارسال شد' : 'Sent'"><path d="M20 6 9 17l-5-5"/></svg>
+              <svg v-if="d.smsSent" class="sms-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :aria-label="t('ui.sent')"><path d="M20 6 9 17l-5-5"/></svg>
               <span v-else class="sms-no" aria-hidden="true">—</span>
             </td>
           </tr>
         </tbody>
       </table>
-      <p v-if="!filtered.length" class="empty">{{ locale === 'fa' ? 'تراکنشی یافت نشد' : 'No records' }}</p>
+      <p v-if="!filtered.length" class="empty">{{ t('ui.noRecords') }}</p>
     </div>
   </div>
 </template>

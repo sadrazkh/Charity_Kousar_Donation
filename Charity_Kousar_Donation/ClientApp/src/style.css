@@ -21,7 +21,7 @@
   --danger: #f43f5e;
   /* Keyboard focus ring token (WCAG 2.4.7). */
   --ring: color-mix(in srgb, var(--primary) 70%, transparent);
-  font-family: 'Vazirmatn', 'Inter', system-ui, sans-serif;
+  font-family: 'Vazirmatn Variable', 'Manrope Variable', system-ui, sans-serif;
 }
 
 [data-theme="light"] {
@@ -37,7 +37,7 @@
 }
 
 [dir="ltr"] {
-  font-family: 'Inter', 'Vazirmatn', system-ui, sans-serif;
+  font-family: 'Manrope Variable', 'Vazirmatn Variable', system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -237,7 +237,7 @@ a:hover { text-decoration: underline; }
 .input-ltr, .input-ltr.input, .textarea.input-ltr {
   direction: ltr;
   text-align: left;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Manrope Variable', system-ui, sans-serif;
 }
 .input-rtl, .input-rtl.input, .textarea.input-rtl {
   direction: rtl;

@@ -1,5 +1,4 @@
 using Charity_Kousar_Donation.Models;
-using Charity_Kousar_Donation.Services;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -24,226 +23,18 @@ public static class DbSeeder
             throw;
         }
 
-        if (!await db.SiteSettings.AnyAsync())
+        // Settings live in SettingsCatalog. A fresh database gets the whole list; an existing
+        // one only receives keys it is missing, so admin-edited values are never touched.
+        var existingKeys = await db.SiteSettings.Select(s => s.Key).ToListAsync();
+        var missing = SettingsCatalog.All
+            .Where(d => !existingKeys.Contains(d.Key))
+            .Select(d => d.ToRow())
+            .ToList();
+        if (missing.Count > 0)
         {
-            var settings = new List<SiteSetting>
-            {
-                new() { Key = "site.name.fa", Value = "خیریه کوثر", Group = "site", LabelFa = "نام سایت (فارسی)", LabelEn = "Site name (FA)", SortOrder = 1 },
-                new() { Key = "site.name.en", Value = "Kousar Charity", Group = "site", LabelFa = "نام سایت (انگلیسی)", LabelEn = "Site name (EN)", SortOrder = 2 },
-                new() { Key = "site.tagline.fa", Value = "همراه شما برای ساختن امید", Group = "site", LabelFa = "شعار (فارسی)", LabelEn = "Tagline (FA)", SortOrder = 3 },
-                new() { Key = "site.tagline.en", Value = "Building hope together", Group = "site", LabelFa = "شعار (انگلیسی)", LabelEn = "Tagline (EN)", SortOrder = 4 },
-                new() { Key = "site.hero.fa", Value = "با هم می‌توانیم زندگی‌ها را روشن کنیم", Group = "site", LabelFa = "متن بنر اصلی (فارسی)", LabelEn = "Hero text (FA)", Type = SettingType.TextArea, SortOrder = 5 },
-                new() { Key = "site.hero.en", Value = "Together we can light up lives", Group = "site", LabelFa = "متن بنر اصلی (انگلیسی)", LabelEn = "Hero text (EN)", Type = SettingType.TextArea, SortOrder = 6 },
-                new() { Key = "site.hero.badge.fa", Value = "همراه شما برای ساختن امید", Group = "site", LabelFa = "متن نشان بالای بنر (فارسی)", LabelEn = "Hero badge text (FA)", SortOrder = 15 },
-                new() { Key = "site.hero.badge.en", Value = "Building hope together", Group = "site", LabelFa = "متن نشان بالای بنر (انگلیسی)", LabelEn = "Hero badge text (EN)", SortOrder = 16 },
-                new() { Key = "site.logo.url", Value = "", Group = "site", LabelFa = "آدرس لوگو", LabelEn = "Logo URL", Type = SettingType.Url, SortOrder = 7 },
-                new() { Key = "site.color.primary", Value = "#0d9488", Group = "site", LabelFa = "رنگ اصلی", LabelEn = "Primary color", Type = SettingType.Color, SortOrder = 8 },
-                new() { Key = "site.color.accent", Value = "#f59e0b", Group = "site", LabelFa = "رنگ تأکید", LabelEn = "Accent color", Type = SettingType.Color, SortOrder = 9 },
-                new() { Key = "site.color.background", Value = "#0f172a", Group = "site", LabelFa = "رنگ پس‌زمینه", LabelEn = "Background color", Type = SettingType.Color, SortOrder = 10 },
-                new() { Key = "site.footer.fa", Value = "© خیریه کوثر — تمامی حقوق محفوظ است", Group = "site", LabelFa = "متن فوتر (فارسی)", LabelEn = "Footer (FA)", Type = SettingType.TextArea, SortOrder = 11 },
-                new() { Key = "site.footer.en", Value = "© Kousar Charity — All rights reserved", Group = "site", LabelFa = "متن فوتر (انگلیسی)", LabelEn = "Footer (EN)", Type = SettingType.TextArea, SortOrder = 12 },
-                new() { Key = "site.logo.height", Value = "48", Group = "site", LabelFa = "اندازه لوگو (پیکسل)", LabelEn = "Logo size (px)", Type = SettingType.Number, SortOrder = 13 },
-                new() { Key = "site.logo.show.text", Value = "true", Group = "site", LabelFa = "نمایش نام و شعار کنار لوگو", LabelEn = "Show name & tagline next to logo", Type = SettingType.Boolean, SortOrder = 14 },
-
-                new() { Key = "site.home.order", Value = "hero,featured,campaigns,donors", Group = "home", LabelFa = "ترتیب کادرهای صفحه اصلی", LabelEn = "Home sections order", SortOrder = 1 },
-                new() { Key = "site.home.columns", Value = "auto", Group = "home", LabelFa = "تعداد ستون کارت‌ها (auto/2/3/4)", LabelEn = "Card columns (auto/2/3/4)", SortOrder = 6 },
-                new() { Key = "site.home.merge.featured", Value = "false", Group = "home", LabelFa = "نمایش ویژه و عادی در یک کادر", LabelEn = "Merge featured into one grid", Type = SettingType.Boolean, SortOrder = 7 },
-                new() { Key = "site.progress.mode", Value = "shift", Group = "home", LabelFa = "حالت رنگ نوار پیشرفت", LabelEn = "Progress bar color mode", SortOrder = 2 },
-                new() { Key = "site.progress.color.start", Value = "#ef4444", Group = "home", LabelFa = "رنگ شروع نوار پیشرفت", LabelEn = "Progress start color", Type = SettingType.Color, SortOrder = 3 },
-                new() { Key = "site.progress.color.end", Value = "#22c55e", Group = "home", LabelFa = "رنگ پایان نوار (سبز)", LabelEn = "Progress end color (green)", Type = SettingType.Color, SortOrder = 4 },
-                new() { Key = "site.progress.show.percent", Value = "true", Group = "home", LabelFa = "نمایش درصد روی نوار", LabelEn = "Show percent on bar", Type = SettingType.Boolean, SortOrder = 5 },
-                new() { Key = "site.progress.animate", Value = "true", Group = "home", LabelFa = "پر شدن متحرک نوار پیشرفت", LabelEn = "Animate progress fill", Type = SettingType.Boolean, SortOrder = 8 },
-                new() { Key = "site.progress.animate.ms", Value = "1400", Group = "home", LabelFa = "مدت انیمیشن نوار (میلی‌ثانیه)", LabelEn = "Fill animation duration (ms)", Type = SettingType.Number, SortOrder = 9 },
-                new() { Key = "site.progress.track.color", Value = "", Group = "home", LabelFa = "رنگ زمینه نوار (خالی = پیش‌فرض)", LabelEn = "Progress track color (empty = default)", Type = SettingType.Color, SortOrder = 10 },
-                new() { Key = "site.card.image.fit", Value = "cover", Group = "home", LabelFa = "نمایش تصویر کارت (cover/contain)", LabelEn = "Card image fit (cover/contain)", SortOrder = 11 },
-
-                new() { Key = "featured.units", Value = "days,hours,minutes,seconds", Group = "featured", LabelFa = "واحدهای شمارش معکوس", LabelEn = "Countdown units", SortOrder = 1 },
-                new() { Key = "featured.layout", Value = "boxes", Group = "featured", LabelFa = "چیدمان تایمر (boxes یا inline)", LabelEn = "Timer layout (boxes/inline)", SortOrder = 2 },
-                new() { Key = "featured.badge.show", Value = "true", Group = "featured", LabelFa = "نمایش نشان «ویژه»", LabelEn = "Show featured badge", Type = SettingType.Boolean, SortOrder = 3 },
-                new() { Key = "featured.badge.fa", Value = "⭐ ویژه", Group = "featured", LabelFa = "متن نشان (فارسی)", LabelEn = "Badge text (FA)", SortOrder = 4 },
-                new() { Key = "featured.badge.en", Value = "⭐ Featured", Group = "featured", LabelFa = "متن نشان (انگلیسی)", LabelEn = "Badge text (EN)", SortOrder = 5 },
-                new() { Key = "featured.color", Value = "#f59e0b", Group = "featured", LabelFa = "رنگ تایمر", LabelEn = "Timer color", Type = SettingType.Color, SortOrder = 6 },
-                new() { Key = "featured.expired.fa", Value = "⏱ فرصت به پایان رسید", Group = "featured", LabelFa = "متن پایان زمان (فارسی)", LabelEn = "Expired text (FA)", SortOrder = 7 },
-                new() { Key = "featured.expired.en", Value = "⏱ Time ended", Group = "featured", LabelFa = "متن پایان زمان (انگلیسی)", LabelEn = "Expired text (EN)", SortOrder = 8 },
-                new() { Key = "featured.styles", Value = SettingsService.DefaultFeaturedStyles, Group = "featured", LabelFa = "حالت‌های نشان ویژه", LabelEn = "Featured highlight styles", Type = SettingType.TextArea, SortOrder = 9 },
-                new() { Key = "site.completed.show", Value = "true", Group = "home", LabelFa = "تب پرونده‌های تکمیل‌شده", LabelEn = "Completed projects tab", Type = SettingType.Boolean, SortOrder = 12 },
-                new() { Key = "site.completed.title.fa", Value = "پرونده‌های تکمیل‌شده", Group = "home", LabelFa = "عنوان تب تکمیل‌شده (فارسی)", LabelEn = "Completed tab title (FA)", SortOrder = 13 },
-                new() { Key = "site.completed.title.en", Value = "Completed projects", Group = "home", LabelFa = "عنوان تب تکمیل‌شده (انگلیسی)", LabelEn = "Completed tab title (EN)", SortOrder = 14 },
-
-                new() { Key = "zarinpal.merchant", Value = "", Group = "payment", LabelFa = "مرچنت زرین‌پال", LabelEn = "ZarinPal Merchant ID", SortOrder = 1 },
-                new() { Key = "zarinpal.sandbox", Value = "true", Group = "payment", LabelFa = "حالت تست (سندباکس)", LabelEn = "Sandbox mode", Type = SettingType.Boolean, SortOrder = 2 },
-                new() { Key = "zarinpal.enabled", Value = "true", Group = "payment", LabelFa = "فعال بودن زرین‌پال", LabelEn = "ZarinPal enabled", Type = SettingType.Boolean, SortOrder = 3 },
-                new() { Key = "payment.bypass.enabled", Value = "true", Group = "payment", LabelFa = "حالت تست پرداخت (بدون درگاه واقعی)", LabelEn = "Payment test bypass", Type = SettingType.Boolean, SortOrder = 4 },
-
-                new() { Key = "crypto.enabled", Value = "false", Group = "crypto", LabelFa = "فعال بودن پرداخت رمزارز", LabelEn = "Crypto enabled", Type = SettingType.Boolean, SortOrder = 1 },
-                new() { Key = "crypto.api.url", Value = "", Group = "crypto", LabelFa = "آدرس API درگاه رمزارز", LabelEn = "Crypto gateway API URL", Type = SettingType.Url, SortOrder = 2 },
-                new() { Key = "crypto.api.key", Value = "", Group = "crypto", LabelFa = "کلید API", LabelEn = "API Key", Type = SettingType.Password, SortOrder = 3 },
-                new() { Key = "crypto.wallet.address", Value = "", Group = "crypto", LabelFa = "آدرس کیف پول", LabelEn = "Wallet address", SortOrder = 4 },
-                new() { Key = "crypto.network", Value = "TRC20", Group = "crypto", LabelFa = "شبکه", LabelEn = "Network", SortOrder = 5 },
-
-                new() { Key = "sms.provider", Value = "kavenegar", Group = "sms", LabelFa = "سرویس پیامک", LabelEn = "SMS provider", SortOrder = 1 },
-                new() { Key = "sms.api.key", Value = "", Group = "sms", LabelFa = "کلید API پیامک", LabelEn = "SMS API Key", Type = SettingType.Password, SortOrder = 2 },
-                new() { Key = "sms.sender", Value = "", Group = "sms", LabelFa = "شماره فرستنده", LabelEn = "Sender number", SortOrder = 3 },
-                new() { Key = "sms.template", Value = "بانی گرامی {name}، کمک {amount} تومانی شما برای «{campaign}» با موفقیت ثبت شد. کد پیگیری: {ref}. سپاس از همراهی شما — خیریه کوثر", Group = "sms", LabelFa = "متن پیامک", LabelEn = "SMS template", Type = SettingType.TextArea, SortOrder = 4 },
-                new() { Key = "sms.enabled", Value = "true", Group = "sms", LabelFa = "ارسال پیامک فعال", LabelEn = "SMS enabled", Type = SettingType.Boolean, SortOrder = 5 },
-
-                new() { Key = "donation.min.amount", Value = "10000", Group = "donation", LabelFa = "حداقل مبلغ (تومان)", LabelEn = "Min amount (Toman)", Type = SettingType.Number, SortOrder = 1 },
-                new() { Key = "donation.quick.amounts", Value = "50000,100000,200000,500000,1000000", Group = "donation", LabelFa = "مبالغ پیشنهادی (با کاما)", LabelEn = "Quick amounts (comma-separated)", SortOrder = 2 },
-                new() { Key = "donation.progress.format.fa", Value = "*{collected}* از {target} تومان", Group = "donation", LabelFa = "قالب متن مبلغ (فارسی)", LabelEn = "Amount text format (FA)", SortOrder = 5 },
-                new() { Key = "donation.progress.format.en", Value = "*{collected}* of {target} Toman", Group = "donation", LabelFa = "قالب متن مبلغ (انگلیسی)", LabelEn = "Amount text format (EN)", SortOrder = 6 },
-                new() { Key = "donation.progress.highlight", Value = "#0d9488", Group = "donation", LabelFa = "رنگ تأکید متن مبلغ", LabelEn = "Amount highlight color", Type = SettingType.Color, SortOrder = 7 },
-                new() { Key = "donation.progress.color.collected", Value = "", Group = "donation", LabelFa = "رنگ مبلغ جمع‌آوری‌شده", LabelEn = "Raised amount color", Type = SettingType.Color, SortOrder = 8 },
-                new() { Key = "donation.progress.color.target", Value = "", Group = "donation", LabelFa = "رنگ مبلغ هدف", LabelEn = "Goal amount color", Type = SettingType.Color, SortOrder = 9 },
-                new() { Key = "donation.progress.color.remaining", Value = "", Group = "donation", LabelFa = "رنگ مبلغ باقی‌مانده", LabelEn = "Remaining amount color", Type = SettingType.Color, SortOrder = 10 },
-                new() { Key = "donation.progress.color.percent", Value = "", Group = "donation", LabelFa = "رنگ درصد پیشرفت", LabelEn = "Percent color", Type = SettingType.Color, SortOrder = 11 },
-                new() { Key = "donation.progress.color.text", Value = "", Group = "donation", LabelFa = "رنگ متن ساده مبلغ", LabelEn = "Plain amount text color", Type = SettingType.Color, SortOrder = 12 },
-                new() { Key = "donation.progress.size", Value = "100", Group = "donation", LabelFa = "اندازه متن مبلغ (درصد)", LabelEn = "Amount text size (%)", Type = SettingType.Number, SortOrder = 13 },
-                new() { Key = "donation.otp.enabled", Value = "false", Group = "donation", LabelFa = "تأیید OTP برای مبالغ بالا", LabelEn = "OTP for large amounts", Type = SettingType.Boolean, SortOrder = 3 },
-                new() { Key = "donation.otp.threshold", Value = "5000000", Group = "donation", LabelFa = "آستانه OTP (تومان)", LabelEn = "OTP threshold (Toman)", Type = SettingType.Number, SortOrder = 4 },
-
-                new() { Key = "share.ai.enabled", Value = "true", Group = "share", LabelFa = "استفاده از AI برای متن اشتراک", LabelEn = "Use AI for share text", Type = SettingType.Boolean, SortOrder = 0 },
-                new() { Key = "share.template.fa", Value = "🤲 {title}\n\n{desc}\n\n📊 {collected} از {target} تومان جمع شده ({progress}%)\n\n💳 برای کمک:\n{link}", Group = "share", LabelFa = "قالب آماده متن اشتراک (فارسی)", LabelEn = "Built-in share template (FA)", Type = SettingType.TextArea, SortOrder = 3 },
-                new() { Key = "share.template.en", Value = "🤲 {title}\n\n{desc}\n\n📊 {collected} of {target} Toman raised ({progress}%)\n\n💳 Donate here:\n{link}", Group = "share", LabelFa = "قالب آماده متن اشتراک (انگلیسی)", LabelEn = "Built-in share template (EN)", Type = SettingType.TextArea, SortOrder = 4 },
-                new() { Key = "share.ai.system", Value = "You write charity share texts for WhatsApp and Telegram. Output ONLY valid JSON with messageFa and messageEn. No markdown.", Group = "share", LabelFa = "دستور سیستم AI", LabelEn = "AI system prompt", Type = SettingType.TextArea, SortOrder = 1 },
-                new() { Key = "share.ai.prompt", Value = "بر اساس محتوای واقعی این کمپین خیریه، متن اشتراک‌گذاری برای واتساپ/تلگرام بنویس.\n\nعنوان فارسی: {titleFa}\nعنوان انگلیسی: {titleEn}\nتوضیح فارسی: {descriptionFa}\nتوضیح انگلیسی: {descriptionEn}\nمحتوای صفحه (فارسی): {pageContentFa}\nمحتوای صفحه (انگلیسی): {pageContentEn}\nجمع‌آوری: {collected} تومان از {target} تومان ({progress}%)\nلینک پرداخت: {link}\nلینک صفحه: {pageUrl}\n\nفقط از اطلاعات بالا استفاده کن. در پایان هر متن لینک پرداخت را بیاور.\nخروجی JSON: {\"messageFa\":\"...\",\"messageEn\":\"...\"}", Group = "share", LabelFa = "پرامپت AI اشتراک", LabelEn = "Share AI prompt template", Type = SettingType.TextArea, SortOrder = 2 },
-
-                new() { Key = "donors.show.recent", Value = "true", Group = "donors", LabelFa = "نمایش مشارکت‌کنندگان اخیر", LabelEn = "Show recent contributors", Type = SettingType.Boolean, SortOrder = 1 },
-                new() { Key = "donors.show.count", Value = "10", Group = "donors", LabelFa = "تعداد نمایش", LabelEn = "Recent count", Type = SettingType.Number, SortOrder = 2 },
-                new() { Key = "donors.show.home", Value = "true", Group = "donors", LabelFa = "نمایش در صفحه اصلی", LabelEn = "Show on home page", Type = SettingType.Boolean, SortOrder = 3 },
-                new() { Key = "donors.show.name", Value = "true", Group = "donors", LabelFa = "نمایش نام", LabelEn = "Show name", Type = SettingType.Boolean, SortOrder = 4 },
-                new() { Key = "donors.show.amount", Value = "true", Group = "donors", LabelFa = "نمایش مبلغ", LabelEn = "Show amount", Type = SettingType.Boolean, SortOrder = 5 },
-                new() { Key = "donors.show.date", Value = "false", Group = "donors", LabelFa = "نمایش تاریخ", LabelEn = "Show date", Type = SettingType.Boolean, SortOrder = 6 },
-                new() { Key = "donors.show.campaign", Value = "false", Group = "donors", LabelFa = "نمایش نام پروژه", LabelEn = "Show campaign name", Type = SettingType.Boolean, SortOrder = 7 },
-                new() { Key = "donors.anonymous.fa", Value = "نیکوکار", Group = "donors", LabelFa = "عنوان مشارکت‌کننده ناشناس (فارسی)", LabelEn = "Anonymous label (FA)", SortOrder = 8 },
-                new() { Key = "donors.anonymous.en", Value = "Well-wisher", Group = "donors", LabelFa = "عنوان مشارکت‌کننده ناشناس (انگلیسی)", LabelEn = "Anonymous label (EN)", SortOrder = 9 },
-                new() { Key = "donors.title.fa", Value = "حامیان اخیر", Group = "donors", LabelFa = "عنوان بخش (فارسی)", LabelEn = "Section title (FA)", SortOrder = 10 },
-                new() { Key = "donors.title.en", Value = "Recent supporters", Group = "donors", LabelFa = "عنوان بخش (انگلیسی)", LabelEn = "Section title (EN)", SortOrder = 11 },
-                new() { Key = "donors.source", Value = "auto", Group = "donors", LabelFa = "منبع لیست (auto/manual/both)", LabelEn = "List source (auto/manual/both)", SortOrder = 12 },
-                new() { Key = "donors.manual", Value = "[]", Group = "donors", LabelFa = "لیست دستی مشارکت‌کنندگان", LabelEn = "Manual contributors list", Type = SettingType.TextArea, SortOrder = 13 },
-
-                new() { Key = "openrouter.enabled", Value = "true", Group = "ai", LabelFa = "فعال بودن AI", LabelEn = "AI enabled", Type = SettingType.Boolean, SortOrder = 1 },
-                new() { Key = "openrouter.api.key", Value = "", Group = "ai", LabelFa = "کلید API OpenRouter", LabelEn = "OpenRouter API Key", Type = SettingType.Password, SortOrder = 2 },
-                new() { Key = "openrouter.model", Value = "google/gemma-2-9b-it:free", Group = "ai", LabelFa = "مدل (مثلاً openai/gpt-4o-mini)", LabelEn = "Model ID", SortOrder = 3 },
-                new() { Key = "openrouter.translate.model", Value = "", Group = "ai", LabelFa = "مدل ترجمه (خالی = همان مدل اصلی)", LabelEn = "Translation model (empty = main model)", SortOrder = 4 },
-            };
-            db.SiteSettings.AddRange(settings);
+            db.SiteSettings.AddRange(missing);
             await db.SaveChangesAsync();
-        }
-        else
-        {
-            await EnsureSettingAsync(db, "openrouter.enabled", "true", "ai", "فعال بودن AI", "AI enabled", SettingType.Boolean, 1);
-            await EnsureSettingAsync(db, "openrouter.api.key", "", "ai", "کلید API OpenRouter", "OpenRouter API Key", SettingType.Password, 2);
-            await EnsureSettingAsync(db, "openrouter.model", "google/gemma-2-9b-it:free", "ai", "مدل OpenRouter", "Model ID", SettingType.Text, 3);
-
-            await EnsureSettingAsync(db, "donation.quick.amounts", "50000,100000,200000,500000,1000000", "donation",
-                "مبالغ پیشنهادی (با کاما)", "Quick amounts (comma-separated)", SettingType.Text, 2);
-            await EnsureSettingAsync(db, "donation.otp.enabled", "false", "donation",
-                "تأیید OTP برای مبالغ بالا", "OTP for large amounts", SettingType.Boolean, 3);
-            await EnsureSettingAsync(db, "donation.otp.threshold", "5000000", "donation",
-                "آستانه OTP (تومان)", "OTP threshold (Toman)", SettingType.Number, 4);
-
-            await EnsureSettingAsync(db, "share.ai.system",
-                "You write charity share texts for WhatsApp and Telegram. Output ONLY valid JSON with messageFa and messageEn. No markdown.",
-                "share", "دستور سیستم AI", "AI system prompt", SettingType.TextArea, 1);
-            await EnsureSettingAsync(db, "share.ai.prompt", """
-                بر اساس محتوای واقعی این کمپین خیریه، متن اشتراک‌گذاری برای واتساپ/تلگرام بنویس.
-
-                عنوان فارسی: {titleFa}
-                عنوان انگلیسی: {titleEn}
-                توضیح فارسی: {descriptionFa}
-                توضیح انگلیسی: {descriptionEn}
-                محتوای صفحه (فارسی): {pageContentFa}
-                محتوای صفحه (انگلیسی): {pageContentEn}
-                جمع‌آوری: {collected} تومان از {target} تومان ({progress}%)
-                لینک پرداخت: {link}
-                لینک صفحه: {pageUrl}
-
-                فقط از اطلاعات بالا استفاده کن. در پایان هر متن لینک پرداخت را بیاور.
-                خروجی JSON: {"messageFa":"...","messageEn":"..."}
-                """, "share", "پرامپت AI اشتراک (قابل ویرایش)", "Share AI prompt template", SettingType.TextArea, 2);
-
-            await EnsureSettingAsync(db, "donors.show.recent", "true", "donors",
-                "نمایش حامیان اخیر", "Show recent donors", SettingType.Boolean, 1);
-            await EnsureSettingAsync(db, "donors.show.count", "10", "donors",
-                "تعداد حامیان نمایش داده شده", "Recent donors count", SettingType.Number, 2);
-
-            await EnsureSettingAsync(db, "payment.bypass.enabled", "true", "payment",
-                "حالت تست پرداخت (بدون درگاه واقعی)", "Payment test bypass", SettingType.Boolean, 4);
-
-            // Logo / branding
-            await EnsureSettingAsync(db, "site.logo.height", "48", "site", "اندازه لوگو (پیکسل)", "Logo size (px)", SettingType.Number, 13);
-            await EnsureSettingAsync(db, "site.logo.show.text", "true", "site", "نمایش نام و شعار کنار لوگو", "Show name & tagline next to logo", SettingType.Boolean, 14);
-
-            // Home layout + progress bar
-            await EnsureSettingAsync(db, "site.home.order", "hero,featured,campaigns,donors", "home", "ترتیب کادرهای صفحه اصلی", "Home sections order", SettingType.Text, 1);
-            await EnsureSettingAsync(db, "site.home.columns", "auto", "home", "تعداد ستون کارت‌ها (auto/2/3/4)", "Card columns (auto/2/3/4)", SettingType.Text, 6);
-            await EnsureSettingAsync(db, "site.home.merge.featured", "false", "home", "نمایش ویژه و عادی در یک کادر", "Merge featured into one grid", SettingType.Boolean, 7);
-            await EnsureSettingAsync(db, "donation.progress.highlight", "#0d9488", "donation", "رنگ تأکید متن مبلغ", "Amount highlight color", SettingType.Color, 7);
-            await EnsureSettingAsync(db, "site.progress.mode", "shift", "home", "حالت رنگ نوار پیشرفت", "Progress bar color mode", SettingType.Text, 2);
-            await EnsureSettingAsync(db, "site.progress.color.start", "#ef4444", "home", "رنگ شروع نوار پیشرفت", "Progress start color", SettingType.Color, 3);
-            await EnsureSettingAsync(db, "site.progress.color.end", "#22c55e", "home", "رنگ پایان نوار (سبز)", "Progress end color (green)", SettingType.Color, 4);
-            await EnsureSettingAsync(db, "site.progress.show.percent", "true", "home", "نمایش درصد روی نوار", "Show percent on bar", SettingType.Boolean, 5);
-            await EnsureSettingAsync(db, "site.progress.animate", "true", "home", "پر شدن متحرک نوار پیشرفت", "Animate progress fill", SettingType.Boolean, 8);
-            await EnsureSettingAsync(db, "site.progress.animate.ms", "1400", "home", "مدت انیمیشن نوار (میلی‌ثانیه)", "Fill animation duration (ms)", SettingType.Number, 9);
-            await EnsureSettingAsync(db, "site.progress.track.color", "", "home", "رنگ زمینه نوار (خالی = پیش‌فرض)", "Progress track color (empty = default)", SettingType.Color, 10);
-            await EnsureSettingAsync(db, "site.card.image.fit", "cover", "home", "نمایش تصویر کارت (cover/contain)", "Card image fit (cover/contain)", SettingType.Text, 11);
-
-            // Hero badge text (separate from the header tagline)
-            await EnsureSettingAsync(db, "site.hero.badge.fa", "همراه شما برای ساختن امید", "site", "متن نشان بالای بنر (فارسی)", "Hero badge text (FA)", SettingType.Text, 15);
-            await EnsureSettingAsync(db, "site.hero.badge.en", "Building hope together", "site", "متن نشان بالای بنر (انگلیسی)", "Hero badge text (EN)", SettingType.Text, 16);
-
-            // Featured highlight styles + completed projects tab
-            await EnsureSettingAsync(db, "featured.styles", SettingsService.DefaultFeaturedStyles, "featured", "حالت‌های نشان ویژه", "Featured highlight styles", SettingType.TextArea, 9);
-            await EnsureSettingAsync(db, "site.completed.show", "true", "home", "تب پرونده‌های تکمیل‌شده", "Completed projects tab", SettingType.Boolean, 12);
-            await EnsureSettingAsync(db, "site.completed.title.fa", "پرونده‌های تکمیل‌شده", "home", "عنوان تب تکمیل‌شده (فارسی)", "Completed tab title (FA)", SettingType.Text, 13);
-            await EnsureSettingAsync(db, "site.completed.title.en", "Completed projects", "home", "عنوان تب تکمیل‌شده (انگلیسی)", "Completed tab title (EN)", SettingType.Text, 14);
-
-            // Amount text colors (empty = follow theme)
-            await EnsureSettingAsync(db, "donation.progress.color.collected", "", "donation", "رنگ مبلغ جمع‌آوری‌شده", "Raised amount color", SettingType.Color, 8);
-            await EnsureSettingAsync(db, "donation.progress.color.target", "", "donation", "رنگ مبلغ هدف", "Goal amount color", SettingType.Color, 9);
-            await EnsureSettingAsync(db, "donation.progress.color.remaining", "", "donation", "رنگ مبلغ باقی‌مانده", "Remaining amount color", SettingType.Color, 10);
-            await EnsureSettingAsync(db, "donation.progress.color.percent", "", "donation", "رنگ درصد پیشرفت", "Percent color", SettingType.Color, 11);
-            await EnsureSettingAsync(db, "donation.progress.color.text", "", "donation", "رنگ متن ساده مبلغ", "Plain amount text color", SettingType.Color, 12);
-            await EnsureSettingAsync(db, "donation.progress.size", "100", "donation", "اندازه متن مبلغ (درصد)", "Amount text size (%)", SettingType.Number, 13);
-
-            // Featured / countdown timer
-            await EnsureSettingAsync(db, "featured.units", "days,hours,minutes,seconds", "featured", "واحدهای شمارش معکوس", "Countdown units", SettingType.Text, 1);
-            await EnsureSettingAsync(db, "featured.layout", "boxes", "featured", "چیدمان تایمر (boxes یا inline)", "Timer layout (boxes/inline)", SettingType.Text, 2);
-            await EnsureSettingAsync(db, "featured.badge.show", "true", "featured", "نمایش نشان «ویژه»", "Show featured badge", SettingType.Boolean, 3);
-            await EnsureSettingAsync(db, "featured.badge.fa", "⭐ ویژه", "featured", "متن نشان (فارسی)", "Badge text (FA)", SettingType.Text, 4);
-            await EnsureSettingAsync(db, "featured.badge.en", "⭐ Featured", "featured", "متن نشان (انگلیسی)", "Badge text (EN)", SettingType.Text, 5);
-            await EnsureSettingAsync(db, "featured.color", "#f59e0b", "featured", "رنگ تایمر", "Timer color", SettingType.Color, 6);
-            await EnsureSettingAsync(db, "featured.expired.fa", "⏱ فرصت به پایان رسید", "featured", "متن پایان زمان (فارسی)", "Expired text (FA)", SettingType.Text, 7);
-            await EnsureSettingAsync(db, "featured.expired.en", "⏱ Time ended", "featured", "متن پایان زمان (انگلیسی)", "Expired text (EN)", SettingType.Text, 8);
-
-            // Contributors display
-            await EnsureSettingAsync(db, "donors.show.home", "true", "donors", "نمایش در صفحه اصلی", "Show on home page", SettingType.Boolean, 3);
-            await EnsureSettingAsync(db, "donors.show.name", "true", "donors", "نمایش نام", "Show name", SettingType.Boolean, 4);
-            await EnsureSettingAsync(db, "donors.show.amount", "true", "donors", "نمایش مبلغ", "Show amount", SettingType.Boolean, 5);
-            await EnsureSettingAsync(db, "donors.show.date", "false", "donors", "نمایش تاریخ", "Show date", SettingType.Boolean, 6);
-            await EnsureSettingAsync(db, "donors.show.campaign", "false", "donors", "نمایش نام پروژه", "Show campaign name", SettingType.Boolean, 7);
-            await EnsureSettingAsync(db, "donors.anonymous.fa", "نیکوکار", "donors", "عنوان مشارکت‌کننده ناشناس (فارسی)", "Anonymous label (FA)", SettingType.Text, 8);
-            await EnsureSettingAsync(db, "donors.anonymous.en", "Well-wisher", "donors", "عنوان مشارکت‌کننده ناشناس (انگلیسی)", "Anonymous label (EN)", SettingType.Text, 9);
-            await EnsureSettingAsync(db, "donors.title.fa", "حامیان اخیر", "donors", "عنوان بخش (فارسی)", "Section title (FA)", SettingType.Text, 10);
-            await EnsureSettingAsync(db, "donors.title.en", "Recent supporters", "donors", "عنوان بخش (انگلیسی)", "Section title (EN)", SettingType.Text, 11);
-            await EnsureSettingAsync(db, "donors.source", "auto", "donors", "منبع لیست (auto/manual/both)", "List source (auto/manual/both)", SettingType.Text, 12);
-            await EnsureSettingAsync(db, "donors.manual", "[]", "donors", "لیست دستی مشارکت‌کنندگان", "Manual contributors list", SettingType.TextArea, 13);
-
-            await EnsureSettingAsync(db, "donation.progress.format.fa", "{collected} از {target} تومان", "donation", "قالب متن مبلغ (فارسی)", "Amount text format (FA)", SettingType.Text, 5);
-            await EnsureSettingAsync(db, "donation.progress.format.en", "{collected} of {target} Toman", "donation", "قالب متن مبلغ (انگلیسی)", "Amount text format (EN)", SettingType.Text, 6);
-
-            // Sharing (built-in templates + AI toggle)
-            await EnsureSettingAsync(db, "share.ai.enabled", "true", "share", "استفاده از AI برای متن اشتراک", "Use AI for share text", SettingType.Boolean, 0);
-            await EnsureSettingAsync(db, "share.template.fa",
-                "🤲 {title}\n\n{desc}\n\n📊 {collected} از {target} تومان جمع شده ({progress}%)\n\n💳 برای کمک:\n{link}",
-                "share", "قالب آماده متن اشتراک (فارسی)", "Built-in share template (FA)", SettingType.TextArea, 3);
-            await EnsureSettingAsync(db, "share.template.en",
-                "🤲 {title}\n\n{desc}\n\n📊 {collected} of {target} Toman raised ({progress}%)\n\n💳 Donate here:\n{link}",
-                "share", "قالب آماده متن اشتراک (انگلیسی)", "Built-in share template (EN)", SettingType.TextArea, 4);
-
-            // Translation model
-            await EnsureSettingAsync(db, "openrouter.translate.model", "", "ai",
-                "مدل ترجمه (خالی = همان مدل اصلی)", "Translation model (empty = main model)", SettingType.Text, 4);
+            logger.LogInformation("Added {Count} site settings from the catalog.", missing.Count);
         }
 
         if (!await db.AdminUsers.AnyAsync())
@@ -277,19 +68,7 @@ public static class DbSeeder
         }
     }
 
-    private static async Task EnsureSettingAsync(AppDbContext db, string key, string value, string group,
-        string labelFa, string labelEn, SettingType type, int sort)
-    {
-        if (await db.SiteSettings.AnyAsync(s => s.Key == key)) return;
-        db.SiteSettings.Add(new SiteSetting
-        {
-            Key = key, Value = value, Group = group,
-            LabelFa = labelFa, LabelEn = labelEn, Type = type, SortOrder = sort
-        });
-        await db.SaveChangesAsync();
-    }
-
-  private static async Task EnsureDatabaseExistsAsync(IConfiguration config, ILogger logger)
+    private static async Task EnsureDatabaseExistsAsync(IConfiguration config, ILogger logger)
     {
         var connectionString = config.GetConnectionString("DefaultConnection");
         if (string.IsNullOrWhiteSpace(connectionString)) return;

@@ -9,7 +9,7 @@ defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 const uploading = ref(false)
 const error = ref('')
 const dragOver = ref(false)
@@ -18,7 +18,7 @@ const showPicker = ref(false)
 async function handleFile(file) {
   if (!file) return
   if (!file.type.startsWith('image/')) {
-    error.value = locale.value === 'fa' ? 'فقط فایل تصویری مجاز است' : 'Only image files are allowed'
+    error.value = t('ui.onlyImageFilesAreAllowed')
     return
   }
   error.value = ''
@@ -51,13 +51,13 @@ function onDrop(e) {
       <input :value="modelValue" class="input input-ltr" dir="ltr" placeholder="https://... یا آپلود کنید"
         @input="emit('update:modelValue', $event.target.value)" />
       <button v-if="modelValue" type="button" class="btn btn-ghost btn-sm" @click="emit('update:modelValue', '')">
-        {{ locale === 'fa' ? 'حذف' : 'Remove' }}
+        {{ t('ui.remove') }}
       </button>
     </div>
 
     <button type="button" class="btn btn-ghost btn-sm pick-btn" @click="showPicker = true">
       <svg class="pick-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-      {{ locale === 'fa' ? 'انتخاب از تصاویر آماده و گالری' : 'Pick from ready-made images & gallery' }}
+      {{ t('ui.pickFromReadyMadeImages') }}
     </button>
 
     <label
@@ -71,8 +71,8 @@ function onDrop(e) {
       <div v-else class="dz-inner">
         <span class="dz-icon">{{ uploading ? '⏳' : '📤' }}</span>
         <span class="dz-text">{{ uploading
-          ? (locale === 'fa' ? 'در حال آپلود...' : 'Uploading...')
-          : (locale === 'fa' ? 'کلیک کنید یا تصویر را اینجا بکشید' : 'Click or drag an image here') }}</span>
+          ? (t('ui.uploading'))
+          : (t('ui.clickOrDragAnImage')) }}</span>
         <span class="dz-hint">JPG · PNG · WebP · GIF — حداکثر ۵MB</span>
       </div>
       <input type="file" accept="image/*" hidden @change="onPick" />

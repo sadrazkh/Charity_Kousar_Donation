@@ -42,7 +42,7 @@ function desc() {
     <div class="body">
       <span v-if="completed" class="done-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-        {{ locale === 'fa' ? 'هدف تأمین شد' : 'Goal reached' }}
+        {{ t('ui.goalReached') }}
       </span>
       <FeaturedBanner v-else-if="campaign.isFeatured" :campaign="campaign" compact />
       <h3><router-link :to="`/c/${campaign.slug}`" class="title-link">{{ title() }}</router-link></h3>
@@ -53,7 +53,7 @@ function desc() {
       </div>
       <div class="actions">
         <router-link v-if="completed" :to="`/c/${campaign.slug}`" class="btn btn-ghost btn-sm pay-btn">
-          {{ locale === 'fa' ? 'مشاهده پرونده' : 'View project' }}
+          {{ t('ui.viewProject') }}
         </router-link>
         <button v-else class="btn btn-primary btn-sm pay-btn" @click="emit('donate', campaign)">{{ t('pay') }}</button>
       </div>

@@ -80,7 +80,7 @@ async function duplicate(c) {
   busy.value = c.id
   try {
     await api(`/campaigns/${c.id}/duplicate`, { method: 'POST' })
-    toast.success(locale.value === 'fa' ? 'کپی شد ✓' : 'Duplicated ✓')
+    toast.success(t('ui.duplicated'))
     await load()
   } catch (e) { toast.error(e.message) } finally { busy.value = '' }
 }
@@ -90,7 +90,7 @@ async function regenLink(c) {
     const res = await api(`/campaigns/${c.id}/regenerate-short-link`, { method: 'POST' })
     c.shortUrl = res.shortUrl
     await navigator.clipboard.writeText(res.shortUrl).catch(() => {})
-    toast.success(locale.value === 'fa' ? 'لینک جدید کپی شد ✓' : 'New link copied ✓')
+    toast.success(t('ui.newLinkCopied'))
   } catch (e) { toast.error(e.message) }
 }
 
@@ -98,7 +98,7 @@ async function remove(c) {
   if (!confirm(locale.value === 'fa' ? `«${c.titleFa}» حذف شود؟ این عمل بازگشت‌ناپذیر است.` : `Delete "${c.titleFa}"? This cannot be undone.`)) return
   try {
     await api(`/campaigns/${c.id}`, { method: 'DELETE' })
-    toast.success(locale.value === 'fa' ? 'حذف شد' : 'Deleted')
+    toast.success(t('ui.deleted'))
     await load()
   } catch (e) { toast.error(e.message) }
 }
@@ -109,7 +109,7 @@ async function remove(c) {
     <div class="toolbar">
       <div>
         <h1>{{ t('manageCampaigns') }}</h1>
-        <p class="hint">{{ locale === 'fa' ? 'فعال/ویژه کردن، جابه‌جایی ترتیب، کپی و ویرایش صفحه اختصاصی.' : 'Toggle active/featured, reorder, duplicate and edit the dedicated page.' }}</p>
+        <p class="hint">{{ t('ui.toggleActiveFeaturedReorderDuplicate') }}</p>
       </div>
       <router-link to="/admin/campaigns/new" class="btn btn-primary">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -119,7 +119,7 @@ async function remove(c) {
 
     <div class="search-field">
       <svg class="search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input v-model="search" class="input search" :aria-label="locale === 'fa' ? 'جستجو' : 'Search'" :placeholder="locale === 'fa' ? 'جستجوی پروژه...' : 'Search projects...'" />
+      <input v-model="search" class="input search" :aria-label="t('ui.search')" :placeholder="t('ui.searchProjects')" />
     </div>
 
     <div class="list-tabs" role="tablist">
@@ -147,41 +147,41 @@ async function remove(c) {
             </span>
             <span v-if="c.isCompleted" class="badge badge-success">
               <svg class="badge-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-              {{ locale === 'fa' ? 'تکمیل‌شده' : 'Completed' }}
+              {{ t('ui.completed') }}
             </span>
             <span class="badge" :class="c.isActive ? 'badge-success' : 'badge-danger'">
-              {{ c.isActive ? (locale === 'fa' ? 'فعال' : 'Active') : (locale === 'fa' ? 'غیرفعال' : 'Inactive') }}
+              {{ c.isActive ? (t('ui.active')) : (t('ui.inactive')) }}
             </span>
           </div>
           <ProgressBar :percent="c.progressPercent" :height="8" />
           <div class="metrics">
             <span><strong>{{ fmt(c.collectedAmount) }}</strong> / {{ fmt(c.targetAmount) }} {{ t('toman') }}</span>
             <span class="dot">·</span>
-            <span>{{ c.donorCount }} {{ locale === 'fa' ? 'حامی' : 'donors' }}</span>
-            <a :href="c.pageUrl" target="_blank" class="link">{{ locale === 'fa' ? 'صفحه' : 'Page' }}</a>
+            <span>{{ c.donorCount }} {{ t('ui.donors') }}</span>
+            <a :href="c.pageUrl" target="_blank" class="link">{{ t('ui.page') }}</a>
           </div>
         </div>
 
         <div class="actions">
           <div class="reorder">
-            <button type="button" class="icon-btn" :disabled="realIndex(c) === 0" :aria-label="locale==='fa'?'بالا':'Move up'" :title="locale==='fa'?'بالا':'Up'" @click="move(c, -1)">
+            <button type="button" class="icon-btn" :disabled="realIndex(c) === 0" :aria-label="t('ui.moveUp')" :title="t('ui.up')" @click="move(c, -1)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>
             </button>
-            <button type="button" class="icon-btn" :disabled="realIndex(c) === campaigns.length - 1" :aria-label="locale==='fa'?'پایین':'Move down'" :title="locale==='fa'?'پایین':'Down'" @click="move(c, 1)">
+            <button type="button" class="icon-btn" :disabled="realIndex(c) === campaigns.length - 1" :aria-label="t('ui.moveDown')" :title="t('ui.down')" @click="move(c, 1)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </button>
           </div>
           <button type="button" class="icon-btn" :class="{ on: c.isActive }" :disabled="busy === c.id"
-            :aria-label="locale==='fa'?'فعال/غیرفعال':'Toggle active'" :title="locale==='fa'?'فعال/غیرفعال':'Active toggle'" @click="toggleActive(c)">
+            :aria-label="t('ui.toggleActive')" :title="t('ui.activeToggle')" @click="toggleActive(c)">
             <svg v-if="c.isActive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.2A10 10 0 0 1 12 4c6.5 0 10 8 10 8a15 15 0 0 1-2.9 3.7M6.6 6.6A15 15 0 0 0 2 12s3.5 7 10 7a10 10 0 0 0 4.4-1M3 3l18 18"/></svg>
           </button>
           <button type="button" class="icon-btn" :class="{ on: c.isFeatured }" :disabled="busy === c.id"
-            :aria-label="locale==='fa'?'ویژه':'Featured'" :title="locale==='fa'?'ویژه':'Featured'" @click="toggleFeatured(c)">
+            :aria-label="t('ui.featured')" :title="t('ui.featured')" @click="toggleFeatured(c)">
             <svg viewBox="0 0 24 24" :fill="c.isFeatured ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.8 6.1 20.8l1.2-6.6L2.5 9l6.6-.9L12 2z"/></svg>
           </button>
           <router-link :to="`/admin/campaigns/${c.id}/edit`" class="btn btn-primary btn-sm">{{ t('edit') }}</router-link>
-          <button type="button" class="icon-btn" :disabled="busy === c.id" :aria-label="locale==='fa'?'کپی':'Duplicate'" :title="locale==='fa'?'کپی':'Duplicate'" @click="duplicate(c)">
+          <button type="button" class="icon-btn" :disabled="busy === c.id" :aria-label="t('ui.duplicate')" :title="t('ui.duplicate')" @click="duplicate(c)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
           </button>
           <button type="button" class="icon-btn" :aria-label="t('regenerateLink')" :title="t('regenerateLink')" @click="regenLink(c)">
@@ -196,9 +196,9 @@ async function remove(c) {
 
     <p v-if="!filtered.length" class="empty">
       {{ search
-        ? (locale === 'fa' ? 'نتیجه‌ای یافت نشد' : 'No results')
+        ? (t('ui.noResults'))
         : campaigns.length
-          ? (locale === 'fa' ? 'در این تب پرونده‌ای نیست.' : 'Nothing in this tab.')
+          ? (t('ui.nothingInThisTab'))
           : t('noCampaigns') }}
     </p>
   </div>

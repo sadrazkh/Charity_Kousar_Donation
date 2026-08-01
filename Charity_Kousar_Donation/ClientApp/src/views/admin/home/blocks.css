@@ -1,0 +1,43 @@
+/* Form styling shared by every block of the home editor. Namespaced under
+   .home-editor so it stays out of the rest of the panel. */
+.home-editor .block h2 { font-size: 1rem; color: var(--primary); margin-bottom: 0.6rem; }
+.home-editor .hint { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.75rem; }
+.home-editor .label { display: block; margin: 0.5rem 0 0.3rem; font-size: 0.88rem; color: var(--muted); }
+.home-editor .label-row { display: flex; justify-content: space-between; align-items: center; }
+.home-editor .chk { display: flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; color: var(--muted); }
+.home-editor .row-2 { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end; }
+
+.home-editor .colors { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
+.home-editor .swatch {
+  width: 56px; height: 38px; padding: 2px;
+  border: 1px solid var(--border); border-radius: 8px; background: none; cursor: pointer;
+}
+.home-editor .swatch.sm { width: 44px; height: 32px; }
+.home-editor .swatch-row { display: flex; align-items: center; gap: 0.4rem; }
+.home-editor .reset-btn {
+  border: 1px solid var(--border); background: var(--input-bg); color: var(--muted);
+  border-radius: 999px; padding: 0.25rem 0.7rem; font-size: 0.75rem; cursor: pointer; font-family: inherit;
+}
+.home-editor .reset-btn:hover:not(:disabled) {
+  color: var(--primary); border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+}
+.home-editor .reset-btn:disabled { opacity: 0.45; cursor: default; }
+
+.home-editor .speed.off { opacity: 0.45; }
+.home-editor .speed .label { margin-top: 0; }
+.home-editor .speed-row { display: flex; align-items: center; gap: 0.6rem; }
+.home-editor .speed-row input[type="range"] { width: 180px; accent-color: var(--primary); }
+.home-editor .speed-val { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.home-editor .anim-row { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: center; margin-top: 0.9rem; }
+
+.home-editor .mini {
+  width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--card); color: var(--text); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.home-editor .mini svg { width: 17px; height: 17px; }
+.home-editor .mini.danger { color: var(--danger); }
+.home-editor .more-link {
+  display: inline-block; margin-top: 0.75rem;
+  font-size: 0.85rem; color: var(--primary); text-decoration: none;
+}

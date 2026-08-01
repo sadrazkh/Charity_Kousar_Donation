@@ -52,7 +52,7 @@ const translating = ref('')
 async function translate(fromField, toField) {
   const text = form.value[fromField]
   if (!text || !String(text).trim()) {
-    toast.error(locale.value === 'fa' ? 'ابتدا متن فارسی را وارد کنید' : 'Enter Persian text first')
+    toast.error(t('ui.enterPersianTextFirst'))
     return
   }
   translating.value = toField
@@ -62,7 +62,7 @@ async function translate(fromField, toField) {
       body: JSON.stringify({ text, from: 'fa', to: 'en' })
     })
     form.value[toField] = res.translated
-    toast.success(locale.value === 'fa' ? 'ترجمه شد ✓' : 'Translated ✓')
+    toast.success(t('ui.translated'))
   } catch (e) {
     toast.error(e.message)
   } finally {
@@ -110,7 +110,7 @@ async function saveInfo() {
 
 async function savePage() {
   if (isNew.value) {
-    toast.error(locale.value === 'fa' ? 'اول اطلاعات پایه را ذخیره کنید' : 'Save basic info first')
+    toast.error(t('ui.saveBasicInfoFirst'))
     tab.value = 'info'
     return
   }
@@ -137,9 +137,9 @@ async function savePage() {
         <h1>{{ isNew ? t('add') : form.titleFa || t('edit') }}</h1>
       </div>
       <div class="header-links" v-if="pageUrl">
-        <a :href="pageUrl" target="_blank" class="btn btn-ghost btn-sm">{{ locale === 'fa' ? 'مشاهده صفحه' : 'View page' }}</a>
+        <a :href="pageUrl" target="_blank" class="btn btn-ghost btn-sm">{{ t('ui.viewPage') }}</a>
         <button v-if="!isNew" type="button" class="btn btn-accent btn-sm" @click="showShare = true">
-          {{ locale === 'fa' ? '📤 اشتراک AI' : '📤 AI Share' }}
+          {{ t('ui.aiShare') }}
         </button>
         <a :href="shortUrl" target="_blank" class="btn btn-ghost btn-sm">{{ t('shortLink') }}</a>
       </div>
@@ -147,10 +147,10 @@ async function savePage() {
 
     <div class="tabs">
       <button type="button" :class="{ active: tab === 'info' }" @click="tab = 'info'">
-        {{ locale === 'fa' ? 'اطلاعات پایه' : 'Basic info' }}
+        {{ t('ui.basicInfo') }}
       </button>
       <button type="button" :class="{ active: tab === 'page' }" @click="tab = 'page'" :disabled="isNew">
-        {{ locale === 'fa' ? 'صفحه اختصاصی' : 'Dedicated page' }}
+        {{ t('ui.dedicatedPage') }}
       </button>
     </div>
 
@@ -163,7 +163,7 @@ async function savePage() {
             <label class="label">{{ t('titleEn') }}</label>
             <button type="button" class="translate-btn" :disabled="translating === 'titleEn'"
               @click="translate('titleFa', 'titleEn')">
-              {{ translating === 'titleEn' ? '...' : (locale === 'fa' ? '🌐 ترجمه' : '🌐 Translate') }}
+              {{ translating === 'titleEn' ? '...' : (t('ui.translate')) }}
             </button>
           </div>
           <input v-model="form.titleEn" class="input input-ltr" dir="ltr" />
@@ -175,7 +175,7 @@ async function savePage() {
         <label class="label">{{ t('descEn') }}</label>
         <button type="button" class="translate-btn" :disabled="translating === 'descriptionEn'"
           @click="translate('descriptionFa', 'descriptionEn')">
-          {{ translating === 'descriptionEn' ? '...' : (locale === 'fa' ? '🌐 ترجمه از فارسی' : '🌐 Translate from FA') }}
+          {{ translating === 'descriptionEn' ? '...' : (t('ui.translateFromFa')) }}
         </button>
       </div>
       <textarea v-model="form.descriptionEn" class="textarea input-ltr" dir="ltr" rows="3" />
@@ -191,9 +191,9 @@ async function savePage() {
       <label><input type="checkbox" v-model="form.isFeatured" /> {{ t('featured') }}</label>
 
       <div v-if="form.isFeatured" class="featured-config card">
-        <h3>{{ locale === 'fa' ? '⭐ تنظیمات بخش ویژه' : '⭐ Featured section' }}</h3>
+        <h3>{{ t('ui.featuredSection') }}</h3>
 
-        <label class="label">{{ locale === 'fa' ? 'حالت نشان (رنگ کادر و برچسب)' : 'Highlight style (card color & badge)' }}</label>
+        <label class="label">{{ t('ui.highlightStyleCardColorBadge') }}</label>
         <div class="style-picker">
           <button v-for="s in featuredStyles" :key="s.id" type="button"
             class="style-chip" :class="{ on: form.featuredStyle === s.id }"
@@ -202,27 +202,25 @@ async function savePage() {
           </button>
           <button type="button" class="style-chip default" :class="{ on: !form.featuredStyle }"
             @click="form.featuredStyle = ''">
-            {{ locale === 'fa' ? 'پیش‌فرض سایت' : 'Site default' }}
+            {{ t('ui.siteDefault') }}
           </button>
         </div>
-        <p class="hint">{{ locale === 'fa'
-          ? 'حالت‌ها و رنگ‌هایشان در «صفحه اصلی → حالت‌های نشان ویژه» قابل ویرایش‌اند.'
-          : 'Styles and their colors are editable in “Home page → Featured styles”.' }}</p>
+        <p class="hint">{{ t('ui.stylesAndTheirColorsAre') }}</p>
 
-        <label class="label">{{ locale === 'fa' ? 'متن بنر (فارسی)' : 'Banner text (FA)' }}</label>
+        <label class="label">{{ t('ui.bannerTextFa') }}</label>
         <textarea v-model="form.featuredBannerFa" class="textarea" rows="2"
-          :placeholder="locale === 'fa' ? 'مثلاً: امروز باید جمع شود!' : 'e.g. Must be collected today!'" />
-        <label class="label">{{ locale === 'fa' ? 'متن بنر (انگلیسی)' : 'Banner text (EN)' }}</label>
+          :placeholder="t('ui.eGMustBeCollected')" />
+        <label class="label">{{ t('ui.bannerTextEn') }}</label>
         <textarea v-model="form.featuredBannerEn" class="textarea input-ltr" dir="ltr" rows="2" />
-        <label class="label">{{ locale === 'fa' ? 'پایان شمارش معکوس (شمسی، اختیاری)' : 'Countdown end (Jalali, optional)' }}</label>
+        <label class="label">{{ t('ui.countdownEndJalaliOptional') }}</label>
         <PersianDateTimePicker v-model="form.featuredTimerEndsAt" />
-        <p class="hint">{{ locale === 'fa' ? 'تاریخ و ساعت به وقت تهران — اگر خالی باشد تایمر نمایش داده نمی‌شود' : 'Tehran time — leave empty to hide timer' }}</p>
+        <p class="hint">{{ t('ui.tehranTimeLeaveEmptyTo') }}</p>
       </div>
 
       <div class="actions">
         <button class="btn btn-primary" :disabled="saving" @click="saveInfo">{{ t('save') }}</button>
         <button v-if="!isNew" class="btn btn-ghost" @click="tab = 'page'">
-          {{ locale === 'fa' ? 'رفتن به صفحه‌ساز ←' : 'Go to page builder →' }}
+          {{ t('ui.goToPageBuilder') }}
         </button>
       </div>
     </div>

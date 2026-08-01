@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import AppHeader from '@/components/AppHeader.vue'
 
 const route = useRoute()
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 
 const donationId = computed(() => route.query.donationId || '')
 
@@ -22,22 +22,22 @@ function complete(success) {
       <div class="gateway-head">
         <div class="logo">🧪</div>
         <div>
-          <h1>{{ locale === 'fa' ? 'درگاه آزمایشی پرداخت' : 'Test payment gateway' }}</h1>
-          <p>{{ locale === 'fa' ? 'این صفحه فقط برای تست است — درگاه واقعی نیست' : 'For testing only — not a real gateway' }}</p>
+          <h1>{{ t('ui.testPaymentGateway') }}</h1>
+          <p>{{ t('ui.forTestingOnlyNotA') }}</p>
         </div>
       </div>
 
       <div class="info-box">
-        <p>{{ locale === 'fa' ? 'نتیجه پرداخت را انتخاب کنید:' : 'Choose payment result:' }}</p>
+        <p>{{ t('ui.choosePaymentResult') }}</p>
         <code v-if="donationId" class="tx-id">ID: {{ donationId }}</code>
       </div>
 
       <div class="actions">
         <button type="button" class="btn btn-primary btn-lg" @click="complete(true)">
-          ✓ {{ locale === 'fa' ? 'پرداخت موفق' : 'Payment success' }}
+          ✓ {{ t('ui.paymentSuccess') }}
         </button>
         <button type="button" class="btn btn-ghost btn-lg fail-btn" @click="complete(false)">
-          ✕ {{ locale === 'fa' ? 'پرداخت ناموفق / لغو' : 'Payment failed / cancel' }}
+          ✕ {{ t('ui.paymentFailedCancel') }}
         </button>
       </div>
     </div>

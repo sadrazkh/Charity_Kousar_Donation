@@ -144,23 +144,23 @@ async function confirmCrypto() {
 
       <template v-if="otpStep">
         <p class="hint">{{ otpStep.message }}</p>
-        <label class="label">{{ locale === 'fa' ? 'کد تأیید پیامک' : 'SMS verification code' }}</label>
+        <label class="label">{{ t('ui.smsVerificationCode') }}</label>
         <input v-model="otpCode" class="input input-ltr" dir="ltr" inputmode="numeric" maxlength="6" />
         <p v-if="error" class="error">{{ error }}</p>
         <div class="actions">
-          <button type="button" class="btn btn-ghost btn-sm" @click="resendOtp">{{ locale === 'fa' ? 'ارسال مجدد' : 'Resend' }}</button>
-          <button class="btn btn-primary" :disabled="loading" @click="verifyOtp">{{ loading ? '...' : (locale === 'fa' ? 'تأیید و پرداخت' : 'Verify & pay') }}</button>
+          <button type="button" class="btn btn-ghost btn-sm" @click="resendOtp">{{ t('ui.resend') }}</button>
+          <button class="btn btn-primary" :disabled="loading" @click="verifyOtp">{{ loading ? '...' : (t('ui.verifyPay')) }}</button>
         </div>
       </template>
 
       <template v-else-if="!cryptoStep">
         <div class="form">
           <label class="label">{{ t('name') }}</label>
-          <input v-model="name" class="input" type="text" :placeholder="locale === 'fa' ? 'اختیاری' : 'Optional'" />
+          <input v-model="name" class="input" type="text" :placeholder="t('ui.optional')" />
 
           <label class="label">{{ t('phone') }}</label>
           <input v-model="phone" class="input input-ltr" dir="ltr" type="tel" inputmode="tel"
-            :placeholder="locale === 'fa' ? 'اختیاری — 09123456789' : 'Optional'" />
+            :placeholder="t('ui.optional')" />
 
           <label class="label">{{ t('amount') }}</label>
           <AmountInput v-model="amount" dir="ltr" placeholder="100,000" />
@@ -174,7 +174,7 @@ async function confirmCrypto() {
 
           <p v-if="config.paymentBypassEnabled" class="test-hint">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.5L5.5 18a2 2 0 0 0 1.8 3h9.4a2 2 0 0 0 1.8-3L14 9.5V3"/></svg>
-            {{ locale === 'fa' ? 'حالت تست پرداخت فعال است' : 'Payment test mode is on' }}
+            {{ t('ui.paymentTestModeIsOn') }}
           </p>
 
           <p v-if="error" class="error">{{ error }}</p>

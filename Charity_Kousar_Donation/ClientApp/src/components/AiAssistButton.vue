@@ -12,7 +12,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 const loading = ref(false)
 const suggestion = ref(null)
 const error = ref('')
@@ -49,20 +49,20 @@ function apply(text) {
 <template>
   <div class="ai-wrap">
     <button type="button" class="btn-ai" :disabled="loading || !props.modelValue?.trim()" @click="optimize">
-      {{ loading ? '...' : (locale === 'fa' ? '✨ بهینه‌سازی AI' : '✨ AI optimize') }}
+      {{ loading ? '...' : (t('ui.aiOptimize')) }}
     </button>
     <p v-if="error" class="ai-error">{{ error }}</p>
     <div v-if="suggestion" class="ai-suggestion card">
-      <p class="ai-label">{{ locale === 'fa' ? 'پیشنهاد AI' : 'AI suggestion' }}</p>
+      <p class="ai-label">{{ t('ui.aiSuggestion') }}</p>
       <p class="ai-text">{{ suggestion.optimized }}</p>
       <div class="ai-actions">
         <button type="button" class="btn btn-primary btn-sm" @click="apply(suggestion.optimized)">
-          {{ locale === 'fa' ? 'اعمال' : 'Apply' }}
+          {{ t('ui.apply') }}
         </button>
         <button v-if="suggestion.alternative" type="button" class="btn btn-ghost btn-sm" @click="apply(suggestion.alternative)">
-          {{ locale === 'fa' ? 'جایگزین' : 'Alternative' }}
+          {{ t('ui.alternative') }}
         </button>
-        <button type="button" class="btn btn-ghost btn-sm" @click="suggestion = null">{{ locale === 'fa' ? 'بستن' : 'Close' }}</button>
+        <button type="button" class="btn btn-ghost btn-sm" @click="suggestion = null">{{ t('ui.close') }}</button>
       </div>
       <p v-if="suggestion.tips" class="ai-tip">💡 {{ suggestion.tips }}</p>
     </div>

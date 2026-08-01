@@ -10,7 +10,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['close'])
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 const { config } = useSiteConfig()
 const loading = ref(false)
 const pack = ref(null)
@@ -57,15 +57,13 @@ watch(() => props.show, v => { if (v) { pack.value = null; load() } })
   <div v-if="show" class="modal-overlay" @click.self="emit('close')">
     <div class="card modal share-modal">
       <div class="modal-head">
-        <h2>📤 {{ locale === 'fa' ? 'اشتراک‌گذاری پروژه' : 'Share project' }}</h2>
+        <h2>📤 {{ t('ui.shareProject') }}</h2>
         <button type="button" class="icon-btn" @click="emit('close')">✕</button>
       </div>
 
-      <p class="hint">{{ locale === 'fa'
-        ? 'این متن آماده است. می‌توانید آن را ویرایش، کپی یا مستقیم ارسال کنید.'
-        : 'This text is ready. You can edit, copy, or send it directly.' }}</p>
+      <p class="hint">{{ t('ui.thisTextIsReadyYou') }}</p>
 
-      <div v-if="loading" class="loading">{{ locale === 'fa' ? 'در حال آماده‌سازی...' : 'Preparing...' }}</div>
+      <div v-if="loading" class="loading">{{ t('ui.preparing') }}</div>
 
       <template v-else-if="pack">
         <textarea class="textarea share-text" v-model="editable" rows="9" />
@@ -74,10 +72,10 @@ watch(() => props.show, v => { if (v) { pack.value = null; load() } })
           <button type="button" class="btn btn-success big" @click="openShare(waUrl)">💬 WhatsApp</button>
           <button type="button" class="btn btn-info big" @click="openShare(tgUrl)">✈️ Telegram</button>
           <button type="button" class="btn btn-primary big" @click="copyText">
-            {{ copied ? '✓ ' + (locale === 'fa' ? 'کپی شد' : 'Copied') : (locale === 'fa' ? '📋 کپی متن' : '📋 Copy') }}
+            {{ copied ? '✓ ' + (t('ui.copied')) : (t('ui.copy')) }}
           </button>
           <button v-if="config.shareAiEnabled" type="button" class="btn btn-ghost big" @click="refresh">
-            ✨ {{ locale === 'fa' ? 'متن جدید' : 'New text' }}
+            ✨ {{ t('ui.newText') }}
           </button>
         </div>
       </template>

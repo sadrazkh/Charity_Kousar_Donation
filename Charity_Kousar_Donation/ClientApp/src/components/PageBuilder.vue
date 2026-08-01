@@ -14,7 +14,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue', 'save'])
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 const toast = useToast()
 const blocks = computed({
   get: () => props.modelValue,
@@ -46,9 +46,7 @@ function refreshIds(list) {
 }
 
 function confirmReplace() {
-  return !blocks.value.length || confirm(locale.value === 'fa'
-    ? 'محتوای فعلی صفحه با این قالب جایگزین شود؟'
-    : 'Replace the current page content with this template?')
+  return !blocks.value.length || confirm(t('ui.replaceTheCurrentPageContent'))
 }
 
 function applyTemplate(tpl) {
@@ -70,10 +68,10 @@ async function persistTemplates(arr) {
 
 async function saveAsTemplate() {
   if (!blocks.value.length) {
-    toast.error(locale.value === 'fa' ? 'صفحه خالی است' : 'Page is empty')
+    toast.error(t('ui.pageIsEmpty'))
     return
   }
-  const name = (prompt(locale.value === 'fa' ? 'نام قالب (برای ویرایش، همان نام قبلی را وارد کنید):' : 'Template name (reuse a name to overwrite):') || '').trim()
+  const name = (prompt(t('ui.templateNameReuseAName')) || '').trim()
   if (!name) return
   const snapshot = JSON.parse(JSON.stringify(blocks.value))
   const next = [...customTemplates.value]
@@ -82,7 +80,7 @@ async function saveAsTemplate() {
   else next.push({ id: Math.random().toString(36).slice(2, 10), name, blocks: snapshot })
   try {
     await persistTemplates(next)
-    toast.success(locale.value === 'fa' ? 'قالب ذخیره شد ✓' : 'Template saved ✓')
+    toast.success(t('ui.templateSaved'))
   } catch (e) { toast.error(e.message) }
 }
 
@@ -90,7 +88,7 @@ async function deleteCustom(tpl) {
   if (!confirm(locale.value === 'fa' ? `قالب «${tpl.name}» حذف شود؟` : `Delete template "${tpl.name}"?`)) return
   try {
     await persistTemplates(customTemplates.value.filter(t => t.id !== tpl.id))
-    toast.success(locale.value === 'fa' ? 'حذف شد' : 'Deleted')
+    toast.success(t('ui.deleted'))
   } catch (e) { toast.error(e.message) }
 }
 
@@ -118,7 +116,7 @@ function label(type) {
     </button>
 
     <aside class="palette card" :class="{ open: paletteOpen }">
-      <h3>{{ locale === 'fa' ? 'افزودن بلوک' : 'Add block' }}</h3>
+      <h3>{{ t('ui.addBlock') }}</h3>
       <div v-for="(items, cat) in categories" :key="cat" class="cat-group">
         <p class="cat-label">{{ cat }}</p>
         <button v-for="bt in items" :key="bt.type" type="button" class="palette-btn" @click="addBlock(bt.type)">
@@ -130,20 +128,20 @@ function label(type) {
 
     <div class="canvas">
       <div class="canvas-toolbar">
-        <span>{{ locale === 'fa' ? 'صفحه‌ساز — برای جابه‌جایی بکشید ⠿' : 'Page builder — drag ⠿ to reorder' }}</span>
+        <span>{{ t('ui.pageBuilderDragToReorder') }}</span>
         <div class="toolbar-actions">
           <button type="button" class="btn btn-ghost btn-sm" @click="showTemplates = !showTemplates">
-            🎨 {{ locale === 'fa' ? 'قالب آماده' : 'Templates' }}
+            🎨 {{ t('ui.templates') }}
           </button>
           <button type="button" class="btn btn-ghost btn-sm hide-mobile" @click="showPreview = !showPreview">
-            {{ showPreview ? '▣' : '◫' }} {{ locale === 'fa' ? 'پیش‌نمایش' : 'Preview' }}
+            {{ showPreview ? '▣' : '◫' }} {{ t('ui.preview') }}
           </button>
-          <button type="button" class="btn btn-primary btn-sm" @click="emit('save')">{{ locale === 'fa' ? 'ذخیره' : 'Save' }}</button>
+          <button type="button" class="btn btn-primary btn-sm" @click="emit('save')">{{ t('ui.save') }}</button>
         </div>
       </div>
 
       <div v-if="showTemplates" class="templates card">
-        <p class="tpl-hint">{{ locale === 'fa' ? 'یک قالب را انتخاب کنید تا چیدمان آماده ساخته شود، سپس آزادانه ویرایش/بکشید:' : 'Pick a layout to scaffold the page, then edit/drag freely:' }}</p>
+        <p class="tpl-hint">{{ t('ui.pickALayoutToScaffold') }}</p>
         <div class="tpl-grid">
           <button v-for="tpl in PAGE_TEMPLATES" :key="tpl.id" type="button" class="tpl-card" @click="applyTemplate(tpl)">
             <span class="tpl-ic">{{ tpl.icon }}</span>
@@ -154,34 +152,34 @@ function label(type) {
 
         <div class="custom-tpls">
           <div class="ct-head">
-            <strong>{{ locale === 'fa' ? '💾 قالب‌های من' : '💾 My templates' }}</strong>
+            <strong>{{ t('ui.myTemplates') }}</strong>
             <button type="button" class="btn btn-ghost btn-sm" @click="saveAsTemplate">
-              {{ locale === 'fa' ? 'ذخیرهٔ صفحهٔ فعلی به‌عنوان قالب' : 'Save current page as template' }}
+              {{ t('ui.saveCurrentPageAsTemplate') }}
             </button>
           </div>
-          <p class="tpl-hint">{{ locale === 'fa' ? 'برای ویرایش یک قالب: «استفاده» را بزنید، تغییر دهید و دوباره با همان نام ذخیره کنید.' : 'To edit a template: Use it, change it, then save again with the same name.' }}</p>
+          <p class="tpl-hint">{{ t('ui.toEditATemplateUse') }}</p>
           <div v-if="customTemplates.length" class="tpl-grid">
             <div v-for="tpl in customTemplates" :key="tpl.id" class="tpl-card custom">
               <strong>{{ tpl.name }}</strong>
-              <small>{{ (tpl.blocks || []).length }} {{ locale === 'fa' ? 'بلوک' : 'blocks' }}</small>
+              <small>{{ (tpl.blocks || []).length }} {{ t('ui.blocks') }}</small>
               <div class="ct-actions">
-                <button type="button" class="btn btn-primary btn-sm" @click="applyCustom(tpl)">{{ locale === 'fa' ? 'استفاده' : 'Use' }}</button>
+                <button type="button" class="btn btn-primary btn-sm" @click="applyCustom(tpl)">{{ t('ui.use') }}</button>
                 <button type="button" class="ct-del" @click="deleteCustom(tpl)">🗑</button>
               </div>
             </div>
           </div>
-          <p v-else class="ct-empty">{{ locale === 'fa' ? 'هنوز قالبی ذخیره نکرده‌اید.' : 'No saved templates yet.' }}</p>
+          <p v-else class="ct-empty">{{ t('ui.noSavedTemplatesYet') }}</p>
         </div>
       </div>
 
       <NestedBlockList v-model="blocks" :campaign-title="campaignTitle" />
 
       <p v-if="!blocks.length" class="empty">
-        {{ locale === 'fa' ? '➕ بلوک اضافه کنید' : '➕ Add blocks' }}
+        {{ t('ui.addBlocks') }}
       </p>
 
       <div v-if="showPreview && blocks.length && campaign" class="preview-panel card">
-        <h3>{{ locale === 'fa' ? 'پیش‌نمایش موبایل/دسکتاپ' : 'Preview' }}</h3>
+        <h3>{{ t('ui.preview') }}</h3>
         <PageBlockRenderer :blocks="blocks" :campaign="campaign" preview @donate="() => {}" />
       </div>
     </div>

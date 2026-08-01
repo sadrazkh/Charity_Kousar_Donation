@@ -15,6 +15,7 @@ const DEFAULTS = {
   amountColorCollected: '', amountColorTarget: '', amountColorRemaining: '',
   amountColorPercent: '', amountTextColor: '', amountFontScale: 100,
   cardImageFit: 'cover',
+  progressFlow: true, progressFlowStyle: 'shimmer', progressFlowMs: 2400,
   heroBadgeFa: '', heroBadgeEn: '',
   featuredStyles: '', showCompletedTab: true,
   completedTitleFa: 'پرونده‌های تکمیل‌شده', completedTitleEn: 'Completed projects',

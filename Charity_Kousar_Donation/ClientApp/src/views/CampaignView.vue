@@ -54,7 +54,7 @@ async function copyLink() {
   <div v-if="campaign" class="container">
     <router-link to="/" class="back-home">
       <span class="bh-arrow">{{ locale === 'fa' ? '→' : '←' }}</span>
-      {{ locale === 'fa' ? 'بازگشت به صفحه اصلی' : 'Back to home' }}
+      {{ t('ui.backToHome') }}
     </router-link>
   </div>
   <main v-if="campaign" class="container campaign-page">
@@ -76,7 +76,7 @@ async function copyLink() {
           </div>
           <div>
             <h3>{{ t('shareInvite') }}</h3>
-            <p>{{ locale === 'fa' ? 'لینک را بفرستید یا با واتساپ/تلگرام به اشتراک بگذارید' : 'Send the link or share via WhatsApp/Telegram' }}</p>
+            <p>{{ t('ui.sendTheLinkOrShare') }}</p>
           </div>
         </div>
 
@@ -98,15 +98,15 @@ async function copyLink() {
           </a>
           <button type="button" class="channel-btn ai" @click="showShare = true">
             <svg class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
-            <span>{{ locale === 'fa' ? 'متن آماده' : 'Ready text' }}</span>
+            <span>{{ t('ui.readyText') }}</span>
           </button>
         </div>
 
         <div class="qr-card">
           <QrCode :url="campaign.shortUrl" />
           <div class="qr-info">
-            <strong>{{ locale === 'fa' ? 'اسکن QR' : 'Scan QR' }}</strong>
-            <p>{{ locale === 'fa' ? 'برای پرداخت سریع، دوربین گوشی را روی کد بگیرید' : 'Point your camera at the code for quick donation' }}</p>
+            <strong>{{ t('ui.scanQr') }}</strong>
+            <p>{{ t('ui.pointYourCameraAtThe') }}</p>
           </div>
         </div>
       </section>
@@ -119,7 +119,7 @@ async function copyLink() {
       <button class="btn btn-primary" style="width:100%" @click="showDonate = true">{{ t('pay') }}</button>
       <button type="button" class="btn btn-accent btn-sm share-side-btn" @click="showShare = true">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
-        {{ locale === 'fa' ? 'اشتراک‌گذاری' : 'Share' }}
+        {{ t('ui.share') }}
       </button>
     </aside>
   </main>

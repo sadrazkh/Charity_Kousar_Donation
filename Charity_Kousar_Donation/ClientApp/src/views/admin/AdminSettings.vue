@@ -96,7 +96,7 @@ async function translateField(item) {
       body: JSON.stringify({ text: values.value[fa], from: 'fa', to: 'en' })
     })
     values.value[item.key] = res.translated
-    toast.success(locale.value === 'fa' ? 'ترجمه شد ✓' : 'Translated ✓')
+    toast.success(t('ui.translated'))
   } catch (e) {
     toast.error(e.message)
   } finally {
@@ -167,7 +167,7 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
 
     <div class="settings-layout">
       <nav class="settings-nav card">
-        <p class="nav-title">{{ locale === 'fa' ? 'بخش‌ها' : 'Sections' }}</p>
+        <p class="nav-title">{{ t('ui.sections') }}</p>
         <button v-for="g in groups" :key="g.group" type="button"
           class="nav-item" :class="{ active: activeGroup === g.group }"
           @click="scrollToGroup(g.group)">
@@ -180,19 +180,13 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
           <h2>{{ locale === 'fa' ? g.groupLabelFa : g.groupLabelEn }}</h2>
 
           <p v-if="g.group === 'share'" class="section-hint">
-            {{ locale === 'fa'
-              ? 'متغیرهای قالب آماده: {title} {desc} {collected} {target} {progress} {link}'
-              : 'Template placeholders: {title} {desc} {collected} {target} {progress} {link}' }}
+            {{ t('ui.templatePlaceholdersTitleDescCollected') }}
           </p>
           <p v-if="g.group === 'donation'" class="section-hint">
-            {{ locale === 'fa'
-              ? 'مبالغ پیشنهادی با کاما جدا شوند. در «قالب متن مبلغ»: {collected} جمع‌آوری‌شده، {target} هدف، {remaining} باقی‌مانده، {percent} درصد — *متن* بولد و ~متن~ رنگی می‌شود. (راهنمای کامل در صفحهٔ «صفحه اصلی»)'
-              : 'Quick amounts comma-separated. In the amount format: {collected}, {target}, {remaining}, {percent}; *text* = bold, ~text~ = colored. (Full guide on the Home page screen.)' }}
+            {{ t('ui.quickAmountsCommaSeparatedIn') }}
           </p>
           <p v-if="g.group === 'donors'" class="section-hint">
-            {{ locale === 'fa'
-              ? 'برای افزودن دستی حامیان، «منبع لیست» را روی دستی یا هر دو بگذارید و در لیست زیر نام و مبلغ را وارد کنید.'
-              : 'To add contributors manually, set the source to manual/both and fill the list below.' }}
+            {{ t('ui.toAddContributorsManuallySet') }}
           </p>
 
           <div v-for="item in g.items" :key="item.key" class="field">
@@ -206,9 +200,9 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
             <template v-else-if="item.key === 'donors.source'">
               <label class="label">{{ label(item) }}</label>
               <select v-model="values[item.key]" class="select">
-                <option value="auto">{{ locale === 'fa' ? 'خودکار (از کمک‌های واقعی)' : 'Automatic (real donations)' }}</option>
-                <option value="manual">{{ locale === 'fa' ? 'دستی (فقط لیست زیر)' : 'Manual (list below only)' }}</option>
-                <option value="both">{{ locale === 'fa' ? 'هر دو' : 'Both' }}</option>
+                <option value="auto">{{ t('ui.automaticRealDonations') }}</option>
+                <option value="manual">{{ t('ui.manualListBelowOnly') }}</option>
+                <option value="both">{{ t('ui.both') }}</option>
               </select>
             </template>
 
@@ -217,13 +211,13 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
               <label class="label">{{ label(item) }}</label>
               <div class="manual-list">
                 <div v-for="(row, i) in manualRows" :key="i" class="manual-row">
-                  <input v-model="row.name" class="input" :placeholder="locale === 'fa' ? 'نام' : 'Name'" @input="syncManual" />
+                  <input v-model="row.name" class="input" :placeholder="t('ui.name')" @input="syncManual" />
                   <input v-model.number="row.amount" type="number" class="input amount-in"
-                    :placeholder="locale === 'fa' ? 'مبلغ (تومان)' : 'Amount'" @input="syncManual" />
+                    :placeholder="t('ui.amount')" @input="syncManual" />
                   <button type="button" class="mini danger" @click="removeManual(i)">✕</button>
                 </div>
                 <button type="button" class="btn btn-ghost btn-sm add-manual" @click="addManual">
-                  + {{ locale === 'fa' ? 'افزودن مشارکت‌کننده' : 'Add contributor' }}
+                  + {{ t('ui.addContributor') }}
                 </button>
               </div>
             </template>
@@ -242,7 +236,7 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
                   </div>
                 </div>
                 <div v-if="excludedSections.length" class="order-add">
-                  <span class="muted">{{ locale === 'fa' ? 'افزودن:' : 'Add:' }}</span>
+                  <span class="muted">{{ t('ui.add') }}</span>
                   <button v-for="s in excludedSections" :key="s.id" type="button" class="mini add"
                     @click="addSection(s.id)">+ {{ sectionLabel(s.id) }}</button>
                 </div>
@@ -253,9 +247,9 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
             <template v-else-if="item.key === 'site.progress.mode'">
               <label class="label">{{ label(item) }}</label>
               <select v-model="values[item.key]" class="select">
-                <option value="shift">{{ locale === 'fa' ? 'تغییر تدریجی به سبز (پیشنهادی)' : 'Shift to green (recommended)' }}</option>
-                <option value="solid">{{ locale === 'fa' ? 'تک‌رنگ ثابت' : 'Single solid color' }}</option>
-                <option value="gradient">{{ locale === 'fa' ? 'گرادیان دو رنگ' : 'Two-color gradient' }}</option>
+                <option value="shift">{{ t('ui.shiftToGreenRecommended') }}</option>
+                <option value="solid">{{ t('ui.singleSolidColor') }}</option>
+                <option value="gradient">{{ t('ui.twoColorGradient') }}</option>
               </select>
               <div class="prog-preview">
                 <div v-for="p in [25, 60, 95]" :key="p" class="pp-bar">
@@ -279,8 +273,8 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
             <template v-else-if="item.key === 'featured.layout'">
               <label class="label">{{ label(item) }}</label>
               <select v-model="values[item.key]" class="select">
-                <option value="boxes">{{ locale === 'fa' ? 'جعبه‌ای' : 'Boxes' }}</option>
-                <option value="inline">{{ locale === 'fa' ? 'خطی (00:00:00)' : 'Inline (00:00:00)' }}</option>
+                <option value="boxes">{{ t('ui.boxes') }}</option>
+                <option value="inline">{{ t('ui.inline000000') }}</option>
               </select>
             </template>
 
@@ -291,9 +285,9 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
                 <input type="color" :value="values[item.key] || '#0d9488'" class="color-swatch"
                   @input="values[item.key] = $event.target.value" />
                 <input type="text" v-model="values[item.key]" class="input input-ltr" dir="ltr"
-                  :placeholder="locale === 'fa' ? 'خالی = رنگ پیش‌فرض قالب' : 'empty = theme default'" />
+                  :placeholder="t('ui.emptyThemeDefault')" />
                 <button type="button" class="mini danger" :disabled="!values[item.key]"
-                  :title="locale === 'fa' ? 'بازگشت به پیش‌فرض' : 'Reset to default'"
+                  :title="t('ui.resetToDefault')"
                   @click="values[item.key] = ''">✕</button>
               </div>
             </template>
@@ -302,8 +296,8 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
             <template v-else-if="item.type === 'Boolean'">
               <label class="label">{{ label(item) }}</label>
               <select v-model="values[item.key]" class="select">
-                <option value="true">{{ locale === 'fa' ? 'فعال' : 'Enabled' }}</option>
-                <option value="false">{{ locale === 'fa' ? 'غیرفعال' : 'Disabled' }}</option>
+                <option value="true">{{ t('ui.enabled') }}</option>
+                <option value="false">{{ t('ui.disabled') }}</option>
               </select>
             </template>
 
@@ -313,7 +307,7 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
                 <label class="label">{{ label(item) }}</label>
                 <button v-if="canTranslate(item)" type="button" class="translate-btn"
                   :disabled="translating === item.key" @click="translateField(item)">
-                  {{ translating === item.key ? '...' : (locale === 'fa' ? '🌐 ترجمه از فارسی' : '🌐 Translate from FA') }}
+                  {{ translating === item.key ? '...' : (t('ui.translateFromFa')) }}
                 </button>
               </div>
               <textarea v-model="values[item.key]" class="textarea" rows="6" />
@@ -325,7 +319,7 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
                 <label class="label">{{ label(item) }}</label>
                 <button v-if="canTranslate(item)" type="button" class="translate-btn"
                   :disabled="translating === item.key" @click="translateField(item)">
-                  {{ translating === item.key ? '...' : (locale === 'fa' ? '🌐 ترجمه از فارسی' : '🌐 Translate from FA') }}
+                  {{ translating === item.key ? '...' : (t('ui.translateFromFa')) }}
                 </button>
               </div>
               <input :type="item.type === 'Password' ? 'password' : item.type === 'Number' ? 'number' : 'text'"

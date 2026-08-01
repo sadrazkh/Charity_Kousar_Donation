@@ -77,6 +77,10 @@ public record PublicSiteConfigDto(
     bool ProgressAnimate,
     int ProgressAnimateMs,
     string ProgressTrackColor,
+    // Continuous "living" motion that keeps running after the bar is filled
+    bool ProgressFlow,
+    string ProgressFlowStyle,
+    int ProgressFlowMs,
     // Amount text colors (empty string = follow the theme)
     string AmountColorCollected,
     string AmountColorTarget,
