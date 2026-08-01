@@ -1,8 +1,10 @@
 import { reactive, readonly } from 'vue'
 import { api } from '@/api/client'
 
-// Sensible defaults so components render correctly before /settings/public resolves.
-const DEFAULTS = {
+// Sensible defaults so components render correctly before /settings/public resolves
+// (and if that call fails). Every field of the API's PublicSiteConfigDto needs an entry
+// here — site-config.contract.test.js fails when the backend adds one and this list misses it.
+export const DEFAULTS = {
   siteNameFa: '', siteNameEn: '', taglineFa: '', taglineEn: '',
   heroTextFa: '', heroTextEn: '',
   logoUrl: null, logoHeight: 48, showLogoText: true,

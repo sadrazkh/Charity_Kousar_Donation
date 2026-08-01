@@ -16,7 +16,7 @@ public class ShareService(AppDbContext db, OpenRouterService ai, IHttpContextAcc
             .Where(d => d.CampaignId == c.Id && d.Status == DonationStatus.Paid)
             .ToListAsync();
         var collected = paid.Sum(d => d.Amount);
-        var pct = c.TargetAmount > 0 ? (int)Math.Min(100, collected / c.TargetAmount * 100) : 0;
+        var pct = CampaignProgress.Percent(c.TargetAmount, collected);
 
         var baseUrl = $"{http.HttpContext!.Request.Scheme}://{http.HttpContext.Request.Host}";
         var shortUrl = $"{baseUrl}/d/{c.ShortCode}";

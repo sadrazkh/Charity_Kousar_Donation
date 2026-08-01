@@ -39,12 +39,12 @@ public class CampaignService(AppDbContext db, IHttpContextAccessor http)
         {
             var s = stats.GetValueOrDefault(c.Id);
             var col = s?.Sum ?? 0;
-            var pct = c.TargetAmount > 0 ? (int)Math.Min(100, col / c.TargetAmount * 100) : 0;
+            var pct = CampaignProgress.Percent(c.TargetAmount, col);
             return new CampaignAdminListDto(
                 c.Id, c.TitleFa, c.TitleEn, c.TargetAmount, col, pct, c.ImageUrl,
                 c.Slug, c.ShortCode, $"{BaseUrl}/d/{c.ShortCode}", $"{BaseUrl}/c/{c.Slug}",
                 c.IsActive, c.IsFeatured, c.FeaturedStyle, c.SortOrder, s?.Count ?? 0, c.FeaturedTimerEndsAt,
-                IsCompleted(c.TargetAmount, col));
+                CampaignProgress.IsCompleted(c.TargetAmount, col));
         }).ToList();
     }
 
@@ -258,11 +258,11 @@ public class CampaignService(AppDbContext db, IHttpContextAccessor http)
         return campaigns.Select(c =>
         {
             var col = collected.GetValueOrDefault(c.Id, 0);
-            var pct = c.TargetAmount > 0 ? (int)Math.Min(100, col / c.TargetAmount * 100) : 0;
+            var pct = CampaignProgress.Percent(c.TargetAmount, col);
             return new CampaignListDto(c.Id, c.TitleFa, c.TitleEn, c.DescriptionFa, c.DescriptionEn,
                 c.TargetAmount, col, pct, c.ImageUrl, c.Slug, c.ShortCode,
                 $"{BaseUrl}/d/{c.ShortCode}", c.IsFeatured, c.FeaturedStyle, c.FeaturedBannerFa, c.FeaturedBannerEn,
-                c.FeaturedTimerEndsAt, IsCompleted(c.TargetAmount, col));
+                c.FeaturedTimerEndsAt, CampaignProgress.IsCompleted(c.TargetAmount, col));
         }).ToList();
     }
 
@@ -270,7 +270,7 @@ public class CampaignService(AppDbContext db, IHttpContextAccessor http)
     {
         var paid = await db.Donations.Where(d => d.CampaignId == c.Id && d.Status == DonationStatus.Paid).ToListAsync();
         var col = paid.Sum(d => d.Amount);
-        var pct = c.TargetAmount > 0 ? (int)Math.Min(100, col / c.TargetAmount * 100) : 0;
+        var pct = CampaignProgress.Percent(c.TargetAmount, col);
         var blocks = MapBlocks(c);
         if (blocks.Count == 0)
             blocks = CampaignPageHelper.CreateDefaultBlocks(c)
@@ -281,8 +281,6 @@ public class CampaignService(AppDbContext db, IHttpContextAccessor http)
             c.FeaturedBannerFa, c.FeaturedBannerEn, c.FeaturedTimerEndsAt, blocks);
     }
 
-    /// <summary>A project counts as completed once its goal is reached.</summary>
-    private static bool IsCompleted(decimal target, decimal collected) => target > 0 && collected >= target;
 
     private async Task<string> EnsureUniqueSlugAsync(string slug, Guid? excludeId = null)
     {

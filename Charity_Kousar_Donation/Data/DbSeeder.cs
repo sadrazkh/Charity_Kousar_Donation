@@ -23,19 +23,8 @@ public static class DbSeeder
             throw;
         }
 
-        // Settings live in SettingsCatalog. A fresh database gets the whole list; an existing
-        // one only receives keys it is missing, so admin-edited values are never touched.
-        var existingKeys = await db.SiteSettings.Select(s => s.Key).ToListAsync();
-        var missing = SettingsCatalog.All
-            .Where(d => !existingKeys.Contains(d.Key))
-            .Select(d => d.ToRow())
-            .ToList();
-        if (missing.Count > 0)
-        {
-            db.SiteSettings.AddRange(missing);
-            await db.SaveChangesAsync();
-            logger.LogInformation("Added {Count} site settings from the catalog.", missing.Count);
-        }
+        var added = await SeedSettingsAsync(db);
+        if (added > 0) logger.LogInformation("Added {Count} site settings from the catalog.", added);
 
         if (!await db.AdminUsers.AnyAsync())
         {
@@ -66,6 +55,25 @@ public static class DbSeeder
             });
             await db.SaveChangesAsync();
         }
+    }
+
+    /// <summary>
+    /// Brings the settings table in line with <see cref="SettingsCatalog"/>: a fresh database
+    /// gets the whole list, an existing one only the keys it is missing. Values an admin has
+    /// already edited are never overwritten. Returns how many rows were added.
+    /// </summary>
+    public static async Task<int> SeedSettingsAsync(AppDbContext db)
+    {
+        var existingKeys = await db.SiteSettings.Select(s => s.Key).ToListAsync();
+        var missing = SettingsCatalog.All
+            .Where(d => !existingKeys.Contains(d.Key))
+            .Select(d => d.ToRow())
+            .ToList();
+        if (missing.Count == 0) return 0;
+
+        db.SiteSettings.AddRange(missing);
+        await db.SaveChangesAsync();
+        return missing.Count;
     }
 
     private static async Task EnsureDatabaseExistsAsync(IConfiguration config, ILogger logger)

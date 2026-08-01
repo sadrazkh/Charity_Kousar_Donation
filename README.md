@@ -51,6 +51,7 @@
 
 ```
 Charity_Kousar_Donation/                 # ریشهٔ مخزن (شامل .slnx و Dockerfile)
+├── Charity_Kousar_Donation.Tests/       # تست‌های بک‌اند (xUnit)
 └── Charity_Kousar_Donation/             # پروژهٔ ASP.NET Core
     ├── Controllers/Api/                  # کنترلرهای REST (Campaigns, Donations, Settings, Ai, Upload, ...)
     ├── Services/                         # منطق دامنه (Campaign, Donation, ZarinPal, OpenRouter, Upload, ...)
@@ -122,6 +123,30 @@ cd ..  && dotnet run --launch-profile https
 ```
 
 حالا کل برنامه روی **https://localhost:7208** در دسترس است.
+
+---
+
+## 🧪 تست‌ها
+
+تست‌ها به پایگاه‌داده یا اینترنت نیاز ندارند و در چند ثانیه اجرا می‌شوند.
+
+```bash
+dotnet test                                          # بک‌اند (xUnit + EF In-Memory)
+cd Charity_Kousar_Donation/ClientApp && npm test      # فرانت‌اند (Vitest)
+```
+
+چه چیزی پوشش داده می‌شود:
+
+| بخش | موضوع |
+|------|-------|
+| `CampaignProgressTests` | درصد پیشرفت و «تکمیل‌شده» بودن پروژه (سقف ۱۰۰٪، هدف صفر، رسیدن دقیق به هدف) |
+| `SettingsCatalogTests` | یکتا بودن کلیدها، داشتن برچسب، و معتبر بودن مقدار پیش‌فرض هر نوع |
+| `SettingsSeedingTests` | seed نصب تازه، اجرای دوباره بدون تکرار، و دست‌نخوردن مقادیری که ادمین تغییر داده |
+| `PublicSiteConfigTests` | نشستن هر مقدار روی فیلد درست، و روشن‌نشدنِ ناخواستهٔ حالت تست پرداخت |
+| `utils/__tests__` | قالب‌بندی مبلغ، ارقام فارسی، تقویم جلالی، رنگ نوار پیشرفت، حالت‌های نشان ویژه |
+| `site-config.contract` | هم‌خوانی پیش‌فرض‌های فرانت با `PublicSiteConfigDto` بک‌اند |
+
+اگر تنظیم تازه‌ای به `PublicSiteConfigDto` اضافه کنید و پیش‌فرضش را در `useSiteConfig.js` نگذارید، تست آخر با نام همان فیلد شکست می‌خورد.
 
 ---
 
