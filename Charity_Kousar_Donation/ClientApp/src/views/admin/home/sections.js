@@ -19,5 +19,8 @@ export const PRESETS = [
 export const secIcon = (id) =>
   SECTIONS.find(s => s.id === id)?.icon || 'M4 6h16M4 12h16M4 18h16'
 
+export const isKnownSection = (id) => KNOWN.includes(id)
+
+// i18n key for a section; unknown ids have no translation, so callers show the raw id.
 export const secKey = (id) =>
   'homeEditor.' + (SECTIONS.find(s => s.id === id)?.label || 'secHero')

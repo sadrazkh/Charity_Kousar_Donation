@@ -311,7 +311,6 @@
     "name": "نام",
     "amount": "مبلغ (تومان)",
     "addContributor": "افزودن مشارکت‌کننده",
-    "add": "افزودن:",
     "shiftToGreenRecommended": "تغییر تدریجی به سبز (پیشنهادی)",
     "singleSolidColor": "تک‌رنگ ثابت",
     "twoColorGradient": "گرادیان دو رنگ",
@@ -320,6 +319,7 @@
     "emptyThemeDefault": "خالی = رنگ پیش‌فرض قالب",
     "resetToDefault": "بازگشت به پیش‌فرض",
     "enabled": "فعال",
-    "disabled": "غیرفعال"
+    "disabled": "غیرفعال",
+    "editOrderInHomeEditor": "ویرایش ترتیب و نمایش بخش‌ها در «صفحه اصلی» ←"
   }
 }

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import { progressFillStyle } from '@/utils/progress'
+import { secKey, isKnownSection } from './home/sections'
 import ImageUpload from '@/components/ImageUpload.vue'
 
 const { t, locale } = useI18n()
@@ -13,12 +14,6 @@ const values = ref({})
 const activeGroup = ref('site')
 const translating = ref('')
 
-const HOME_SECTIONS = [
-  { id: 'hero', fa: 'متن و مجموع کمک‌ها', en: 'Hero & total' },
-  { id: 'featured', fa: 'پروژه‌های ویژه', en: 'Featured projects' },
-  { id: 'campaigns', fa: 'لیست پروژه‌ها', en: 'Campaigns list' },
-  { id: 'donors', fa: 'مشارکت‌کنندگان اخیر', en: 'Recent contributors' }
-]
 const TIMER_UNITS = [
   { id: 'days', fa: 'روز', en: 'Days' },
   { id: 'hours', fa: 'ساعت', en: 'Hours' },
@@ -104,25 +99,9 @@ async function translateField(item) {
   }
 }
 
-/* ---- Home section order editor ---- */
-const homeOrder = computed({
-  get: () => (values.value['site.home.order'] || '').split(',').map(s => s.trim()).filter(Boolean),
-  set: (arr) => { values.value['site.home.order'] = arr.join(',') }
-})
-function sectionLabel(id) {
-  const s = HOME_SECTIONS.find(x => x.id === id)
-  return s ? (locale.value === 'fa' ? s.fa : s.en) : id
-}
-const excludedSections = computed(() => HOME_SECTIONS.filter(s => !homeOrder.value.includes(s.id)))
-function moveSection(i, dir) {
-  const arr = [...homeOrder.value]
-  const ni = i + dir
-  if (ni < 0 || ni >= arr.length) return
-  ;[arr[i], arr[ni]] = [arr[ni], arr[i]]
-  homeOrder.value = arr
-}
-function removeSection(id) { homeOrder.value = homeOrder.value.filter(s => s !== id) }
-function addSection(id) { homeOrder.value = [...homeOrder.value, id] }
+/* ---- Home section order (shown here, edited in the home editor) ---- */
+const homeOrder = computed(() =>
+  (values.value['site.home.order'] || '').split(',').map(s => s.trim()).filter(Boolean))
 
 /* ---- Featured timer units ---- */
 const timerUnits = computed({
@@ -222,25 +201,16 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
               </div>
             </template>
 
-            <!-- Home section order -->
+            <!-- Home section order — arranged by drag & drop in the home editor -->
             <template v-else-if="item.key === 'site.home.order'">
               <label class="label">{{ label(item) }}</label>
-              <div class="order-editor">
-                <div v-for="(id, i) in homeOrder" :key="id" class="order-row">
-                  <span class="order-handle">≡</span>
-                  <span class="order-name">{{ sectionLabel(id) }}</span>
-                  <div class="order-btns">
-                    <button type="button" class="mini" :disabled="i === 0" @click="moveSection(i, -1)">↑</button>
-                    <button type="button" class="mini" :disabled="i === homeOrder.length - 1" @click="moveSection(i, 1)">↓</button>
-                    <button type="button" class="mini danger" @click="removeSection(id)">✕</button>
-                  </div>
-                </div>
-                <div v-if="excludedSections.length" class="order-add">
-                  <span class="muted">{{ t('ui.add') }}</span>
-                  <button v-for="s in excludedSections" :key="s.id" type="button" class="mini add"
-                    @click="addSection(s.id)">+ {{ sectionLabel(s.id) }}</button>
-                </div>
+              <div class="order-readonly">
+                <span v-for="id in homeOrder" :key="id" class="order-pill">
+                  {{ isKnownSection(id) ? t(secKey(id)) : id }}
+                </span>
+                <span v-if="!homeOrder.length" class="muted">{{ t('homeEditor.noSections') }}</span>
               </div>
+              <router-link to="/admin/home" class="more-link">{{ t('ui.editOrderInHomeEditor') }}</router-link>
             </template>
 
             <!-- Progress bar mode + preview -->
@@ -356,17 +326,16 @@ function previewStyle(p) { return progressFillStyle(p, progressCfg.value) }
 .color-row { display: flex; gap: 0.5rem; align-items: center; }
 .color-swatch { width: 48px; height: 42px; border: 1px solid var(--border); border-radius: 10px; background: none; cursor: pointer; padding: 2px; }
 
-.order-editor { display: flex; flex-direction: column; gap: 0.4rem; }
-.order-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.6rem; border: 1px solid var(--border); border-radius: 10px; background: var(--input-bg); }
-.order-handle { color: var(--muted); }
-.order-name { flex: 1; font-size: 0.9rem; }
-.order-btns { display: flex; gap: 0.25rem; }
+.order-readonly { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.order-pill {
+  padding: 0.35rem 0.7rem; border-radius: 999px; font-size: 0.85rem;
+  border: 1px solid var(--border); background: var(--input-bg); color: var(--text);
+}
+.order-readonly .muted { color: var(--muted); font-size: 0.85rem; }
+.more-link { display: inline-block; margin-top: 0.6rem; font-size: 0.85rem; color: var(--primary); text-decoration: none; }
 .mini { width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); cursor: pointer; font-size: 0.85rem; }
 .mini:disabled { opacity: 0.35; cursor: not-allowed; }
 .mini.danger { color: #f87171; }
-.mini.add { width: auto; padding: 0 0.6rem; }
-.order-add { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-top: 0.25rem; }
-.order-add .muted { color: var(--muted); font-size: 0.85rem; }
 
 .manual-list { display: flex; flex-direction: column; gap: 0.5rem; }
 .manual-row { display: flex; gap: 0.5rem; align-items: center; }

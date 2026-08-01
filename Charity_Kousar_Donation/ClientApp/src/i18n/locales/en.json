@@ -311,7 +311,6 @@
     "name": "Name",
     "amount": "Amount",
     "addContributor": "Add contributor",
-    "add": "Add:",
     "shiftToGreenRecommended": "Shift to green (recommended)",
     "singleSolidColor": "Single solid color",
     "twoColorGradient": "Two-color gradient",
@@ -320,6 +319,7 @@
     "emptyThemeDefault": "empty = theme default",
     "resetToDefault": "Reset to default",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "editOrderInHomeEditor": "Arrange sections in the home editor →"
   }
 }
